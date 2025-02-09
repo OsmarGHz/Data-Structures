@@ -24,6 +24,23 @@ void inicializarLista(){
     lista[MAX - 1].ant = -1;
 }
 
+void insertarInicio(int valor){
+    if (libre == -1){
+        printf("Lista llena. No se puede insertar.\n");
+        return;
+    }
+    int nuevo = libre; // Toma el indice libre actual
+    libre = lista[libre].sig; // Actualiza el indice libre
+
+    lista[nuevo].ant = -1;
+    lista[nuevo].dato = valor;
+    lista[nuevo].sig = cabeza;
+
+    if (cabeza!=-1) lista[cabeza].ant = nuevo; //Actualizamos el anterior de la antigua cabeza, para indicar que ya es 2do elemento en vez de 1ro
+
+    cabeza = nuevo;
+}
+
 // Inserta un nodo al final
 void insertaFinal(int valor){
     if (libre == -1){
@@ -94,6 +111,88 @@ void imprimirLista(){
     printf("\n");
 }
 
+void menu(){
+    int opcion, valor, vAnterior, encontrado;
+
+    do{
+        printf("\n MENU \n");
+        printf("1. Insertar nodo al inicio\n");
+        printf("2. Insertar nodo al final\n");
+        printf("3. Insertar nodo entre dos nodos\n");
+        printf("4. Borrar nodo del inicio\n");
+        printf("5. Borrar nodo del final\n");
+        printf("6. Borrar nodo entre 2 nodos\n");
+        printf("7. Borrar unico nodo\n");
+        printf("8. Buscar un elemento\n");
+        printf("9. Imprimir lista\n");
+        printf("10. Salir\n");
+        printf("SELECCIONE UNA OPCION: ");
+        scanf("%d", &opcion);
+
+        switch (opcion){
+            case 1:
+                printf("Ingrese el valor a insertar al inicio: ");
+                scanf("%d", &valor);
+                insertarInicio(valor);
+                break;
+
+            case 2:
+                printf("Ingrese el valor a insertar al final: ");
+                scanf("%d", &valor);
+                //insertaFInal(valor);
+                break;
+
+            case 3:
+                printf("Ingrese el valor a insertar: ");
+                scanf("%d", &valor);
+                printf("Ingrese el valor del nodo anterior: ");
+                scanf("%d", &vAnterior);
+                encontrado = buscarElemento(cabeza,vAnterior);
+                    if(encontrado != -1){
+                        //insertarEntre(valor, encontrado);
+                    } else {
+                        printf("Error, nodo no existente");
+                    }
+                break;
+            
+            case 4:
+                //borrarInicio();
+                break;
+
+            case 5:
+                borrarFinal();
+                break;
+
+            case 6:
+
+            case 7:
+
+            case 8:
+                printf("Ingrese el valor a buscar: ");
+                scanf("%d", &valor);
+                encontrado = buscarElemento(cabeza,valor);
+                    if (encontrado != -1){
+                        printf("Elemeno encontrado en la posicion: %d\n", encontrado);
+                    } else {
+                        printf("Elemento no encontrado. \n");
+                    }
+                break;    
+            
+            case 9:
+                imprimirLista();
+                break;
+
+            case 10:
+                printf("Saliendo del programa. \n");
+                break;
+
+            default:
+                printf("Opcion no valida. \n");
+                break;
+        }
+    }while (opcion!=10);    
+}
+
 // Función principal
 int main(){
     /*
@@ -117,5 +216,7 @@ int main(){
         printf("Elemento %d no encontrado en la lista.\n", buscarValor);
     }
     */
+    inicializarLista();
+    menu();
     return 0;
 }
