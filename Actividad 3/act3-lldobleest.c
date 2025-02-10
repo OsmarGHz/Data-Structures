@@ -1,6 +1,6 @@
 //Version Original
 #include <stdio.h>
-#define MAX 10 // Tamaño fijo para la lista
+#define MAX 100 // Tamaño fijo para la lista
 
 // Estructura para un nodo
 typedef struct{
