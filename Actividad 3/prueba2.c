@@ -81,7 +81,7 @@ void insertarDespues(int ref, int valor) {
     }
 
     if (actual == -1) {
-        printf("Hubo un error: Nodo de referencia no encontrado.\n");
+        printf("Error: Nodo de referencia no encontrado.\n");
         return;
     }
 
@@ -109,7 +109,7 @@ void insertarDespues(int ref, int valor) {
 // Borra el nodo al inicio de la lista
 void borrarInicio() {
     if (cabeza == -1) {
-        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
+        printf("Error: Lista vacía. No se puede borrar.\n");
         return;
     }
     int temp = cabeza;
@@ -131,7 +131,7 @@ void borrarInicio() {
 // Borra el nodo al final de la lista
 void borrarFinal() {
     if (cola == -1) {
-        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
+        printf("Error: Lista vacía. No se puede borrar.\n");
         return;
     }
 
@@ -153,7 +153,7 @@ void borrarFinal() {
 
 void borrarNodo(int valor) {
     if (cabeza == -1) {
-        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
+        printf("Error: Lista vacía. No se puede borrar.\n");
         return;
     }
 
@@ -166,7 +166,7 @@ void borrarNodo(int valor) {
 
     // Si no se encontró el nodo
     if (actual == -1) {
-        printf("Lo sentimos: Nodo con valor %d no encontrado.\n", valor);
+        printf("Error: Nodo con valor %d no encontrado.\n", valor);
         return;
     }
 
@@ -199,11 +199,11 @@ void borrarNodo(int valor) {
 // Borra el único nodo de la lista (si existe únicamente uno)
 void borrarUnico() {
     if (cabeza == -1) {
-        printf("Lo sentimos, la lista esta vacia.\n");
+        printf("Error: Lista vacía. No hay nodo que borrar.\n");
         return;
     }
     if (lista[cabeza].sig != -1) {
-        printf("Lo sentimos: La lista tiene más de un nodo.\n");
+        printf("Error: La lista tiene más de un nodo.\n");
         return;
     }
 
@@ -323,7 +323,7 @@ void menu() {
                     scanf("%d", &ref);
                     refNodo = buscarNodoPorValorDesdeCabeza(ref);
                     if (refNodo == -1)
-                        printf("Lo sentimos: Nodo de referencia no encontrado.\n");
+                        printf("Error: Nodo de referencia no encontrado.\n");
                     else
                         insertarDespues(ref, valor);
                 } else if (metodo == 2) {
@@ -331,7 +331,7 @@ void menu() {
                     scanf("%d", &pos);
                     refNodo = buscarNodoPorPosicionDesdeCabeza(pos);
                     if (refNodo == -1)
-                        printf("Lo sentimos: No existe nodo en la posición %d.\n", pos);
+                        printf("Error: No existe nodo en la posición %d.\n", pos);
                     else
                         insertarDespues(lista[refNodo].dato, valor);
                 } else {
