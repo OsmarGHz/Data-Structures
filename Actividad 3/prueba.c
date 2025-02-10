@@ -138,20 +138,33 @@ void borrarFinal() {
 
 // -------------------------------------------------------------------
 // Borra el nodo que está DESPUÉS del nodo de referencia (dado por índice)
-void borrarDespues(int anterior) {
-    if (anterior == -1 || lista[anterior].sig == -1) {
-        printf("Error: No hay nodo que borrar después del nodo especificado.\n");
+void borrarNodo(int indice) {
+    if (indice == -1 || cabeza == -1) {
+        printf("Error: Nodo no encontrado o lista vacía.\n");
         return;
     }
-    int nodoBorrar = lista[anterior].sig;
-    int siguiente = lista[nodoBorrar].sig;
-    lista[anterior].sig = siguiente;
-    if (siguiente != -1) {
-        lista[siguiente].ant = anterior;
+
+    // Si es el primer nodo (cabeza)
+    if (indice == cabeza) {
+        cabeza = lista[indice].sig;
+        if (cabeza != -1) {
+            lista[cabeza].ant = -1;
+        }
+    } else {
+        // Ajustar los enlaces del nodo anterior y siguiente
+        if (lista[indice].ant != -1) {
+            lista[lista[indice].ant].sig = lista[indice].sig;
+        }
+        if (lista[indice].sig != -1) {
+            lista[lista[indice].sig].ant = lista[indice].ant;
+        }
     }
-    printf("Nodo borrado con valor: %d\n", lista[nodoBorrar].dato);
-    lista[nodoBorrar].sig = libre;
-    libre = nodoBorrar;
+
+    printf("Nodo eliminado con valor: %d\n", lista[indice].dato);
+
+    // Liberar el nodo
+    lista[indice].sig = libre;
+    libre = indice;
 }
 
 // -------------------------------------------------------------------
@@ -304,32 +317,13 @@ void menu() {
                 borrarFinal();
                 break;
             case 6:
-                // Borrar entre dos nodos
-                printf("Seleccione método para borrar nodo entre dos nodos:\n");
-                printf("1. Por valor del nodo anterior\n");
-                printf("2. Por posición del nodo anterior\n");
-                printf("Opción: ");
-                scanf("%d", &metodo);
-                if (metodo == 1) {
-                    printf("Ingrese el valor del nodo anterior (del nodo a borrar): ");
-                    scanf("%d", &ref);
-                    refIndex = buscarPorValorDesdeCabeza(ref);
-                    if (refIndex == -1) {
-                        printf("Error: Nodo de referencia no encontrado.\n");
-                    } else {
-                        borrarDespues(refIndex);
-                    }
-                } else if (metodo == 2) {
-                    printf("Ingrese la posición del nodo anterior (del nodo a borrar): ");
-                    scanf("%d", &pos);
-                    refIndex = buscarPorPosicionDesdeCabeza(pos);
-                    if (refIndex == -1) {
-                        printf("Error: No existe nodo en la posición %d.\n", pos);
-                    } else {
-                        borrarDespues(refIndex);
-                    }
+                printf("Ingrese el valor del nodo a borrar: ");
+                scanf("%d", &valor);
+                refIndex = buscarPorValorDesdeCabeza(valor);
+                if (refIndex == -1) {
+                    printf("Error: Nodo no encontrado.\n");
                 } else {
-                    printf("Opción no válida.\n");
+                    borrarNodo(refIndex);
                 }
                 break;
             case 7:

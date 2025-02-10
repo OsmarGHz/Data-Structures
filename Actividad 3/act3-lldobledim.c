@@ -17,7 +17,7 @@ Nodo* cola = NULL;
 void insertaInicio(int valor) {
     Nodo* nuevo = (Nodo*) malloc(sizeof(Nodo));
     if (nuevo == NULL) {
-        printf("Error: Memoria insuficiente.\n");
+        printf("Lo sentimos: Memoria insuficiente.\n");
         return;
     }
     nuevo->dato = valor;
@@ -38,7 +38,7 @@ void insertaInicio(int valor) {
 void insertaFinal(int valor) {
     Nodo* nuevo = (Nodo*) malloc(sizeof(Nodo));
     if (nuevo == NULL) {
-        printf("Error: Memoria insuficiente.\n");
+        printf("Lo sentimos: Memoria insuficiente.\n");
         return;
     }
     nuevo->dato = valor;
@@ -58,13 +58,13 @@ void insertaFinal(int valor) {
 // Inserta un nodo DESPUÉS de un nodo de referencia dado
 void insertarDespues(Nodo* ref, int valor) {
     if (ref == NULL) {
-        printf("Error: Nodo de referencia nulo.\n");
+        printf("Lo sentimos: Nodo de referencia nulo.\n");
         return;
     }
     
     Nodo* nuevo = (Nodo*) malloc(sizeof(Nodo));
     if (nuevo == NULL) {
-        printf("Error: Memoria insuficiente.\n");
+        printf("Lo sentimos: Memoria insuficiente.\n");
         return;
     }
     nuevo->dato = valor;
@@ -84,7 +84,7 @@ void insertarDespues(Nodo* ref, int valor) {
 // Borra el nodo al inicio de la lista
 void borrarInicio() {
     if (cabeza == NULL) {
-        printf("Error: Lista vacía. No se puede borrar.\n");
+        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
         return;
     }
     Nodo* temp = cabeza;
@@ -103,7 +103,7 @@ void borrarInicio() {
 // Borra el nodo al final de la lista
 void borrarFinal() {
     if (cola == NULL) {
-        printf("Error: Lista vacía. No se puede borrar.\n");
+        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
         return;
     }
     Nodo* temp = cola;
@@ -119,33 +119,58 @@ void borrarFinal() {
 }
 
 // -------------------------------------------------------------------
-// Borra el nodo que está DESPUÉS del nodo de referencia dado
-void borrarDespues(Nodo* ref) {
-    if (ref == NULL || ref->next == NULL) {
-        printf("Error: No hay nodo que borrar después del nodo especificado.\n");
+void borrarNodo(int valor) {
+    if (cabeza == NULL) {
+        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
         return;
     }
-    Nodo* aBorrar = ref->next;
-    ref->next = aBorrar->next;
-    
-    if (aBorrar->next != NULL)
-        aBorrar->next->prev = ref;
-    else
-        cola = ref;  // Si se borraba la cola
-    
-    printf("Nodo borrado con valor: %d\n", aBorrar->dato);
-    free(aBorrar);
+
+    Nodo* actual = cabeza;
+
+    // Buscar el nodo con el valor especificado
+    while (actual != NULL && actual->dato != valor) {
+        actual = actual->next;
+    }
+
+    // Si no se encontró el nodo
+    if (actual == NULL) {
+        printf("Lo sentimos: Nodo con valor %d no encontrado.\n", valor);
+        return;
+    }
+
+    // Si es el único nodo en la lista
+    if (actual == cabeza && actual == cola) {
+        cabeza = cola = NULL;
+    }
+    // Si es la cabeza de la lista
+    else if (actual == cabeza) {
+        cabeza = actual->next;
+        cabeza->prev = NULL;
+    }
+    // Si es la cola de la lista
+    else if (actual == cola) {
+        cola = actual->prev;
+        cola->next = NULL;
+    }
+    // Si es un nodo intermedio
+    else {
+        actual->prev->next = actual->next;
+        actual->next->prev = actual->prev;
+    }
+
+    printf("Nodo con valor %d eliminado.\n", actual->dato);
+    free(actual);
 }
 
 // -------------------------------------------------------------------
 // Borra el único nodo de la lista (si existe únicamente uno)
 void borrarUnico() {
     if (cabeza == NULL) {
-        printf("Error: Lista vacía. No hay nodo que borrar.\n");
+        printf("Lo sentimos: Lista vacía. No hay nodo que borrar.\n");
         return;
     }
     if (cabeza->next != NULL) {
-        printf("Error: La lista tiene más de un nodo.\n");
+        printf("Lo sentimos: La lista tiene más de un nodo.\n");
         return;
     }
     
@@ -266,7 +291,7 @@ void menu() {
                     scanf("%d", &ref);
                     refNodo = buscarNodoPorValorDesdeCabeza(ref);
                     if (refNodo == NULL)
-                        printf("Error: Nodo de referencia no encontrado.\n");
+                        printf("Lo sentimos: Nodo de referencia no encontrado.\n");
                     else
                         insertarDespues(refNodo, valor);
                 } else if (metodo == 2) {
@@ -274,7 +299,7 @@ void menu() {
                     scanf("%d", &pos);
                     refNodo = buscarNodoPorPosicionDesdeCabeza(pos);
                     if (refNodo == NULL)
-                        printf("Error: No existe nodo en la posición %d.\n", pos);
+                        printf("Lo sentimos: No existe nodo en la posición %d.\n", pos);
                     else
                         insertarDespues(refNodo, valor);
                 } else {
@@ -288,31 +313,9 @@ void menu() {
                 borrarFinal();
                 break;
             case 6:
-                // Borrar entre dos nodos (borrar el nodo que está después de un nodo de referencia)
-                printf("Seleccione método para borrar nodo entre dos nodos:\n");
-                printf("1. Por valor del nodo anterior\n");
-                printf("2. Por posición del nodo anterior\n");
-                printf("Opción: ");
-                scanf("%d", &metodo);
-                if (metodo == 1) {
-                    printf("Ingrese el valor del nodo anterior (del nodo a borrar): ");
-                    scanf("%d", &ref);
-                    refNodo = buscarNodoPorValorDesdeCabeza(ref);
-                    if (refNodo == NULL)
-                        printf("Error: Nodo de referencia no encontrado.\n");
-                    else
-                        borrarDespues(refNodo);
-                } else if (metodo == 2) {
-                    printf("Ingrese la posición del nodo anterior (del nodo a borrar): ");
-                    scanf("%d", &pos);
-                    refNodo = buscarNodoPorPosicionDesdeCabeza(pos);
-                    if (refNodo == NULL)
-                        printf("Error: No existe nodo en la posición %d.\n", pos);
-                    else
-                        borrarDespues(refNodo);
-                } else {
-                    printf("Opción no válida.\n");
-                }
+                printf("Ingrese el valor del nodo a borrar: ");
+                scanf("%d", &valor);
+                borrarNodo(valor);
                 break;
             case 7:
                 borrarUnico();
