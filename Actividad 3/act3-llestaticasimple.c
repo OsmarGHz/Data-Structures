@@ -1,18 +1,14 @@
 #include <stdio.h>
-#define MAX 10 // Tamaño fijo para la lista
+#define MAX 100
 
-// Estructura para un nodo
-typedef struct {
+typedef struct Nodo {
     int dato;
-    int sig; // Índice del siguiente nodo
-    int ant; // Índice del nodo anterior
+    int sig;
 } Nodo;
 
-// Arreglo estático para representar la lista
 Nodo lista[MAX];
-int cabeza = -1; // Índice de la cabeza de la lista
-int cola = -1; // Índice de la cola de la lista
-int libre = 0; // Índice del siguiente espacio libre
+int cabeza = -1;
+int libre = 0;
 
 void limpiarBuffer(){
     char c;
@@ -28,141 +24,110 @@ int escaneoEntero(int * variable){
     return 1;
 }
 
-// Inicializa la lista
 void inicializarLista() {
-    int i;
-    for (i = 0; i < MAX - 1; i++) {
-        lista[i].sig = i + 1; // El índice siguiente al actual
-        lista[i].ant = -1; // No tiene anterior por ahora
+    for (int i = 0; i < MAX - 1; i++) {
+        lista[i].sig = i + 1;
     }
-    lista[MAX - 1].sig = -1; // Fin de la lista
-    lista[MAX - 1].ant = -1;
+    lista[MAX - 1].sig = -1;
 }
 
-// Inserta un nodo al inicio
 void insertaInicio(int valor) {
     if (libre == -1) {
-        printf("Lista llena. No se puede insertar.\n");
-        return;
-    }
-    int nuevo = libre; // Toma el índice libre actual
-    libre = lista[libre].sig; // Actualiza el índice libre
-    lista[nuevo].dato = valor;
-    lista[nuevo].ant = -1;
-    lista[nuevo].sig = cabeza;
-
-    if (cabeza != -1) {
-        lista[cabeza].ant = nuevo;
-    } else {
-        cola = nuevo;
-    }
-    cabeza = nuevo;
-    if (cola == -1) {
-        cola = cabeza;
-    }
-    printf("Nodo con valor %d insertado al inicio.\n", valor);
-}
-
-// Inserta un nodo al final
-void insertaFinal(int valor) {
-    if (libre == -1) {
-        printf("Lista llena. No se puede insertar.\n");
-        return;
-    }
-    int nuevo = libre; // Toma el índice libre actual
-    libre = lista[libre].sig; // Actualiza el índice libre
-    lista[nuevo].dato = valor;
-    lista[nuevo].sig = -1;
-    lista[nuevo].ant = cola;
-
-    if (cola != -1) {
-        lista[cola].sig = nuevo;
-    } else {
-        cabeza = nuevo;
-    }
-    cola = nuevo;
-    if (cabeza == -1) {
-        cabeza = cola;
-    }
-    printf("Nodo con valor %d insertado al final.\n", valor);
-}
-
-// Inserta un nodo DESPUÉS de un nodo de referencia dado
-void insertarDespues(int ref, int valor) {
-    int actual = cabeza;
-    while (actual != -1 && lista[actual].dato != ref) {
-        actual = lista[actual].sig;
-    }
-
-    if (actual == -1) {
-        printf("Hubo un error: Nodo de referencia no encontrado.\n");
-        return;
-    }
-
-    if (libre == -1) {
-        printf("Lista llena. No se puede insertar.\n");
+        printf("Error: No hay espacio disponible en la lista.\n");
         return;
     }
 
     int nuevo = libre;
     libre = lista[libre].sig;
+
     lista[nuevo].dato = valor;
-    lista[nuevo].ant = actual;
-    lista[nuevo].sig = lista[actual].sig;
-
-    if (lista[actual].sig != -1) {
-        lista[lista[actual].sig].ant = nuevo;
-    } else {
-        cola = nuevo;
-    }
-
-    lista[actual].sig = nuevo;
-    printf("Nodo con valor %d insertado después del nodo con valor %d.\n", valor, ref);
+    lista[nuevo].sig = cabeza;
+    cabeza = nuevo;
+    printf("Nodo con valor %d insertado al inicio.\n", valor);
 }
 
-// Borra el nodo al inicio de la lista
+void insertaFinal(int valor) {
+    if (libre == -1) {
+        printf("Errorr: No espacio disponible.\n");
+        return;
+    }
+
+    int nuevo = libre;
+    libre = lista[libre].sig;
+
+    lista[nuevo].dato = valor;
+    lista[nuevo].sig = -1;
+
+    if (cabeza == -1) {
+        cabeza = nuevo;
+    } else {
+        int actual = cabeza;
+        while (lista[actual].sig != -1) {
+            actual = lista[actual].sig;
+        }
+        lista[actual].sig = nuevo;
+    }
+    printf("Nodo con valor %d insertado al final.\n", valor);
+}
+
+void insertarEntre(int valor, int anterior) {
+    if (libre == -1) {
+        printf("Error no hay espacio disponible en la lista.\n");
+        return;
+    }
+
+    if (anterior < 0 || anterior >= MAX || lista[anterior].sig == -1) {
+        printf("Error: Nodo anterior no válido.\n");
+        return;
+    }
+
+    int nuevo = libre;
+    libre = lista[libre].sig;
+
+    lista[nuevo].dato = valor;
+    lista[nuevo].sig = lista[anterior].sig;
+    lista[anterior].sig = nuevo;
+    printf("Nodo con valor %d insertado después del nodo con valor %d.\n", valor, lista[anterior].dato);
+}
+
 void borrarInicio() {
     if (cabeza == -1) {
-        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
+        printf("Error, lista vacia.\n");
         return;
     }
-    int temp = cabeza;
+
+    int nodoBorrar = cabeza;
     cabeza = lista[cabeza].sig;
-
-    if (cabeza != -1) {
-        lista[cabeza].ant = -1;
-    } else {
-        cola = -1;
-    }
-
-    printf("Nodo del inicio borrado (valor %d).\n", lista[temp].dato);
-
-    lista[temp].sig = libre;
-    lista[temp].ant = -1;
-    libre = temp;
+    lista[nodoBorrar].sig = libre;
+    libre = nodoBorrar;
+    printf("Nodo del inicio borrado (valor %d).\n", lista[nodoBorrar].dato);
 }
 
-// Borra el nodo al final de la lista
 void borrarFinal() {
-    if (cola == -1) {
-        printf("Lo sentimos: Lista vacía. No se puede borrar.\n");
+    if (cabeza == -1) {
+        printf("Error, lista vacia.\n");
         return;
     }
 
-    int temp = cola;
-    cola = lista[cola].ant;
-
-    if (cola != -1) {
-        lista[cola].sig = -1;
-    } else {
+    if (lista[cabeza].sig == -1) {
+        int nodoBorrar = cabeza;
         cabeza = -1;
+        lista[nodoBorrar].sig = libre;
+        libre = nodoBorrar;
+        printf("Nodo eliminado del final con valor: %d\n", lista[nodoBorrar].dato);
+        return;
     }
 
-    printf("Nodo eliminado del final con valor: %d\n", lista[temp].dato);
+    int actual = cabeza;
+    while (lista[lista[actual].sig].sig != -1) {
+        actual = lista[actual].sig;
+    }
 
-    lista[temp].sig = libre;
-    lista[temp].ant = -1;
-    libre = temp;
+    int nodoBorrar = lista[actual].sig;
+    lista[actual].sig = -1;
+    lista[nodoBorrar].sig = libre;
+    libre = nodoBorrar;
+    printf("Nodo eliminado del final con valor: %d\n", lista[nodoBorrar].dato);
 }
 
 void borrarNodo(int valor) {
@@ -172,9 +137,11 @@ void borrarNodo(int valor) {
     }
 
     int actual = cabeza;
+    int anterior = -1;
 
-    // Buscar el nodo con el valor especificado
+    // Buscar el nodo con el valor especificado y el nodo anterior
     while (actual != -1 && lista[actual].dato != valor) {
+        anterior = actual;
         actual = lista[actual].sig;
     }
 
@@ -185,35 +152,27 @@ void borrarNodo(int valor) {
     }
 
     // Si es el único nodo en la lista
-    if (actual == cabeza && actual == cola) {
-        cabeza = cola = -1;
+    if (actual == cabeza && lista[actual].sig == -1) {
+        cabeza = -1;
     }
     // Si es la cabeza de la lista
     else if (actual == cabeza) {
         cabeza = lista[actual].sig;
-        lista[cabeza].ant = -1;
-    }
-    // Si es la cola de la lista
-    else if (actual == cola) {
-        cola = lista[actual].ant;
-        lista[cola].sig = -1;
     }
     // Si es un nodo intermedio
     else {
-        lista[lista[actual].ant].sig = lista[actual].sig;
-        lista[lista[actual].sig].ant = lista[actual].ant;
+        lista[anterior].sig = lista[actual].sig;
     }
 
-    printf("Nodo con valor %d eliminado.\n", lista[actual].dato);
     lista[actual].sig = libre;
-    lista[actual].ant = -1;
     libre = actual;
+
+    printf("Nodo con valor %d eliminado.\n", valor);
 }
 
-// Borra el único nodo de la lista (si existe únicamente uno)
 void borrarUnico() {
     if (cabeza == -1) {
-        printf("Lo sentimos, la lista esta vacia.\n");
+        printf("Lo sentimos: Lista vacía. No hay nodo que borrar.\n");
         return;
     }
     if (lista[cabeza].sig != -1) {
@@ -223,13 +182,10 @@ void borrarUnico() {
 
     printf("Nodo único borrado con valor: %d\n", lista[cabeza].dato);
     lista[cabeza].sig = libre;
-    lista[cabeza].ant = -1;
     libre = cabeza;
-    cabeza = cola = -1;
+    cabeza = -1;
 }
 
-// Funciones de Búsqueda
-// Buscar por valor desde la cabeza: retorna la posición (iniciando en 1) o -1 si no se encuentra.
 int buscarPosicionDesdeCabeza(int valor) {
     int actual = cabeza;
     int pos = 1;
@@ -242,20 +198,6 @@ int buscarPosicionDesdeCabeza(int valor) {
     return -1;
 }
 
-// Buscar por valor desde la cola: retorna la posición (iniciando en 1 desde la cola) o -1 si no se encuentra.
-int buscarPosicionDesdeCola(int valor) {
-    int actual = cola;
-    int pos = 1;
-    while (actual != -1) {
-        if (lista[actual].dato == valor)
-            return pos;
-        pos++;
-        actual = lista[actual].ant;
-    }
-    return -1;
-}
-
-// Buscar y retornar el índice del nodo por valor (desde la cabeza)
 int buscarNodoPorValorDesdeCabeza(int valor) {
     int actual = cabeza;
     while (actual != -1) {
@@ -266,7 +208,6 @@ int buscarNodoPorValorDesdeCabeza(int valor) {
     return -1;
 }
 
-// Buscar y retornar el índice del nodo en la posición indicada (posición 1 es la cabeza)
 int buscarNodoPorPosicionDesdeCabeza(int pos) {
     int actual = cabeza;
     int count = 1;
@@ -277,12 +218,7 @@ int buscarNodoPorPosicionDesdeCabeza(int pos) {
     return actual;
 }
 
-// Imprime la lista de cabeza a cola
 void imprimirLista() {
-    if (cabeza == -1) {
-        printf("Lista vacía.\n");
-        return;
-    }
     int actual = cabeza;
     printf("Lista: ");
     while (actual != -1) {
@@ -292,7 +228,6 @@ void imprimirLista() {
     printf("\n");
 }
 
-// Menú principal
 void menu() {
     int opcion;
     do {
@@ -310,8 +245,7 @@ void menu() {
         printf("Seleccione una opción: ");
         while (escaneoEntero(&opcion) == 0);
 
-        int valor, pos, ref, metodo;
-        int refNodo = -1;
+        int valor, pos, ref, metodo, refNodo;
         switch (opcion) {
             case 1:
                 printf("Ingrese el valor a insertar al inicio: ");
@@ -332,14 +266,14 @@ void menu() {
                 while (escaneoEntero(&metodo) == 0);
                 printf("Ingrese el valor a insertar: ");
                 while (escaneoEntero(&valor) == 0);
-                if (metodo == 1) {
+                if (metodo ==1) {
                     printf("Ingrese el valor del nodo de referencia (después del cual insertar): ");
                     while (escaneoEntero(&ref) == 0);
                     refNodo = buscarNodoPorValorDesdeCabeza(ref);
                     if (refNodo == -1)
                         printf("Lo sentimos: Nodo de referencia no encontrado.\n");
                     else
-                        insertarDespues(ref, valor);
+                        insertarEntre(valor, refNodo);
                 } else if (metodo == 2) {
                     printf("Ingrese la posición del nodo de referencia (después del cual insertar): ");
                     while (escaneoEntero(&pos) == 0);
@@ -347,7 +281,7 @@ void menu() {
                     if (refNodo == -1)
                         printf("Lo sentimos: No existe nodo en la posición %d.\n", pos);
                     else
-                        insertarDespues(lista[refNodo].dato, valor);
+                        insertarEntre(valor, refNodo);
                 } else {
                     printf("Opción no válida.\n");
                 }
@@ -367,29 +301,13 @@ void menu() {
                 borrarUnico();
                 break;
             case 8:
-                printf("Seleccione desde:\n");
-                printf("1. Desde la cabeza\n");
-                printf("2. Desde la cola\n");
-                printf("Opción: ");
-                int desde;
-                while (escaneoEntero(&desde) == 0);
                 printf("Ingrese el valor a buscar: ");
                 while (escaneoEntero(&valor) == 0);
-                if (desde == 1) {
-                    pos = buscarPosicionDesdeCabeza(valor);
-                    if (pos == -1)
-                        printf("Elemento %d no encontrado desde la cabeza.\n", valor);
-                    else
-                        printf("Elemento %d encontrado en la posición %d desde la cabeza.\n", valor, pos);
-                } else if (desde == 2) {
-                    pos = buscarPosicionDesdeCola(valor);
-                    if (pos == -1)
-                        printf("Elemento %d no encontrado desde la cola.\n", valor);
-                    else
-                        printf("Elemento %d encontrado en la posición %d desde la cola.\n", valor, pos);
-                } else {
-                    printf("Opción no válida.\n");
-                }
+                pos = buscarPosicionDesdeCabeza(valor);
+                if (pos == -1)
+                    printf("Elemento %d no encontrado desde la cabeza.\n", valor);
+                else
+                    printf("Elemento %d encontrado en la posición %d desde la cabeza.\n", valor, pos);
                 break;
             case 9:
                 imprimirLista();
@@ -403,7 +321,6 @@ void menu() {
     } while (opcion != 10);
 }
 
-// Función principal
 int main() {
     inicializarLista();
     menu();
