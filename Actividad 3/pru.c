@@ -196,15 +196,7 @@ void menu() {
         printf("8. Borrar nodo entre dos nodos\n");
         printf("9. Salir\n");
         printf("SELECCIONE UNA OPCION: ");
-
-        // Se lee la línea completa y se intenta convertirla a entero
-        if (fgets(input, sizeof(input), stdin) != NULL) {
-            if (sscanf(input, "%d", &opcion) != 1) {
-                opcion = -1;  // Si no se pudo leer un entero, se asigna un valor inválido
-            }
-        } else {
-            opcion = -1;
-        }
+        while (escaneoEntero(&opcion) == 0);
 
         switch (opcion) {
             case 1:
