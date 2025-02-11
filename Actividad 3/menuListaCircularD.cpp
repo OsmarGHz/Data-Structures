@@ -1,14 +1,12 @@
 #include <stdio.h>
-#define MAX 100
+#include <stdlib.h>
 
 typedef struct Nodo {
     int dato;
-    int sig;  // Usaremos -1 para indicar “no existe” en la lista libre, pero en la lista circular nunca se usa -1.
+    struct Nodo *sig;
 } Nodo;
 
-Nodo lista[MAX];
-int cabeza = -1;  // Índice del primer nodo de la lista (vacía si es -1)
-int libre = 0;    // Índice del primer nodo libre
+Nodo *cabeza = NULL;  // Puntero al primer nodo de la lista
 
 void limpiarBuffer(){
     char c;
@@ -20,6 +18,8 @@ int escaneoEntero(int * variable){
         printf("Entrada invalida. Ingrese un numero: ");
         limpiarBuffer();
         return 0;
+<<<<<<< HEAD
+=======
     }
     return 1;
 }
@@ -28,218 +28,194 @@ int escaneoEntero(int * variable){
 void inicializarLista(){
     for (int i = 0; i < MAX - 1; i++){
         lista[i].sig = i + 1;
-    }
-    lista[MAX - 1].sig = -1;
-    cabeza = -1;
-    libre = 0;
-}
-
-void limpiarBuffer(){
-    char c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
-
-int escaneoEntero(int * variable){
-    if (scanf("%d", variable) != 1){
-        printf("Entrada invalida. Ingrese un numero: ");
-        limpiarBuffer();
-        return 0;
+>>>>>>> f525a29ab3a33f1cdfc3f6186e023a7bd7ce82b2
     }
     return 1;
 }
 
 // Inserta un nodo al inicio de la lista circular
 void insertarInicio(int valor){
-    if (libre == -1){
-        printf("Error: No hay espacio disponible en la lista.\n");
+    Nodo *nuevo = (Nodo*) malloc(sizeof(Nodo));
+    if(nuevo == NULL) {
+        printf("Error: No se pudo asignar memoria.\n");
         return;
     }
-    int nuevo = libre;
-    libre = lista[libre].sig;  // Actualiza la lista de libres
-    lista[nuevo].dato = valor;
-    if (cabeza == -1){
-        // La lista está vacía; el nuevo nodo se apunta a sí mismo.
-        lista[nuevo].sig = nuevo;
+    nuevo->dato = valor;
+    if(cabeza == NULL){
+        nuevo->sig = nuevo;
         cabeza = nuevo;
     } else {
-        // Se busca el último nodo para actualizar su enlace
-        int ultimo = cabeza;
-        while (lista[ultimo].sig != cabeza)
-            ultimo = lista[ultimo].sig;
-        lista[nuevo].sig = cabeza;
+        // Se busca el último nodo
+        Nodo *ultimo = cabeza;
+        while(ultimo->sig != cabeza)
+            ultimo = ultimo->sig;
+        nuevo->sig = cabeza;
         cabeza = nuevo;
-        lista[ultimo].sig = cabeza;
+        ultimo->sig = cabeza;
     }
 }
 
 // Inserta un nodo al final de la lista circular
-void insertaFinal(int valor){
-    if (libre == -1){
-        printf("Error: No hay espacio disponible en la lista.\n");
+void insertarFinal(int valor){
+    Nodo *nuevo = (Nodo*) malloc(sizeof(Nodo));
+    if(nuevo == NULL){
+        printf("Error: No se pudo asignar memoria.\n");
         return;
     }
-    int nuevo = libre;
-    libre = lista[libre].sig;
-    lista[nuevo].dato = valor;
-    if (cabeza == -1){
-        lista[nuevo].sig = nuevo;
+    nuevo->dato = valor;
+    if(cabeza == NULL){
+        nuevo->sig = nuevo;
         cabeza = nuevo;
     } else {
-        int ultimo = cabeza;
-        while (lista[ultimo].sig != cabeza)
-            ultimo = lista[ultimo].sig;
-        lista[ultimo].sig = nuevo;
-        lista[nuevo].sig = cabeza;
+        Nodo *ultimo = cabeza;
+        while(ultimo->sig != cabeza)
+            ultimo = ultimo->sig;
+        ultimo->sig = nuevo;
+        nuevo->sig = cabeza;
     }
 }
 
-// Inserta un nodo después del nodo que contenga el valor "anterior"
-void insertarEntre(int valor, int anterior){
-    // Buscar el nodo cuyo dato sea igual a 'anterior'
-    if (cabeza == -1){
+// Inserta un nodo después del nodo que contenga el valor "referencia"
+void insertarEntre(int valor, int referencia){
+    if(cabeza == NULL){
         printf("Error: Lista vacia.\n");
         return;
     }
-    int actual = cabeza;
-    int encontrado = -1;
+    Nodo *actual = cabeza;
+    Nodo *encontrado = NULL;
     do {
-        if (lista[actual].dato == anterior) {
+        if(actual->dato == referencia){
             encontrado = actual;
             break;
         }
-        actual = lista[actual].sig;
-    } while (actual != cabeza);
+        actual = actual->sig;
+    } while(actual != cabeza);
 
-    if (encontrado == -1){
-        printf("Error: Nodo con valor %d no encontrado.\n", anterior);
+    if(encontrado == NULL){
+        printf("Error: Nodo con valor %d no encontrado.\n", referencia);
         return;
     }
-    if (libre == -1){
-        printf("Error: No hay espacio disponible en la lista.\n");
+    Nodo *nuevo = (Nodo*) malloc(sizeof(Nodo));
+    if(nuevo == NULL){
+        printf("Error: No se pudo asignar memoria.\n");
         return;
     }
-    int nuevo = libre;
-    libre = lista[libre].sig;
-    lista[nuevo].dato = valor;
-    lista[nuevo].sig = lista[encontrado].sig;
-    lista[encontrado].sig = nuevo;
+    nuevo->dato = valor;
+    nuevo->sig = encontrado->sig;
+    encontrado->sig = nuevo;
 }
 
 // Borra el nodo del inicio de la lista circular
 void borrarInicio(){
-    if (cabeza == -1){
-        printf("Error, lista vacia.\n");
+    if(cabeza == NULL){
+        printf("Error: Lista vacia.\n");
         return;
     }
-    int nodoBorrar = cabeza;
-    if (lista[cabeza].sig == cabeza){
-        // Sólo hay un nodo
-        cabeza = -1;
+    if(cabeza->sig == cabeza){
+        free(cabeza);
+        cabeza = NULL;
     } else {
-        // Buscar el último nodo para actualizar su enlace
-        int ultimo = cabeza;
-        while (lista[ultimo].sig != cabeza)
-            ultimo = lista[ultimo].sig;
-        cabeza = lista[cabeza].sig;
-        lista[ultimo].sig = cabeza;
+        // Se busca el último nodo
+        Nodo *ultimo = cabeza;
+        while(ultimo->sig != cabeza)
+            ultimo = ultimo->sig;
+        Nodo *nodoBorrar = cabeza;
+        cabeza = cabeza->sig;
+        ultimo->sig = cabeza;
+        free(nodoBorrar);
     }
-    // Se reincorpora el nodo borrado a la lista de libres
-    lista[nodoBorrar].sig = libre;
-    libre = nodoBorrar;
 }
 
 // Borra el nodo del final de la lista circular
 void borrarFinal(){
-    if (cabeza == -1){
-        printf("Error, lista vacia.\n");
+    if(cabeza == NULL){
+        printf("Error: Lista vacia.\n");
         return;
     }
-    int nodoBorrar;
-    if (lista[cabeza].sig == cabeza){
-        // Sólo hay un nodo
-        nodoBorrar = cabeza;
-        cabeza = -1;
+    if(cabeza->sig == cabeza){
+        free(cabeza);
+        cabeza = NULL;
     } else {
-        int actual = cabeza;
-        // Se busca el nodo que precede al último (aquel cuyo siguiente apunta a cabeza)
-        while (lista[lista[actual].sig].sig != cabeza)
-            actual = lista[actual].sig;
-        nodoBorrar = lista[actual].sig;
-        lista[actual].sig = cabeza;
+        Nodo *actual = cabeza;
+        // Se busca el nodo anterior al último
+        while(actual->sig->sig != cabeza)
+            actual = actual->sig;
+        Nodo *nodoBorrar = actual->sig;
+        actual->sig = cabeza;
+        free(nodoBorrar);
     }
-    lista[nodoBorrar].sig = libre;
-    libre = nodoBorrar;
 }
 
-// BORRAR ENTRE: Borra un nodo (que no sea el inicio) que contenga el valor especificado.
+// Borra un nodo intermedio de la lista circular (no se puede borrar el nodo del inicio)
 void borrarEntre(){
-    if (cabeza == -1){
-        printf("Error, lista vacia.\n");
+    if(cabeza == NULL){
+        printf("Error: Lista vacia.\n");
         return;
     }
     int valor;
-    printf("Ingrese el valor del nodo a borrar (no puede ser el inicio): ");
-    while (escaneoEntero(&valor) == 0);
+    printf("Ingrese el valor del nodo a borrar (no puede ser el nodo del inicio): ");
+    while(escaneoEntero(&valor) == 0);
 
-    // Si el nodo a borrar es el inicio, se indica que use la opción correspondiente.
-    if (lista[cabeza].dato == valor){
+    // Si el nodo a borrar es el nodo de inicio, se indica que use la opción correspondiente.
+    if(cabeza->dato == valor){
         printf("El nodo a borrar es el inicio. Use la opción de borrar nodo del inicio.\n");
         return;
     }
 
-    int anterior = cabeza;
-    int actual = lista[cabeza].sig;
-    // Recorre la lista hasta volver a la cabeza
-    while (actual != cabeza && lista[actual].dato != valor){
-        anterior = actual;
-        actual = lista[actual].sig;
+    Nodo *prev = cabeza;
+    Nodo *actual = cabeza->sig;
+    while(actual != cabeza && actual->dato != valor){
+        prev = actual;
+        actual = actual->sig;
     }
-    if (actual == cabeza){
-        printf("Nodo con valor %d no encontrado (o es el inicio).\n", valor);
+
+    if(actual == cabeza){
+        printf("Nodo con valor %d no encontrado.\n", valor);
         return;
     }
-    // Se elimina el nodo encontrado
-    lista[anterior].sig = lista[actual].sig;
-    // Se reincorpora el nodo borrado a la lista de libres
-    lista[actual].sig = libre;
-    libre = actual;
+
+    prev->sig = actual->sig;
+    free(actual);
     printf("Nodo con valor %d eliminado.\n", valor);
 }
 
-// Busca un elemento en la lista; retorna el índice del nodo (dentro del arreglo) o -1 si no se encuentra.
-int buscarElemento(int valorBuscado) {
-    if (cabeza == -1) return -1;
-    int actual = cabeza;
+// Busca un elemento en la lista y retorna su posición (1, 2, …) o -1 si no se encuentra.
+int buscarElemento(int valorBuscado){
+    if(cabeza == NULL)
+        return -1;
+    Nodo *actual = cabeza;
+    int posicion = 1;
     do {
-        if (lista[actual].dato == valorBuscado)
-            return actual;
-        actual = lista[actual].sig;
-    } while (actual != cabeza);
+        if(actual->dato == valorBuscado)
+            return posicion;
+        actual = actual->sig;
+        posicion++;
+    } while(actual != cabeza);
     return -1;
 }
 
 // Imprime la lista circular
 void imprimirLista(){
-    if (cabeza == -1){
+    if(cabeza == NULL){
         printf("Lista vacia.\n");
         return;
     }
-    int actual = cabeza;
+    Nodo *actual = cabeza;
     do {
-        printf("%d -> ", lista[actual].dato);
-        actual = lista[actual].sig;
-    } while (actual != cabeza);
+        printf("%d -> ", actual->dato);
+        actual = actual->sig;
+    } while(actual != cabeza);
     printf("(circular)\n");
 }
 
 // Menú interactivo
 void menu(){
-    int opcion, valor, anterior, encontrado;
+    int opcion, valor, referencia, pos;
     do {
         printf("\nMENU\n");
         printf("1. Insertar nodo al inicio\n");
         printf("2. Insertar nodo al final\n");
-        printf("3. Insertar nodo entre dos nodos\n");
+        printf("3. Insertar nodo entre dos nodos (por referencia)\n");
         printf("4. Borrar nodo del inicio\n");
         printf("5. Borrar nodo del final\n");
         printf("6. Borrar nodo entre dos nodos\n");
@@ -249,7 +225,7 @@ void menu(){
         printf("Seleccione una opcion: ");
         while (escaneoEntero(&opcion) == 0);
 
-        switch (opcion){
+        switch(opcion){
             case 1:
                 printf("Ingrese el valor a insertar al inicio: ");
                 while (escaneoEntero(&valor) == 0);
@@ -259,22 +235,22 @@ void menu(){
                 printf("Ingrese el valor a insertar al final: ");
                 while (escaneoEntero(&valor) == 0);
 <<<<<<< HEAD
-                insertaFinal(valor);
-=======
                 insertarFinal(valor);
+=======
+                insertaFinal(valor);
 >>>>>>> f525a29ab3a33f1cdfc3f6186e023a7bd7ce82b2
                 break;
             case 3:
                 printf("Ingrese el valor a insertar: ");
                 while (escaneoEntero(&valor) == 0);
 <<<<<<< HEAD
-                printf("Ingrese el valor del nodo anterior: ");
-                while (escaneoEntero(&anterior) == 0);
-                insertarEntre(valor, anterior);
-=======
                 printf("Ingrese el valor de referencia (despues del cual insertar): ");
                 while (escaneoEntero(&referencia) == 0);
                 insertarEntre(valor, referencia);
+=======
+                printf("Ingrese el valor del nodo anterior: ");
+                while (escaneoEntero(&anterior) == 0);
+                insertarEntre(valor, anterior);
 >>>>>>> f525a29ab3a33f1cdfc3f6186e023a7bd7ce82b2
                 break;
             case 4:
@@ -290,13 +266,13 @@ void menu(){
                 printf("Ingrese el valor a buscar: ");
                 while (escaneoEntero(&valor) == 0);
 <<<<<<< HEAD
-                encontrado = buscarElemento(valor);
-                if (encontrado != -1)
-                    printf("Elemento encontrado en la posicion (indice): %d\n", encontrado);
-=======
                 pos = buscarElemento(valor);
                 if(pos != -1)
                     printf("Elemento encontrado en la posicion: %d\n", pos);
+=======
+                encontrado = buscarElemento(valor);
+                if (encontrado != -1)
+                    printf("Elemento encontrado en la posicion (indice): %d\n", encontrado);
 >>>>>>> f525a29ab3a33f1cdfc3f6186e023a7bd7ce82b2
                 else
                     printf("Elemento no encontrado.\n");
@@ -311,11 +287,10 @@ void menu(){
                 printf("Opcion no valida.\n");
                 break;
         }
-    } while (opcion != 9);
+    } while(opcion != 9);
 }
 
 int main(){
-    inicializarLista();
     menu();
     return 0;
 }
