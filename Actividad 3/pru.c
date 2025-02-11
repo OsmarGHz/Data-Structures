@@ -67,9 +67,7 @@ void insertarFinal(int valor) {
     }
 }
 
-// Inserta un nodo entre dos nodos, es decir, después de un nodo cuyo valor es 'valorAnterior'.
-// Se requiere que el nodo "anterior" no sea el último, ya que se entiende que el nuevo nodo
-// debe quedar "entre" otros dos nodos.
+// Inserta un nodo entre dos nodos
 void insertarEntre(int valor, int valorAnterior) {
     Nodo *anteriorNodo = buscarElemento(valorAnterior);
     if (anteriorNodo == NULL) {
@@ -123,9 +121,7 @@ void borrarFinal() {
     actual->sig = NULL;
 }
 
-// Borra un nodo que se encuentre entre dos nodos (es decir, que no sea el primero ni el último)
-// dado su valor. Si el nodo a borrar es el primero o el último, se sugiere utilizar
-// las funciones borrarInicio o borrarFinal respectivamente.
+// Borra un nodo que se encuentre entre dos nodos 
 void borrarEntreNodo(int valor) {
     if (cabeza == NULL) {
         printf("Error: Lista vacia.\n");
@@ -167,12 +163,13 @@ void imprimirLista() {
     printf("ERROR: Lista vacia\n");
 }
 
-// Función que muestra el menú y gestiona la interacción con el usuario.
+// Función que muestra el menú 
 void menu() {
     int opcion;
     int valor, valorAnterior, pos;
     Nodo *encontrado;
-    
+    char input[100];  // Buffer para leer la opción ingresada
+
     do {
         printf("\n MENU \n");
         printf("1. Insertar nodo al inicio\n");
@@ -185,8 +182,16 @@ void menu() {
         printf("8. Borrar nodo entre dos nodos\n");
         printf("9. Salir\n");
         printf("SELECCIONE UNA OPCION: ");
-        scanf("%d", &opcion);
-        
+
+        // Se lee la línea completa y se intenta convertirla a entero
+        if (fgets(input, sizeof(input), stdin) != NULL) {
+            if (sscanf(input, "%d", &opcion) != 1) {
+                opcion = -1;  // Si no se pudo leer un entero, se asigna un valor inválido
+            }
+        } else {
+            opcion = -1;
+        }
+
         switch (opcion) {
             case 1:
                 printf("Ingrese el valor a insertar al inicio: ");
@@ -232,7 +237,7 @@ void menu() {
                 printf("Saliendo del programa.\n");
                 break;
             default:
-                printf("Opción no válida.\n");
+                printf("Opcion no valida.\n");
                 break;
         }
     } while (opcion != 9);
