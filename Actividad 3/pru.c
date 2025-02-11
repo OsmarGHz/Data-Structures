@@ -9,6 +9,20 @@ typedef struct Nodo {
 
 Nodo *cabeza = NULL;  // Puntero al primer nodo de la lista.
 
+void limpiarBuffer(){
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+int escaneoEntero(int * variable){
+    if (scanf("%d", variable) != 1){
+        printf("Entrada invalida. Ingrese un numero: ");
+        limpiarBuffer();
+        return 0;
+    }
+    return 1;
+}
+
 // Función que busca un elemento en la lista. Devuelve el puntero al nodo encontrado o NULL.
 Nodo* buscarElemento(int valorBuscado) {
     Nodo *actual = cabeza;
@@ -195,19 +209,19 @@ void menu() {
         switch (opcion) {
             case 1:
                 printf("Ingrese el valor a insertar al inicio: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 insertarInicio(valor);
                 break;
             case 2:
                 printf("Ingrese el valor a insertar al final: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 insertarFinal(valor);
                 break;
             case 3:
                 printf("Ingrese el valor a insertar: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 printf("Ingrese el valor del nodo anterior (a la izquierda): ");
-                scanf("%d", &valorAnterior);
+                while (escaneoEntero(&valorAnterior) == 0);
                 insertarEntre(valor, valorAnterior);
                 break;
             case 4:
@@ -218,7 +232,7 @@ void menu() {
                 break;
             case 6:
                 printf("Ingrese el valor a buscar: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 pos = buscar(valor);
                 if (pos != -1)
                     printf("Elemento %d encontrado en la posicion %d.\n", valor, pos);
@@ -230,7 +244,7 @@ void menu() {
                 break;
             case 8:
                 printf("Ingrese el valor del nodo a borrar (entre dos nodos): ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 borrarEntreNodo(valor);
                 break;
             case 9:

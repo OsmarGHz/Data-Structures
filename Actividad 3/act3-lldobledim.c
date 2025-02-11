@@ -12,6 +12,20 @@ typedef struct Nodo {
 Nodo* cabeza = NULL;
 Nodo* cola = NULL;
 
+void limpiarBuffer(){
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+int escaneoEntero(int * variable){
+    if (scanf("%d", variable) != 1){
+        printf("Entrada invalida. Ingrese un numero: ");
+        limpiarBuffer();
+        return 0;
+    }
+    return 1;
+}
+
 // -------------------------------------------------------------------
 // Inserta un nodo al inicio de la lista
 void insertaInicio(int valor) {
@@ -262,19 +276,19 @@ void menu() {
         printf("9. Imprimir lista\n");
         printf("10. Salir\n");
         printf("Seleccione una opción: ");
-        scanf("%d", &opcion);
+        while (escaneoEntero(&opcion) == 0);
 
         int valor, pos, ref, metodo;
         Nodo* refNodo = NULL;
         switch(opcion) {
             case 1:
                 printf("Ingrese el valor a insertar al inicio: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 insertaInicio(valor);
                 break;
             case 2:
                 printf("Ingrese el valor a insertar al final: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 insertaFinal(valor);
                 break;
             case 3:
@@ -283,12 +297,12 @@ void menu() {
                 printf("1. Por valor del nodo de referencia\n");
                 printf("2. Por posición del nodo de referencia\n");
                 printf("Opción: ");
-                scanf("%d", &metodo);
+                while (escaneoEntero(&metodo) == 0);
                 printf("Ingrese el valor a insertar: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 if (metodo == 1) {
                     printf("Ingrese el valor del nodo de referencia (después del cual insertar): ");
-                    scanf("%d", &ref);
+                    while (escaneoEntero(&ref) == 0);
                     refNodo = buscarNodoPorValorDesdeCabeza(ref);
                     if (refNodo == NULL)
                         printf("Lo sentimos: Nodo de referencia no encontrado.\n");
@@ -296,7 +310,7 @@ void menu() {
                         insertarDespues(refNodo, valor);
                 } else if (metodo == 2) {
                     printf("Ingrese la posición del nodo de referencia (después del cual insertar): ");
-                    scanf("%d", &pos);
+                    while (escaneoEntero(&pos) == 0);
                     refNodo = buscarNodoPorPosicionDesdeCabeza(pos);
                     if (refNodo == NULL)
                         printf("Lo sentimos: No existe nodo en la posición %d.\n", pos);
@@ -314,7 +328,7 @@ void menu() {
                 break;
             case 6:
                 printf("Ingrese el valor del nodo a borrar: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 borrarNodo(valor);
                 break;
             case 7:
@@ -326,9 +340,9 @@ void menu() {
                 printf("2. Desde la cola\n");
                 printf("Opción: ");
                 int desde;
-                scanf("%d", &desde);
+                while (escaneoEntero(&desde) == 0);
                 printf("Ingrese el valor a buscar: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 if (desde == 1) {
                     pos = buscarPosicionDesdeCabeza(valor);
                     if (pos == -1)

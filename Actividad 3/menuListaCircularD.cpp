@@ -8,6 +8,20 @@ typedef struct Nodo {
 
 Nodo *cabeza = NULL;  // Puntero al primer nodo de la lista
 
+void limpiarBuffer(){
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+int escaneoEntero(int * variable){
+    if (scanf("%d", variable) != 1){
+        printf("Entrada invalida. Ingrese un numero: ");
+        limpiarBuffer();
+        return 0;
+    }
+    return 1;
+}
+
 // Inserta un nodo al inicio de la lista circular
 void insertarInicio(int valor){
     Nodo *nuevo = (Nodo*) malloc(sizeof(Nodo));
@@ -164,24 +178,24 @@ void menu(){
         printf("7. Imprimir lista\n");
         printf("8. Salir\n");
         printf("Seleccione una opcion: ");
-        scanf("%d", &opcion);
+        while (escaneoEntero(&opcion) == 0);
 
         switch(opcion){
             case 1:
                 printf("Ingrese el valor a insertar al inicio: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 insertarInicio(valor);
                 break;
             case 2:
                 printf("Ingrese el valor a insertar al final: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 insertarFinal(valor);
                 break;
             case 3:
                 printf("Ingrese el valor a insertar: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 printf("Ingrese el valor de referencia (despues del cual insertar): ");
-                scanf("%d", &referencia);
+                while (escaneoEntero(&referencia) == 0);
                 insertarEntre(valor, referencia);
                 break;
             case 4:
@@ -192,7 +206,7 @@ void menu(){
                 break;
             case 6:
                 printf("Ingrese el valor a buscar: ");
-                scanf("%d", &valor);
+                while (escaneoEntero(&valor) == 0);
                 pos = buscarElemento(valor);
                 if(pos != -1)
                     printf("Elemento encontrado en la posicion: %d\n", pos);
