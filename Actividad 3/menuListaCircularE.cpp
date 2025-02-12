@@ -34,20 +34,6 @@ void inicializarLista(){
     libre = 0;
 }
 
-void limpiarBuffer(){
-    char c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
-
-int escaneoEntero(int * variable){
-    if (scanf("%d", variable) != 1){
-        printf("Entrada invalida. Ingrese un numero: ");
-        limpiarBuffer();
-        return 0;
-    }
-    return 1;
-}
-
 // Inserta un nodo al inicio de la lista circular
 void insertarInicio(int valor){
     if (libre == -1){
@@ -258,24 +244,14 @@ void menu(){
             case 2:
                 printf("Ingrese el valor a insertar al final: ");
                 while (escaneoEntero(&valor) == 0);
-<<<<<<< HEAD
                 insertaFinal(valor);
-=======
-                insertarFinal(valor);
->>>>>>> f525a29ab3a33f1cdfc3f6186e023a7bd7ce82b2
                 break;
             case 3:
                 printf("Ingrese el valor a insertar: ");
                 while (escaneoEntero(&valor) == 0);
-<<<<<<< HEAD
                 printf("Ingrese el valor del nodo anterior: ");
                 while (escaneoEntero(&anterior) == 0);
                 insertarEntre(valor, anterior);
-=======
-                printf("Ingrese el valor de referencia (despues del cual insertar): ");
-                while (escaneoEntero(&referencia) == 0);
-                insertarEntre(valor, referencia);
->>>>>>> f525a29ab3a33f1cdfc3f6186e023a7bd7ce82b2
                 break;
             case 4:
                 borrarInicio();
@@ -289,15 +265,9 @@ void menu(){
             case 7:
                 printf("Ingrese el valor a buscar: ");
                 while (escaneoEntero(&valor) == 0);
-<<<<<<< HEAD
                 encontrado = buscarElemento(valor);
                 if (encontrado != -1)
                     printf("Elemento encontrado en la posicion (indice): %d\n", encontrado);
-=======
-                pos = buscarElemento(valor);
-                if(pos != -1)
-                    printf("Elemento encontrado en la posicion: %d\n", pos);
->>>>>>> f525a29ab3a33f1cdfc3f6186e023a7bd7ce82b2
                 else
                     printf("Elemento no encontrado.\n");
                 break;
