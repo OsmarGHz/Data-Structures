@@ -9,20 +9,6 @@ typedef struct Nodo {
 
 Nodo *cabeza = NULL;  // Puntero al primer nodo de la lista.
 
-void limpiarBuffer(){
-    char c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
-
-int escaneoEntero(int * variable){
-    if (scanf("%d", variable) != 1){
-        printf("Entrada invalida. Ingrese un numero: ");
-        limpiarBuffer();
-        return 0;
-    }
-    return 1;
-}
-
 // Función que busca un elemento en la lista. Devuelve el puntero al nodo encontrado o NULL.
 Nodo* buscarElemento(int valorBuscado) {
     Nodo *actual = cabeza;
@@ -81,7 +67,9 @@ void insertarFinal(int valor) {
     }
 }
 
-// Inserta un nodo entre dos nodos
+// Inserta un nodo entre dos nodos, es decir, después de un nodo cuyo valor es 'valorAnterior'.
+// Se requiere que el nodo "anterior" no sea el último, ya que se entiende que el nuevo nodo
+// debe quedar "entre" otros dos nodos.
 void insertarEntre(int valor, int valorAnterior) {
     Nodo *anteriorNodo = buscarElemento(valorAnterior);
     if (anteriorNodo == NULL) {
@@ -135,7 +123,9 @@ void borrarFinal() {
     actual->sig = NULL;
 }
 
-// Borra un nodo que se encuentre entre dos nodos 
+// Borra un nodo que se encuentre entre dos nodos (es decir, que no sea el primero ni el último)
+// dado su valor. Si el nodo a borrar es el primero o el último, se sugiere utilizar
+// las funciones borrarInicio o borrarFinal respectivamente.
 void borrarEntreNodo(int valor) {
     if (cabeza == NULL) {
         printf("Error: Lista vacia.\n");
@@ -177,7 +167,9 @@ void imprimirLista() {
     printf("ERROR: Lista vacia\n");
 }
 
-// Función que muestra el menú 
+
+
+// Función que muestra el menú y gestiona la interacción con el usuario.
 void menu() {
     int opcion;
     int valor, valorAnterior, pos;
@@ -196,24 +188,32 @@ void menu() {
         printf("8. Borrar nodo entre dos nodos\n");
         printf("9. Salir\n");
         printf("SELECCIONE UNA OPCION: ");
-        while (escaneoEntero(&opcion) == 0);
+
+        // Se lee la línea completa y se intenta convertirla a entero
+        if (fgets(input, sizeof(input), stdin) != NULL) {
+            if (sscanf(input, "%d", &opcion) != 1) {
+                opcion = -1;  // Si no se pudo leer un entero, se asigna un valor inválido
+            }
+        } else {
+            opcion = -1;
+        }
 
         switch (opcion) {
             case 1:
                 printf("Ingrese el valor a insertar al inicio: ");
-                while (escaneoEntero(&valor) == 0);
+                scanf("%d", &valor);
                 insertarInicio(valor);
                 break;
             case 2:
                 printf("Ingrese el valor a insertar al final: ");
-                while (escaneoEntero(&valor) == 0);
+                scanf("%d", &valor);
                 insertarFinal(valor);
                 break;
             case 3:
                 printf("Ingrese el valor a insertar: ");
-                while (escaneoEntero(&valor) == 0);
+                scanf("%d", &valor);
                 printf("Ingrese el valor del nodo anterior (a la izquierda): ");
-                while (escaneoEntero(&valorAnterior) == 0);
+                scanf("%d", &valorAnterior);
                 insertarEntre(valor, valorAnterior);
                 break;
             case 4:
@@ -224,7 +224,7 @@ void menu() {
                 break;
             case 6:
                 printf("Ingrese el valor a buscar: ");
-                while (escaneoEntero(&valor) == 0);
+                scanf("%d", &valor);
                 pos = buscar(valor);
                 if (pos != -1)
                     printf("Elemento %d encontrado en la posicion %d.\n", valor, pos);
@@ -236,7 +236,7 @@ void menu() {
                 break;
             case 8:
                 printf("Ingrese el valor del nodo a borrar (entre dos nodos): ");
-                while (escaneoEntero(&valor) == 0);
+                scanf("%d", &valor);
                 borrarEntreNodo(valor);
                 break;
             case 9:
