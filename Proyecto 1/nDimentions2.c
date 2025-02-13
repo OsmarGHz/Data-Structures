@@ -1,6 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//Limpiar buffer
+void limpiarBuffer(){
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+//Escaneo de enteros con validacion
+int escaneoEntero(int * variable){
+    if (scanf("%d", variable) != 1){
+        printf("Entrada invalida. Ingrese un numero: ");
+        limpiarBuffer();
+        return 0;
+    }
+    return 1;
+}
+
 /**
  * Calcula los coeficientes para el polinomio de direccionamiento.
  * Cada coeficiente corresponde al producto de los tamaños de las dimensiones posteriores.
@@ -14,7 +30,7 @@ void calcularCoeficientes(int n, int tDimension[], int limInf[], int coef[]) {
 }
 
 /**
- * Calcula la dirección de un elemento en un arreglo multidimensional usando:
+ * Calcula la dirección de un elemento en un arreglo multidimensional usando esta formula:
  *   dirección = baseDir + tElemento * Sumatoria[(k[i] - limInf[i]) * coef[i]]
  */
 int calcularDireccion(int n, int coef[], int limInf[], int k[], int baseDir, int tElemento) {
@@ -45,10 +61,10 @@ void mostrarPolinomio(int n, int coef[], int limInf[], int tElemento, int baseDi
 void ingresarCoordenadas(int n, int tDimension[], int k[], int desic) {
     int temp;
     printf("\nIngrese las coordenadas del elemento a buscar, separadas por un espacio");
-    printf(" (cada coordenada inicia en %d):\n", desic ? 1 : 0);
+    printf(" (cada coordenada inicia en %d): \n", desic ? 1 : 0);
     
     for (int i = 0; i < n; ) {
-        scanf("%d", &temp);
+        while (escaneoEntero(&temp) == 0);
         if (desic) 
             temp--;  // Ajusta a índice base 0 si es necesario
         if (temp >= 0 && temp < tDimension[i]) {
@@ -64,15 +80,15 @@ int main() {
     int n, baseDir, tElemento, desic;
     
     printf("Ingrese el número de dimensiones del arreglo: ");
-    scanf("%d", &n);
+    while (escaneoEntero(&n) == 0);
 
-    // Asignación dinámica de memoria para mayor robustez
+    // Asignación dinámica de memoria
     int tDimension[n];
     int limInf[n];
     int k[n];
     int coef[n];
 
-    if (!tDimension || !limInf || !k || !coef) {
+    if ( !tDimension || !limInf || !k || !coef ) {
         printf("Error al asignar memoria.\n");
         return 1;
     }
@@ -80,26 +96,26 @@ int main() {
     // Ingreso de tamaños de cada dimensión y asignación de límites inferiores (por defecto 0)
     for (int i = 0; i < n; i++) {
         printf("\nIngrese el tamaño de la dimensión %d: ", i + 1);
-        scanf("%d", &tDimension[i]);
-        limInf[i] = 0;  // Si lo deseas, puedes permitir al usuario ingresar el límite inferior
+        while (escaneoEntero(&tDimension[i]) == 0);
+        limInf[i] = 0;  // Se puede tambien ingresar el límite inferior
     }
     
     printf("\nIngrese la dirección base del arreglo: ");
-    scanf("%d", &baseDir);
+    while (escaneoEntero(&baseDir) == 0);
 
     printf("¿Desea ingresar coordenadas en lenguaje máquina (0) o en lenguaje humano (1)? ");
-    scanf("%d", &desic);
+    while (escaneoEntero(&desic) == 0);
 
-    // Ingreso de las coordenadas
+    // Aqui ingresamos las coordenadas
     ingresarCoordenadas(n, tDimension, k, desic);
 
     printf("\nIngrese el tamaño en bytes de cada elemento: ");
-    scanf("%d", &tElemento);
+    while (escaneoEntero(&tElemento) == 0);
 
-    // Cálculo de coeficientes para el polinomio de direccionamiento
+    // Calculamos coeficientes para el polinomio de direccionamiento
     calcularCoeficientes(n, tDimension, limInf, coef);
 
-    // Mostrar el polinomio de direccionamiento
+    // Mostramos el polinomio de direccionamiento
     mostrarPolinomio(n, coef, limInf, tElemento, baseDir);
 
     // Cálculo de la dirección
