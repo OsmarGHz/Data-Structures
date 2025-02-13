@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -31,8 +32,9 @@ typedef struct Historial{
 
 typedef struct Seguimiento{
     Persona persona;
-    struct Seguimiento* siguiente;  
-}Seguimiento;
+    struct Seguimiento* siguiente;
+    int resuelto;
+} Seguimiento;
 
 //Crear un nodo
 
@@ -50,6 +52,7 @@ Nodo* crearNodo(Persona persona){
     nuevoNodo->siguiente = NULL;
     return nuevoNodo;
 }
+
 
 Nodo* seleccionarPersona(Nodo* lista) {
     if (lista == NULL) {
@@ -77,12 +80,13 @@ Nodo* seleccionarPersona(Nodo* lista) {
     }
 
     if (temp == NULL) {
-        printf("Opción inválida.\n");
+        printf("Opcion inválida.\n");
         return NULL;
     }
 
     return temp;
 }
+
 
 void insertarUrgencia(Nodo** lista, Nodo* nuevoNodo){
     Nodo* actual = *lista;
@@ -102,6 +106,9 @@ void insertarUrgencia(Nodo** lista, Nodo* nuevoNodo){
     }
 }
 
+
+
+
 void generarTurno(char turno[], int* contadorTurnos){
     sprintf(turno, "%04d", (*contadorTurnos)++);
 }
@@ -119,31 +126,66 @@ void datosCliente(Persona persona){
     
 }
 
-void operacionNuevaPersona(int* contadorTurnos, Nodo** listaPersonas){
+
+void agregarSeguimiento(Seguimiento** cabeza, Persona persona) {
+    if (*cabeza != NULL) {
+        Seguimiento* temp = *cabeza;
+        do {
+            if (strcmp(temp->persona.Nombre, persona.Nombre) == 0) {
+                printf("La persona %s ya esta en seguimiento.\n", persona.Nombre);
+                return;  // Evita duplicados
+            }
+            temp = temp->siguiente;
+        } while (temp != *cabeza);
+    }
+
+    // Si no está duplicado, agregarlo
+    Seguimiento* nuevoSeguimiento = (Seguimiento*)malloc(sizeof(Seguimiento));
+    if (nuevoSeguimiento == NULL) {
+        printf("Error: No se pudo asignar memoria para seguimiento.\n");
+        return;
+    }
+
+    nuevoSeguimiento->persona = persona;
+    nuevoSeguimiento->resuelto = 0;  // Caso pendiente
+
+    if (*cabeza == NULL) {
+        *cabeza = nuevoSeguimiento;
+        nuevoSeguimiento->siguiente = nuevoSeguimiento;
+    } else {
+        Seguimiento* temp = *cabeza;
+        while (temp->siguiente != *cabeza) {
+            temp = temp->siguiente;
+        }
+        temp->siguiente = nuevoSeguimiento;
+        nuevoSeguimiento->siguiente = *cabeza;
+    }
+
+    printf("Se agrego a seguimiento: %s\n", persona.Nombre);
+}
+
+
+void operacionNuevaPersona(int* contadorTurnos, Nodo** listaPersonas, Seguimiento** seguimiento){
     Persona nuevaPersona;
     generarTurno(nuevaPersona.turno, contadorTurnos);
 
     printf("\nIngrese su nombre:");
-    scanf(" %[^\n]", nuevaPersona.Nombre);
+    scanf(" %49[^\n]", nuevaPersona.Nombre);
 
     printf("\nIngrese su nacionalidad:");
-    scanf(" %[^\n]", nuevaPersona.Nacionalidad);
+    scanf(" %49[^\n]", nuevaPersona.Nacionalidad);
 
     printf("\nIngrese su motivo de desplazamiento:");
-    scanf(" %[^\n]", nuevaPersona.Motivo);
+    scanf(" %49[^\n]", nuevaPersona.Motivo);
 
     do{
-  
-        printf("\nIngrese el grado de urgencia:\n1. Urgente.\n2. Regular.");
+        printf("\nIngrese el grado de urgencia:\n1. Urgente.\n2. Regular.\n");
         scanf("%d", &nuevaPersona.Urgencia);
         
         if (nuevaPersona.Urgencia < 1 || nuevaPersona.Urgencia > 2){
-            printf("\n- - - - - - - - - - - - - - - - - - - - - - - -");
-            printf("\nNumero de urgencia inexistente. Intente de nuevo");
-            printf("\n- - - - - - - - - - - - - - - - - - - - - - - -\n");
-
+            printf("\nNumero de urgencia inexistente. Intente de nuevo\n");
         }
-    }while (nuevaPersona.Urgencia < 1 || nuevaPersona.Urgencia > 2);
+    } while (nuevaPersona.Urgencia < 1 || nuevaPersona.Urgencia > 2);
 
     Nodo* nuevoNodo = crearNodo(nuevaPersona);
     if(nuevoNodo == NULL){
@@ -151,36 +193,11 @@ void operacionNuevaPersona(int* contadorTurnos, Nodo** listaPersonas){
         return;
     }
 
-    insertarUrgencia(listaPersonas, crearNodo(nuevaPersona));
+    insertarUrgencia(listaPersonas, nuevoNodo);
+    agregarSeguimiento(seguimiento, nuevaPersona); // Agregar automáticamente al seguimiento
     datosCliente(nuevaPersona);
 }
 
-void liberarLista(Nodo* lista) {
-    Nodo* temp;
-    while (lista != NULL) {
-        temp = lista;
-        lista = lista->siguiente;
-        free(temp);
-    }
-}
-
-void mostrarFila(Nodo* cola) {
-    printf("- - - - - - - - - - - - - - - - - - -\n");
-    printf("Persona en la cola de prioridades:\n");
-    printf("- - - - - - - - - - - - - - - - - - -\n");
-    Nodo* temp = cola;
-    if (cola == NULL)
-    {
-        printf("\t* No hay personas en la fila *");
-    }
-    
-    while (temp != NULL) {
-        printf("--------------------------------------------\n");
-        printf("Identificador: %s - Urgencia: %d - Nombre: %s - Nacionalidad: %s - Motivo de desplazamiento: %s\n",
-               temp->persona.turno, temp->persona.Urgencia, temp->persona.Nombre, temp->persona.Nacionalidad, temp->persona.Motivo);
-        temp = temp->siguiente;
-    }
-}
 
 void agregarRecurso(Recurso** lista, char nombre[], int cantidad){
     Recurso* nuevoRecurso = (Recurso*)malloc(sizeof(Recurso));
@@ -189,6 +206,7 @@ void agregarRecurso(Recurso** lista, char nombre[], int cantidad){
     nuevoRecurso ->siguiente = *lista;
     *lista = nuevoRecurso;
 }
+
 
 void mostrarRecursos(Recurso* lista){
     printf("\n-Recursos disponibles-\n");
@@ -199,7 +217,7 @@ void mostrarRecursos(Recurso* lista){
     }
 }
 
-void asignarRecurso(Nodo** listaPersonas, Recurso** listaRecursos, Historial** historial) {
+void asignarRecurso(Nodo** listaPersonas, Recurso** listaRecursos, Historial** historial, Seguimiento** seguimiento) {
     if (*listaPersonas == NULL) {
         printf("No hay clientes para asignar recursos.\n");
         return;
@@ -240,12 +258,119 @@ void asignarRecurso(Nodo** listaPersonas, Recurso** listaRecursos, Historial** h
             }
 
             *historial = nuevoHistorial;
+
+            agregarSeguimiento(seguimiento, personaSeleccionada->persona);
+
             return;
         }
         temp = temp->siguiente;
     }
 
     printf("Recurso no encontrado o sin disponibilidad.\n");
+
+    agregarSeguimiento(seguimiento, personaSeleccionada->persona);
+}
+
+
+
+void darSeguimiento(Seguimiento** cabeza) {
+    if (*cabeza == NULL) {
+        printf("No hay casos en seguimiento.\n");
+        return;
+    }
+
+    Seguimiento* temp = *cabeza;
+    Seguimiento* anterior = NULL;
+    do {
+        printf("\nSeguimiento de: %s (Turno: %s)\n", temp->persona.Nombre, temp->persona.turno);
+        printf("Estado: %s\n", temp->resuelto ? "Resuelto" : "Pendiente");
+        printf("\nMarcar como resuelto? (1: Si, 0: No): ");
+        int opcion;
+        scanf("%d", &opcion);
+
+        if (opcion == 1) {
+            temp->resuelto = 1;
+            printf("Caso de %s marcado como resuelto.\n", temp->persona.Nombre);
+        }
+
+        printf("Eliminar de seguimiento? (1: Si, 0: No): ");
+        int eliminar;
+        scanf("%d", &eliminar);
+
+        if (eliminar == 1) {
+            printf("Eliminando caso de %s...\n", temp->persona.Nombre);
+            if (temp == *cabeza && temp->siguiente == *cabeza) {
+                free(temp);
+                *cabeza = NULL;
+                return;
+            } else {
+                Seguimiento* ultimo = *cabeza;
+                while (ultimo->siguiente != *cabeza) {
+                    ultimo = ultimo->siguiente;
+                }
+
+                if (temp == *cabeza) {
+                    *cabeza = temp->siguiente;
+                    ultimo->siguiente = *cabeza;
+                } else {
+                    anterior->siguiente = temp->siguiente;
+                }
+
+                free(temp);
+                return;
+            }
+        }
+
+        anterior = temp;
+        temp = temp->siguiente;
+    } while (temp != *cabeza);
+}
+
+void marcarCasoResuelto(Seguimiento** cabeza, char turno[]) {
+    if (*cabeza == NULL) {
+        printf("No hay casos de seguimiento.");
+        return;
+    }
+
+    Seguimiento* temp = *cabeza;
+    do {
+        if (strcmp(temp->persona.turno, turno) == 0) {
+            temp->resuelto = 1;
+            printf("Caso marcado como resuelto: %s\n", temp->persona.Nombre);
+            return;
+        }
+        temp = temp->siguiente;
+    } while (temp != *cabeza);
+    
+    printf("Caso no encontrado.\n");
+}
+
+void liberarLista(Nodo* lista) {
+    Nodo* temp;
+    while (lista != NULL) {
+        temp = lista;
+        lista = lista->siguiente;
+        free(temp);
+    }
+}
+
+
+void mostrarFila(Nodo* cola) {
+    printf("- - - - - - - - - - - - - - - - - - -\n");
+    printf("Persona en la cola de prioridades:\n");
+    printf("- - - - - - - - - - - - - - - - - - -\n");
+    Nodo* temp = cola;
+    if (cola == NULL)
+    {
+        printf("\t* No hay personas en la fila *");
+    }
+    
+    while (temp != NULL) {
+        printf("--------------------------------------------\n");
+        printf("Identificador: %s - Urgencia: %d - Nombre: %s - Nacionalidad: %s - Motivo de desplazamiento: %s\n",
+               temp->persona.turno, temp->persona.Urgencia, temp->persona.Nombre, temp->persona.Nacionalidad, temp->persona.Motivo);
+        temp = temp->siguiente;
+    }
 }
 
 
@@ -258,76 +383,48 @@ void mostrarHistorial(Historial* historial){
     }
 }
 
-void agregarSeguimiento(Seguimiento** cabeza, Persona persona){
-    Seguimiento* nuevoSeguimiento = (Seguimiento*)malloc(sizeof(Seguimiento));
-    nuevoSeguimiento->persona = persona;
 
-    if(*cabeza == NULL){
-        nuevoSeguimiento->siguiente = nuevoSeguimiento;
-        *cabeza = nuevoSeguimiento;
-    } else {
-        Seguimiento* temp = *cabeza;
-        while (temp->siguiente != *cabeza){
-            temp = temp -> siguiente;
-        }
-        temp->siguiente = nuevoSeguimiento;
-        nuevoSeguimiento->siguiente = *cabeza;
-    }
-}
-
-void mostrarSeguimiento(Seguimiento* cabeza){
-    if(cabeza == NULL){
-        printf("No hay casos de seguimiento");
-        return;
-    }
-
-    Seguimiento* temp = cabeza;
-    printf("--Casos de seguimiento--\n");
-    do{
-        printf("Identificador: %s - Nombre: %s\n", temp->persona.turno, temp->persona.Nombre);
-        temp = temp->siguiente;    
-    }while(temp != cabeza);
-}
-
-void generarReporte(Nodo* listaClientes, Recurso* listaRecurso, Historial* historial, Seguimiento* seguimiento){
+void generarReporte(Nodo* listaClientes, Recurso* listaRecurso, Historial* historial, Seguimiento* seguimiento) {
     printf("\n--- Reporte semanal ---\n");
 
-    //Atendidos
-    printf("-Personas Atendidas-\n");
+    // Atendidos
+    printf("- Personas Atendidas -\n");
     Nodo* temp = listaClientes;
-    while(temp != NULL){
+    while (temp != NULL) {
         printf("- %s (Turno: %s)\n", temp->persona.Nombre, temp->persona.turno);
         temp = temp->siguiente;
     }
 
-    //Recursos
-    printf("\n-Recursos Disponibles-\n");
+    // Recursos
+    printf("\n- Recursos Disponibles -\n");
     Recurso* tempRecursos = listaRecurso;
-    while (tempRecursos != NULL){
-        printf("- %s\n", tempRecursos->nombre);
+    while (tempRecursos != NULL) {
+        printf("- %s: %d disponibles\n", tempRecursos->nombre, tempRecursos->cantidad);
         tempRecursos = tempRecursos->siguiente;
     }
 
-    //Historial
-    printf("-Historial de asignaciones-\n");
+    // Historial
+    printf("\n- Historial de asignaciones -\n");
     Historial* tempHistorial = historial;
-    while(tempHistorial != NULL){
+    while (tempHistorial != NULL) {
         printf("- %s: %s\n", tempHistorial->persona.Nombre, tempHistorial->recurso);
         tempHistorial = tempHistorial->siguiente;
     }
 
-    //Seguimiento
-    printf("-Historial de asignaciones-\n");
-    if(seguimiento == NULL){
-        printf("No hay casos en seguimiento");
-    } else{
+    // Seguimiento
+    printf("\n- Casos de Seguimiento -\n");
+    if (seguimiento == NULL) {
+        printf("No hay casos en seguimiento\n");
+    } else {
         Seguimiento* tempSeguimiento = seguimiento;
-        do{
-            printf("- %s (turno:%s)\n", tempSeguimiento->persona.Nombre, tempSeguimiento->persona.turno);
+        do {
+            printf("- %s (Turno: %s) - %s\n", tempSeguimiento->persona.Nombre, tempSeguimiento->persona.turno,
+                   tempSeguimiento->resuelto ? "Resuelto" : "Pendiente");
             tempSeguimiento = tempSeguimiento->siguiente;
-        }while(tempSeguimiento != seguimiento);
+        } while (tempSeguimiento != seguimiento);
     }
 }
+
 
 void liberarRecursos(Recurso* lista) {
     Recurso* temp;
@@ -348,22 +445,23 @@ void liberarHistorial(Historial* lista) {
 }
 
 void liberarSeguimiento(Seguimiento* lista) {
-    if (lista == NULL);
-        Seguimiento* temp = lista;
-        do{
-            Seguimiento* siguiente = temp->siguiente;
-            free(temp);
-            temp = siguiente;
-        }while (temp != lista);
+    if (lista == NULL) return;
+    Seguimiento* temp = lista;
+    do {
+        Seguimiento* siguiente = temp->siguiente;
+        free(temp);
+        temp = siguiente;
+    } while (temp != lista);
 }
 
-void menuCiclado(int* contadorTurnos, Nodo** listaPersonas, Recurso** listaRecursos, Historial** historial, Seguimiento** seguimiento){
+
+void menuCiclado(int* contadorTurnos, Nodo** listaPersonas, Recurso** listaRecursos, Historial** historial, Seguimiento** seguimiento) {
     int opcion;
 
     do {
         printf("\n........................\n");
         printf("\n\tMENU\nOpciones disponibles:\n");
-        printf("1. Nuevo cliente\n2. Visualizar Lista\n3. Asignar Recurso\n4. Ver Historial\n5. Generar Reporte\n6. Salir\n");
+        printf("1. Nuevo cliente\n2. Visualizar Lista\n3. Asignar Recurso\n4. Ver Historial\n5. Generar Reporte\n6. Dar Seguimiento\n7. Salir\n");
         printf("\n........................\n");
         printf("\nIngrese el numero de opcion deseado: ");
         scanf("%d", &opcion);
@@ -372,15 +470,13 @@ void menuCiclado(int* contadorTurnos, Nodo** listaPersonas, Recurso** listaRecur
 
         switch (opcion) {
             case 1:
-                //Crear Nuevo Cliente
-                operacionNuevaPersona(contadorTurnos, listaPersonas);
+                operacionNuevaPersona(contadorTurnos, listaPersonas, seguimiento);
                 break;
             case 2:
-                // Ver lista 
-                mostrarFila(*listaPersonas);                
+                mostrarFila(*listaPersonas);
                 break;
             case 3:
-                asignarRecurso(listaPersonas, listaRecursos, historial);
+                asignarRecurso(listaPersonas, listaRecursos, historial,seguimiento);
                 break;
             case 4:
                 mostrarHistorial(*historial);
@@ -389,12 +485,15 @@ void menuCiclado(int* contadorTurnos, Nodo** listaPersonas, Recurso** listaRecur
                 generarReporte(*listaPersonas, *listaRecursos, *historial, *seguimiento);
                 break;
             case 6:
+                darSeguimiento(seguimiento);
+                break;
+            case 7:
                 break;
             default:
-                printf("Opcion no valida");
+                printf("Opcion no valida\n");
                 break;
         }
-    } while (opcion != 6);
+    } while (opcion != 7);
 }
 
 int main(){
