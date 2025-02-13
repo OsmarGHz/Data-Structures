@@ -94,7 +94,7 @@ void insertarUrgencia(Nodo** lista, Nodo* nuevoNodo){
     }
 
     if (anterior == NULL){
-        nuevoNodo->siguiente == *lista;
+        nuevoNodo->siguiente = *lista;
         *lista = nuevoNodo;
     } else {
         nuevoNodo -> siguiente = actual;
