@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_NODOS 100  // Número máximo de nodos
+#define MAX_NODOS 100  // Nï¿½mero mï¿½ximo de nodos
 
 // ===================== Pila  =====================
 
@@ -35,7 +35,7 @@ void apilar(Pila* pila, int valor) {
 
 // Elimina y retorna el elemento en el tope de la pila
 int desapilar(Pila* pila) {
-    if (pila->tope == NULL) { // Si la pila está vacía
+    if (pila->tope == NULL) { // Si la pila estï¿½ vacï¿½a
         return -1;
     }
     NodoPila* temp = pila->tope;
@@ -45,7 +45,7 @@ int desapilar(Pila* pila) {
     return valor;
 }
 
-// Retorna 1 si la pila está vacía, 0 si no
+// Retorna 1 si la pila estï¿½ vacï¿½a, 0 si no
 int estaVacia(Pila* pila) {
     return pila->tope == NULL;
 }
@@ -68,15 +68,15 @@ typedef struct Nodo {
 
 // Estructura del grafo usando lista de adyacencia
 typedef struct Grafo {
-    int numVertices;  // número de vértices que tendrá la gráfica
-    Nodo* listasAdyacencia[MAX_NODOS];  // lista de adyacencia para cada vértice
+    int numVertices;  // nï¿½mero de vï¿½rtices que tendrï¿½ la grï¿½fica
+    Nodo* listasAdyacencia[MAX_NODOS];  // lista de adyacencia para cada vï¿½rtice
     int visitado[MAX_NODOS];  // bandera para nodos visitados
 } Grafo;
 
 // Crea un nuevo grafo
 Grafo* crearGrafo(int vertices) {
     Grafo* grafo = (Grafo*)malloc(sizeof(Grafo)); // reserva memoria para el grafo
-    grafo->numVertices = vertices; // asigna el número de vértices
+    grafo->numVertices = vertices; // asigna el nï¿½mero de vï¿½rtices
     for (int i = 0; i < vertices; i++) {
         grafo->listasAdyacencia[i] = NULL; //inicializa listas de adyacencia a null
         grafo->visitado[i] = 0; // inicializa todos como no visitados
@@ -87,7 +87,7 @@ Grafo* crearGrafo(int vertices) {
 // Crea un nuevo nodo para la lista de adyacencia
 Nodo* crearNodo(int vertice) {
     Nodo* nuevoNodo = (Nodo*)malloc(sizeof(Nodo)); // reserva espacio en memoria
-    nuevoNodo->vertice = vertice; // asigna el vértice al nodo
+    nuevoNodo->vertice = vertice; // asigna el vï¿½rtice al nodo
     nuevoNodo->siguiente = NULL;  // el nuevo nodo apunta a NULL
     return nuevoNodo;
 }
@@ -144,27 +144,27 @@ void eliminarArista(Grafo* grafo, int origen, int destino) {
         anterior = actual;
         actual = actual->siguiente;
     }
-    //Si actual no es NULL después del ciclo, significa que se
-    //encontró un nodo cuyo valor (vertice) es igual a destino.
+    //Si actual no es NULL despuï¿½s del ciclo, significa que se
+    //encontrï¿½ un nodo cuyo valor (vertice) es igual a destino.
     if (actual != NULL) {
         if (anterior == NULL) { //Esto significa que el nodo a eliminar es el primero de la lista (la cabeza).
             //Se actualiza la cabeza de la lista de adyacencia de origen
             //para que apunte al siguiente nodo (actual->siguiente).
             grafo->listasAdyacencia[origen] = actual->siguiente;
-        } else { //El nodo a eliminar está en algún lugar del medio o al final de la lista.
+        } else { //El nodo a eliminar estï¿½ en algï¿½n lugar del medio o al final de la lista.
 
             //Se actualiza el enlace del nodo anterior (anterior->siguiente) para que "salte" el
-            //nodo que se va a eliminar, enlazándose directamente con el siguiente de actual.
+            //nodo que se va a eliminar, enlazï¿½ndose directamente con el siguiente de actual.
             anterior->siguiente = actual->siguiente;
         }
         //Se libera la memoria asignada al nodo eliminado
         free(actual);
         printf("Arista eliminada de %d a %d.\n", origen, destino);
     } else {
-        printf("No se encontró la arista de %d a %d.\n", origen, destino);
+        printf("No se encontrï¿½ la arista de %d a %d.\n", origen, destino);
     }
 
-    // Eliminar de la lista de 'destino', misma lógica
+    // Eliminar de la lista de 'destino', misma lï¿½gica
     actual = grafo->listasAdyacencia[destino];
     anterior = NULL;
     while (actual != NULL && actual->vertice != origen) {
@@ -204,7 +204,7 @@ void reiniciarVisitado(Grafo* grafo) {
     }
 }
 
-// Búsqueda en profundidad (DFS) iterativa usando la pila dinámica
+// Bï¿½squeda en profundidad (DFS) iterativa usando la pila dinï¿½mica
 void DFS_Iterativo(Grafo* grafo, int verticeInicio) {
     Pila* pila = crearPila();
     apilar(pila, verticeInicio);
@@ -230,8 +230,8 @@ void DFS_Iterativo(Grafo* grafo, int verticeInicio) {
             if (!grafo->visitado[temp->vertice]) {
                 /*
                 si el vertice guardado en el nodo en turno de la lista de adyacencia
-                del vertice actual no está marcado como visitado, entonces será agregado
-                a la pila, es decir, aquí se agregan a la pila los vértices adyacentes
+                del vertice actual no estï¿½ marcado como visitado, entonces serï¿½ agregado
+                a la pila, es decir, aquï¿½ se agregan a la pila los vï¿½rtices adyacentes
                 del vertice actual
                 */
                 apilar(pila, temp->vertice);
@@ -241,18 +241,18 @@ void DFS_Iterativo(Grafo* grafo, int verticeInicio) {
         }
         /*
         terminados de ser agregados a la pila los vertices adyacentes
-        del vertice actual entonces se regresará a verificar si la pila
-        esta vacía, si no lo está entonces se hará de nuevo todo el proceso
-        anterior con el detalle de que ya habrá nodos marcados como visitados
-        y por tanto ya no serán agregados a la pila. De esta forma al llegar
-        a un vértice que ya no tiene vértices adyacentes se hará un "retorno"
-        hasta encontrar otro vértice si tiene adyacentes (si es que lo hay).
+        del vertice actual entonces se regresara a verificar si la pila
+        esta vacia, si no lo esta entonces se hara de nuevo todo el proceso
+        anterior con el detalle de que ya habra nodos marcados como visitados
+        y por tanto ya no seran agregados a la pila. De esta forma al llegar
+        a un vertice que ya no tiene vertices adyacentes se hara un "retorno"
+        hasta encontrar otro vertice si tiene adyacentes (si es que lo hay).
         */
     }
     liberarPila(pila);
 }
 
-// Función para obtener un número válido del usuario
+// Funcion para obtener un numero vï¿½lido del usuario
 int obtenerNumero(const char *mensaje) {
     char entrada[100]; // Buffer para almacenar la entrada del usuario
     int valido, i;
@@ -260,7 +260,7 @@ int obtenerNumero(const char *mensaje) {
     do {
         printf("%s", mensaje);  // Muestra el mensaje
         scanf("%s", entrada);   //lee la entrada
-        // Verificar si toda la entrada contiene solo dígitos
+        // Verificar si toda la entrada contiene solo dï¿½gitos
         valido = 1;
         for (i = 0; i < strlen(entrada); i++) {
             if (!isdigit(entrada[i])) {
@@ -277,7 +277,7 @@ int obtenerNumero(const char *mensaje) {
     return atoi(entrada); // Convertir la entrada a entero
 }
 
-// ===================== Menú Principal =====================
+// ===================== Menï¿½ Principal =====================
 
 int main() {
     int opcion;

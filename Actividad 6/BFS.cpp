@@ -153,6 +153,18 @@ void mostrarListaAdyacencia(Grafo * grafo) {
     }
 }
 
+int existeArista(Grafo * grafo, int origen, int destino){
+    Nodo * temp = grafo -> listasAdyacencia[origen];
+    while (temp){
+        if(temp -> vertice == destino){
+            printf("\nYa hay una conexion entre %d y %d\n", origen, destino);
+            return 1;
+        }
+        temp = temp -> siguiente;
+    }
+    return 0;
+}
+
 void eliminarArista(Grafo * grafo, int origen, int destino) {
     Nodo * actual, * anterior;
     // Eliminar de la lista de 'origen' el nodo que tenga 'destino'
@@ -280,6 +292,7 @@ int main() {
                 if (origen < 0 || origen >= grafo -> numVertices || destino < 0 || destino >= grafo -> numVertices) {
                     printf("Vertice invalido.\n");
                 } else {
+                    if (existeArista(grafo, origen, destino) == 1){ break;}
                     agregarArista(grafo, origen, destino);
                     printf("Arista agregada entre %d y %d.\n", origen, destino);
                 }
