@@ -1,7 +1,14 @@
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
+import java.util.Queue;
 
 // Clase que representa el grafo utilizando listas de adyacencia
 class Grafo {
@@ -9,7 +16,7 @@ class Grafo {
     ArrayList<ArrayList<Integer>> listaAdyacencia;  // Lista de adyacencia
     ArrayList<Boolean> visitados;                    // Seguimiento de nodos visitados
     boolean dirigido;                              // true: grafo dirigido, false: no dirigido
-
+    
     // Constructor que recibe el número de vértices y el tipo de grafo (dirigido o no)
     public Grafo(int vertices, boolean dirigido) {
         this.numeroVertices = vertices;
@@ -223,6 +230,15 @@ class PanelEstructuraDatos extends JPanel {
     }
 }
 
+class MenuInicial {
+    public static int mostrar() {
+        String[] opciones = {"Nuevo Grafo", "Cargar Grafo Guardado"};
+        return JOptionPane.showOptionDialog(null, "¿Qué desea hacer?", "Menú Inicial",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+    }
+}
+
+
 // Clase principal: ventana que contiene el grafo, el panel de estructura de datos,
 // un toolbar con las opciones en la parte superior, atajos de teclado y un menú.
 public class VisualizacionRecorridosGrafo extends JFrame {
@@ -272,6 +288,10 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnSalir = new JButton("Salir (8)");
         btnSalir.addActionListener(e -> System.exit(0));
         barraHerramientas.add(btnSalir);
+
+        JButton btnGuardarGrafo = new JButton("Guardar Grafo (9)");
+btnGuardarGrafo.addActionListener(e -> guardarGrafo());
+barraHerramientas.add(btnGuardarGrafo);
         
         // Instanciar los paneles
         panelGrafo = new PanelGrafo();
@@ -321,6 +341,10 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JMenuItem miSalir = new JMenuItem("Salir (8)");
         miSalir.addActionListener(e -> System.exit(0));
         menu.add(miSalir);
+
+        JMenuItem miGuardarGrafo = new JMenuItem("Guardar Grafo (9)");
+        miGuardarGrafo.addActionListener(e -> guardarGrafo());
+        menu.add(miGuardarGrafo);
         
         barraMenu.add(menu);
         setJMenuBar(barraMenu);
@@ -386,6 +410,13 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         mapaAccion.put("salir", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 System.exit(0);
+            }
+        });
+
+        mapaEntrada.put(KeyStroke.getKeyStroke("9"),"Guardar");
+        mapaAccion.put("Guardar", new AbstractAction(){
+            public void actionPerformed(ActionEvent e){
+                guardarGrafo();
             }
         });
     }
@@ -537,6 +568,62 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         panelGrafo.setGrafo(null);
         panelEstructura.setEstructuraDatos(new ArrayList<>(), "");
     }
+
+    // Opcion 9: Guardar
+    private void guardarGrafo() {
+        if (grafo == null) {
+            JOptionPane.showMessageDialog(null, "No hay grafo creado.");
+            return;
+        }
+        String nombreArchivo = JOptionPane.showInputDialog("Ingrese el nombre del archivo para guardar el grafo:");
+        if (nombreArchivo == null || nombreArchivo.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Nombre de archivo inválido.");
+            return;
+        }
+        try (FileWriter writer = new FileWriter(nombreArchivo + ".txt")) {
+            // Guardar número de vértices y tipo de grafo
+            writer.write(grafo.numeroVertices + "\n");
+            writer.write(grafo.dirigido + "\n");
+            // Guardar aristas
+            for (int i = 0; i < grafo.numeroVertices; i++) {
+                for (int vecino : grafo.listaAdyacencia.get(i)) {
+                    writer.write(i + "," + vecino + "\n");
+                }
+            }
+            JOptionPane.showMessageDialog(null, "Grafo guardado correctamente.");
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Error al guardar el grafo.");
+        }
+    }
+
+    //extra cargar grafo
+    private void cargarGrafo() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Seleccione un archivo de grafo");
+        int resultado = fileChooser.showOpenDialog(this);
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            File archivo = fileChooser.getSelectedFile();
+            try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
+                // Leer número de vértices y tipo de grafo
+                int vertices = Integer.parseInt(reader.readLine());
+                boolean dirigido = Boolean.parseBoolean(reader.readLine());
+                grafo = new Grafo(vertices, dirigido);
+                // Leer aristas
+                String linea;
+                while ((linea = reader.readLine()) != null) {
+                    String[] partes = linea.split(",");
+                    int origen = Integer.parseInt(partes[0]);
+                    int destino = Integer.parseInt(partes[1]);
+                    grafo.agregarArista(origen, destino);
+                }
+                panelGrafo.setGrafo(grafo);
+                panelEstructura.setEstructuraDatos(new ArrayList<>(), "");
+                JOptionPane.showMessageDialog(null, "Grafo cargado correctamente.");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Error al cargar el grafo.");
+            }
+        }
+    }
     
     // Animación paso a paso para DFS (utilizando una pila)
     private void animarDFS(int inicio) {
@@ -614,8 +701,13 @@ public class VisualizacionRecorridosGrafo extends JFrame {
     }
         
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new VisualizacionRecorridosGrafo().setVisible(true);
-        });
-    }
+    SwingUtilities.invokeLater(() -> {
+        int opcion = MenuInicial.mostrar();
+        VisualizacionRecorridosGrafo ventana = new VisualizacionRecorridosGrafo();
+        if (opcion == 1) { // Cargar grafo guardado
+            ventana.cargarGrafo();
+        }
+        ventana.setVisible(true);
+    });
+}
 }
