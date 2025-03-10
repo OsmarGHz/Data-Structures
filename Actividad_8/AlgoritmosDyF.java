@@ -597,6 +597,9 @@ public class AlgoritmosDyF extends JFrame {
         StringBuilder resumen = new StringBuilder("Resumen Dijkstra:\n");
         animateNextPathDijkstra(1, n, prev, dist, resumen, () -> {
             JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
+            //limpiar grafo
+            panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+                panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
         });
     }
     
@@ -667,6 +670,9 @@ public class AlgoritmosDyF extends JFrame {
         StringBuilder resumen = new StringBuilder("Resumen Floyd:\n");
         animateNextPathFloyd(1, n, next, dist, resumen, () -> {
             JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
+            //limpiar grafo despues de
+            panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+                panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
         });
     }
     
