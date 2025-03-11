@@ -887,18 +887,16 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         }
     }
     
-    // Función para ejecutar Floyd–Warshall y animar el camino entre dos vértices
+    // Función para ejecutar Floyd–Warshall y animar los caminos desde un vértice a todos los demás
     private void ejecutarFloyd() {
         if (grafo == null) {
             JOptionPane.showMessageDialog(null, "No hay grafo creado.");
             return;
         }
         String inputInicio = JOptionPane.showInputDialog("Ingrese el vértice de inicio para Floyd:");
-        String inputDestino = JOptionPane.showInputDialog("Ingrese el vértice de destino para Floyd:");
         try {
             int inicio = Integer.parseInt(inputInicio.trim());
-            int destino = Integer.parseInt(inputDestino.trim());
-            if (inicio < 0 || inicio >= grafo.numeroVertices || destino < 0 || destino >= grafo.numeroVertices) {
+            if (inicio < 0 || inicio >= grafo.numeroVertices) {
                 JOptionPane.showMessageDialog(null, "Vértice inválido.");
                 return;
             }
@@ -931,26 +929,27 @@ public class VisualizacionRecorridosGrafo extends JFrame {
                 }
             }
             StringBuilder resumen = new StringBuilder("Resumen Floyd:\n");
-            if (dist[inicio][destino] >= Integer.MAX_VALUE / 2) {
-                resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
-                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
-                int u = inicio;
-                camino.add(u);
-                while (u != destino) {
-                    u = next[u][destino];
+            for (int destino = 0; destino < n; destino++) {
+                if (inicio == destino) continue;
+                if (dist[inicio][destino] >= Integer.MAX_VALUE / 2) {
+                    resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
+                } else {
+                    java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
+                    int u = inicio;
                     camino.add(u);
-                }
-                animatePath(camino, () -> {
+                    while (u != destino) {
+                        u = next[u][destino];
+                        camino.add(u);
+                    }
+                    animatePath(camino, null);
                     resumen.append(inicio).append(" -> ").append(destino).append(": ").append(camino)
                            .append(" | Costo total: ").append(dist[inicio][destino]).append("\n");
-                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
-                    // Limpiar grafo
-                    panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
-                    panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
-                });
+                }
             }
+            JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
+            // Limpiar grafo
+            panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+            panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
@@ -963,3 +962,4 @@ public class VisualizacionRecorridosGrafo extends JFrame {
     });
 }
 }
+
