@@ -426,6 +426,9 @@ public class VisualizacionRecorridosGrafo extends JFrame {
 		getContentPane().add(scrollBarraHerramientas, BorderLayout.NORTH);
         getContentPane().add(panelPrincipal, BorderLayout.CENTER);
         
+<<<<<<< HEAD
+=======
+>>>>>>> 7e80cab (Update VisualizacionRecorridosGrafo.java)
         // Configurar atajos de teclado para las opciones (teclas 1 a 8)
         configurarAtajosTeclado();
     }
