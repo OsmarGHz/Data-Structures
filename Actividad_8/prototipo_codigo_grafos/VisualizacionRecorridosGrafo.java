@@ -786,6 +786,47 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         }
     }
 
+    // Método auxiliar para animar paso a paso un camino (lista de vértices) usando arreglos en lugar de hash
+    // Se resalta: origen (verde), intermedios (amarillo) y destino (cian) y se van "encendiendo" las aristas.
+    private void animatePath(java.util.ArrayList<Integer> camino, Runnable callback) {
+        final int delay = 1000; // 1 segundo entre pasos
+        int n = grafo.numeroVertices;
+        // Arreglo para aristas resaltadas
+        boolean[][] animEdges = new boolean[n][n];
+        // Arreglo para colores de vértices (inicialmente todos null)
+        Color[] animVertices = new Color[n];
+        // Resalta el origen en verde
+        animVertices[camino.get(0)] = Color.GREEN;
+        panelGrafo.setHighlightedEdges(animEdges);
+        panelGrafo.setHighlightedVertices(animVertices);
+        final int[] index = {0};
+        Timer timer = new Timer(delay, null);
+        timer.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (index[0] < camino.size() - 1) {
+                    int origen = camino.get(index[0]);
+                    int destino = camino.get(index[0] + 1);
+                    animEdges[origen][destino] = true;
+                    // Final verde, else amarillo.
+                    if (index[0] + 1 < camino.size() - 1) {
+                        animVertices[destino] = Color.YELLOW;
+                    } else {
+                        animVertices[destino] = Color.GREEN;
+                    }
+                    panelGrafo.setHighlightedEdges(animEdges);
+                    panelGrafo.setHighlightedVertices(animVertices);
+                    index[0]++;
+                } else {
+                    timer.stop();
+                    if (callback != null) {
+                        callback.run();
+                    }
+                }
+            }
+        });
+        timer.start();
+    }
+
     // Función para ejecutar Dijkstra y animar cada camino encontrado
     private void ejecutarDijkstra() {
         if (grafo == null) {
