@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
@@ -173,6 +172,7 @@ class PanelGrafo extends JPanel {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
+				if (posiciones == null) return; // Add this null check
 				// Verificar si se hizo clic sobre un vértice
 				for (int i = 0; i < posiciones.length; i++) {
 					if (posiciones[i] != null && e.getPoint().distance(posiciones[i]) <= 15) {
