@@ -378,9 +378,17 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         btnGuardarGrafo.addActionListener(e -> guardarGrafo());
         barraHerramientas.add(btnGuardarGrafo);
 
-        JButton btnSalir = new JButton("Salir (10)");
+        JButton btnSalir = new JButton("Salir (ctr + 0)");
         btnSalir.addActionListener(e -> System.exit(0));
         barraHerramientas.add(btnSalir);
+
+        JButton btnDijkstra = new JButton("Salir (ctr + 1)");
+        btnDijkstra.addActionListener(e -> ejecutarDijkstra());
+        barraHerramientas.add(btnDijkstra);
+
+        JButton btnFloyd = new JButton("Salir (ctr + 2)");
+        btnFloyd.addActionListener(e -> ejecutarFloyd());
+        barraHerramientas.add(btnFloyd);
         
         // Instanciar los paneles
         panelGrafo = new PanelGrafo();
@@ -435,9 +443,17 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         miGuardarGrafo.addActionListener(e -> guardarGrafo());
         menu.add(miGuardarGrafo);
         
-        JMenuItem miSalir = new JMenuItem("Salir (10)");
+        JMenuItem miSalir = new JMenuItem("Salir (ctr + 0)");
         miSalir.addActionListener(e -> System.exit(0));
         menu.add(miSalir);
+
+        JMenuItem miDijkstra = new JMenuItem("Dijkstra (ctr + 1)");
+        miDijkstra.addActionListener(e -> ejecutarDijkstra());
+        menu.add(miDijkstra);
+
+        JMenuItem miFloyd = new JMenuItem("Salir (ctr + 2)");
+        miFloyd.addActionListener(e -> ejecutarFloyd());
+        menu.add(miFloyd);
 
         barraMenu.add(menu);
         setJMenuBar(barraMenu);
@@ -515,6 +531,20 @@ public class VisualizacionRecorridosGrafo extends JFrame {
 
         mapaEntrada.put(KeyStroke.getKeyStroke("control 0"), "salir");
         mapaAccion.put("salir", new AbstractAction() {
+        public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        mapaEntrada.put(KeyStroke.getKeyStroke("control 1"), "ejecutarDijkstra");
+        mapaAccion.put("ejecutarDijkstra", new AbstractAction() {
+        public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        mapaEntrada.put(KeyStroke.getKeyStroke("control 2"), "ejecutarFloyd");
+        mapaAccion.put("ejecutarFloyd", new AbstractAction() {
         public void actionPerformed(ActionEvent e) {
                 System.exit(0);
             }
@@ -753,6 +783,138 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             } else {
                 break; // Salir del bucle si el usuario cancela la selección
             }
+        }
+    }
+
+    // Función para ejecutar Dijkstra y animar cada camino encontrado
+    private void ejecutarDijkstra() {
+        if (grafo == null) {
+            JOptionPane.showMessageDialog(null, "No hay grafo creado.");
+            return;
+        }
+        String inputInicio = JOptionPane.showInputDialog("Ingrese el vértice de inicio para Dijkstra:");
+        String inputDestino = JOptionPane.showInputDialog("Ingrese el vértice de destino para Dijkstra:");
+        try {
+            int inicio = Integer.parseInt(inputInicio.trim());
+            int destino = Integer.parseInt(inputDestino.trim());
+            if (inicio < 0 || inicio >= grafo.numeroVertices || destino < 0 || destino >= grafo.numeroVertices) {
+                JOptionPane.showMessageDialog(null, "Vértice inválido.");
+                return;
+            }
+            int n = grafo.numeroVertices;
+            int[] dist = new int[n];
+            int[] prev = new int[n];
+            Arrays.fill(dist, Integer.MAX_VALUE);
+            Arrays.fill(prev, -1);
+            dist[inicio] = 0;
+            PriorityQueue<Integer> cola = new PriorityQueue<>(Comparator.comparingInt(v -> dist[v]));
+            cola.add(inicio);
+            while (!cola.isEmpty()) {
+                int u = cola.poll();
+                for (Arista arista : grafo.listaAdyacencia.get(u)) {
+                    int v = arista.destino;
+                    int peso = arista.peso;
+                    if (dist[u] != Integer.MAX_VALUE && dist[u] + peso < dist[v]) {
+                        dist[v] = dist[u] + peso;
+                        prev[v] = u;
+                        cola.remove(v);
+                        cola.add(v);
+                    }
+                }
+            }
+            // Se anima el camino desde el vértice de inicio hasta el vértice de destino
+            StringBuilder resumen = new StringBuilder("Resumen Dijkstra:\n");
+            if (dist[destino] == Integer.MAX_VALUE) {
+                resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
+                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
+                int actual = destino;
+                while (actual != -1) {
+                    camino.add(actual);
+                    actual = prev[actual];
+                }
+                Collections.reverse(camino);
+                animatePath(camino, () -> {
+                    resumen.append(inicio).append(" -> ").append(destino).append(": ").append(camino)
+                           .append(" | Costo total: ").append(dist[destino]).append("\n");
+                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
+                    // Limpiar grafo
+                    panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+                    panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Entrada inválida.");
+        }
+    }
+    
+    // Función para ejecutar Floyd–Warshall y animar el camino entre dos vértices
+    private void ejecutarFloyd() {
+        if (grafo == null) {
+            JOptionPane.showMessageDialog(null, "No hay grafo creado.");
+            return;
+        }
+        String inputInicio = JOptionPane.showInputDialog("Ingrese el vértice de inicio para Floyd:");
+        String inputDestino = JOptionPane.showInputDialog("Ingrese el vértice de destino para Floyd:");
+        try {
+            int inicio = Integer.parseInt(inputInicio.trim());
+            int destino = Integer.parseInt(inputDestino.trim());
+            if (inicio < 0 || inicio >= grafo.numeroVertices || destino < 0 || destino >= grafo.numeroVertices) {
+                JOptionPane.showMessageDialog(null, "Vértice inválido.");
+                return;
+            }
+            int n = grafo.numeroVertices;
+            int[][] dist = new int[n][n];
+            int[][] next = new int[n][n];
+            for (int i = 0; i < n; i++) {
+                Arrays.fill(dist[i], Integer.MAX_VALUE / 2);
+                for (int j = 0; j < n; j++) {
+                    next[i][j] = -1;
+                }
+                dist[i][i] = 0;
+                next[i][i] = i;
+            }
+            for (int u = 0; u < n; u++) {
+                for (Arista arista : grafo.listaAdyacencia.get(u)) {
+                    int v = arista.destino;
+                    dist[u][v] = arista.peso;
+                    next[u][v] = v;
+                }
+            }
+            for (int k = 0; k < n; k++) {
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                            dist[i][j] = dist[i][k] + dist[k][j];
+                            next[i][j] = next[i][k];
+                        }
+                    }
+                }
+            }
+            StringBuilder resumen = new StringBuilder("Resumen Floyd:\n");
+            if (dist[inicio][destino] >= Integer.MAX_VALUE / 2) {
+                resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
+                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
+                int u = inicio;
+                camino.add(u);
+                while (u != destino) {
+                    u = next[u][destino];
+                    camino.add(u);
+                }
+                animatePath(camino, () -> {
+                    resumen.append(inicio).append(" -> ").append(destino).append(": ").append(camino)
+                           .append(" | Costo total: ").append(dist[inicio][destino]).append("\n");
+                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
+                    // Limpiar grafo
+                    panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+                    panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
     

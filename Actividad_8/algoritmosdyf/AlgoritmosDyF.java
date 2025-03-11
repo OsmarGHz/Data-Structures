@@ -572,140 +572,131 @@ public class AlgoritmosDyF extends JFrame {
             JOptionPane.showMessageDialog(null, "No hay grafo creado.");
             return;
         }
-        int n = grafo.numeroVertices;
-        int[] dist = new int[n];
-        int[] prev = new int[n];
-        Arrays.fill(dist, Integer.MAX_VALUE);
-        Arrays.fill(prev, -1);
-        dist[0] = 0;
-        PriorityQueue<Integer> cola = new PriorityQueue<>(Comparator.comparingInt(v -> dist[v]));
-        cola.add(0);
-        while (!cola.isEmpty()) {
-            int u = cola.poll();
-            for (Arista arista : grafo.listaAdyacencia.get(u)) {
-                int v = arista.destino;
-                int peso = arista.peso;
-                if (dist[u] != Integer.MAX_VALUE && dist[u] + peso < dist[v]) {
-                    dist[v] = dist[u] + peso;
-                    prev[v] = u;
-                    cola.remove(v);
-                    cola.add(v);
+        String inputInicio = JOptionPane.showInputDialog("Ingrese el vértice de inicio para Dijkstra:");
+        String inputDestino = JOptionPane.showInputDialog("Ingrese el vértice de destino para Dijkstra:");
+        try {
+            int inicio = Integer.parseInt(inputInicio.trim());
+            int destino = Integer.parseInt(inputDestino.trim());
+            if (inicio < 0 || inicio >= grafo.numeroVertices || destino < 0 || destino >= grafo.numeroVertices) {
+                JOptionPane.showMessageDialog(null, "Vértice inválido.");
+                return;
+            }
+            int n = grafo.numeroVertices;
+            int[] dist = new int[n];
+            int[] prev = new int[n];
+            Arrays.fill(dist, Integer.MAX_VALUE);
+            Arrays.fill(prev, -1);
+            dist[inicio] = 0;
+            PriorityQueue<Integer> cola = new PriorityQueue<>(Comparator.comparingInt(v -> dist[v]));
+            cola.add(inicio);
+            while (!cola.isEmpty()) {
+                int u = cola.poll();
+                for (Arista arista : grafo.listaAdyacencia.get(u)) {
+                    int v = arista.destino;
+                    int peso = arista.peso;
+                    if (dist[u] != Integer.MAX_VALUE && dist[u] + peso < dist[v]) {
+                        dist[v] = dist[u] + peso;
+                        prev[v] = u;
+                        cola.remove(v);
+                        cola.add(v);
+                    }
                 }
             }
-        }
-        // Se anima cada camino desde 0 hasta cada vértice (v = 1..n-1)
-        StringBuilder resumen = new StringBuilder("Resumen Dijkstra:\n");
-        animateNextPathDijkstra(1, n, prev, dist, resumen, () -> {
-            JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
-            //limpiar grafo
-            panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
-                panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
-        });
-    }
-    
-    // Método auxiliar para animar secuencialmente cada camino en Dijkstra
-    private void animateNextPathDijkstra(int v, int n, int[] prev, int[] dist, StringBuilder resumen, Runnable finalCallback) {
-        if (v >= n) {
-            finalCallback.run();
-            return;
-        }
-        if (dist[v] == Integer.MAX_VALUE) {
-            resumen.append("0 -> ").append(v).append(": No alcanzable\n");
-            animateNextPathDijkstra(v + 1, n, prev, dist, resumen, finalCallback);
-        } else {
-            java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
-            int actual = v;
-            while (actual != -1) {
-                camino.add(actual);
-                actual = prev[actual];
+            // Se anima el camino desde el vértice de inicio hasta el vértice de destino
+            StringBuilder resumen = new StringBuilder("Resumen Dijkstra:\n");
+            if (dist[destino] == Integer.MAX_VALUE) {
+                resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
+                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
+                int actual = destino;
+                while (actual != -1) {
+                    camino.add(actual);
+                    actual = prev[actual];
+                }
+                Collections.reverse(camino);
+                animatePath(camino, () -> {
+                    resumen.append(inicio).append(" -> ").append(destino).append(": ").append(camino)
+                           .append(" | Costo total: ").append(dist[destino]).append("\n");
+                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
+                    // Limpiar grafo
+                    panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+                    panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
+                });
             }
-            Collections.reverse(camino);
-            animatePath(camino, () -> {
-                resumen.append("0 -> ").append(v).append(": ").append(camino)
-                       .append(" | Costo total: ").append(dist[v]).append("\n");
-                new Timer(500, new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        ((Timer)e.getSource()).stop();
-                        animateNextPathDijkstra(v + 1, n, prev, dist, resumen, finalCallback);
-                    }
-                }).start();
-            });
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
     
-    // Función para ejecutar Floyd–Warshall y animar cada camino desde 0 hasta cada vértice
+    // Función para ejecutar Floyd–Warshall y animar el camino entre dos vértices
     private void ejecutarFloyd() {
         if (grafo == null) {
             JOptionPane.showMessageDialog(null, "No hay grafo creado.");
             return;
         }
-        int n = grafo.numeroVertices;
-        int[][] dist = new int[n][n];
-        int[][] next = new int[n][n];
-        for (int i = 0; i < n; i++) {
-            Arrays.fill(dist[i], Integer.MAX_VALUE / 2);
-            for (int j = 0; j < n; j++) {
-                next[i][j] = -1;
+        String inputInicio = JOptionPane.showInputDialog("Ingrese el vértice de inicio para Floyd:");
+        String inputDestino = JOptionPane.showInputDialog("Ingrese el vértice de destino para Floyd:");
+        try {
+            int inicio = Integer.parseInt(inputInicio.trim());
+            int destino = Integer.parseInt(inputDestino.trim());
+            if (inicio < 0 || inicio >= grafo.numeroVertices || destino < 0 || destino >= grafo.numeroVertices) {
+                JOptionPane.showMessageDialog(null, "Vértice inválido.");
+                return;
             }
-            dist[i][i] = 0;
-            next[i][i] = i;
-        }
-        for (int u = 0; u < n; u++) {
-            for (Arista arista : grafo.listaAdyacencia.get(u)) {
-                int v = arista.destino;
-                dist[u][v] = arista.peso;
-                next[u][v] = v;
-            }
-        }
-        for (int k = 0; k < n; k++) {
+            int n = grafo.numeroVertices;
+            int[][] dist = new int[n][n];
+            int[][] next = new int[n][n];
             for (int i = 0; i < n; i++) {
+                Arrays.fill(dist[i], Integer.MAX_VALUE / 2);
                 for (int j = 0; j < n; j++) {
-                    if (dist[i][k] + dist[k][j] < dist[i][j]) {
-                        dist[i][j] = dist[i][k] + dist[k][j];
-                        next[i][j] = next[i][k];
+                    next[i][j] = -1;
+                }
+                dist[i][i] = 0;
+                next[i][i] = i;
+            }
+            for (int u = 0; u < n; u++) {
+                for (Arista arista : grafo.listaAdyacencia.get(u)) {
+                    int v = arista.destino;
+                    dist[u][v] = arista.peso;
+                    next[u][v] = v;
+                }
+            }
+            for (int k = 0; k < n; k++) {
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                            dist[i][j] = dist[i][k] + dist[k][j];
+                            next[i][j] = next[i][k];
+                        }
                     }
                 }
             }
-        }
-        StringBuilder resumen = new StringBuilder("Resumen Floyd:\n");
-        animateNextPathFloyd(1, n, next, dist, resumen, () -> {
-            JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
-            //limpiar grafo despues de
-            panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
-                panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
-        });
-    }
-    
-    // Método auxiliar para animar cada camino en Floyd desde 0 a cada vértice
-    private void animateNextPathFloyd(int v, int n, int[][] next, int[][] dist, StringBuilder resumen, Runnable finalCallback) {
-        if (v >= n) {
-            finalCallback.run();
-            return;
-        }
-        if (dist[0][v] >= Integer.MAX_VALUE / 2) {
-            resumen.append("0 -> ").append(v).append(": No alcanzable\n");
-            animateNextPathFloyd(v + 1, n, next, dist, resumen, finalCallback);
-        } else {
-            java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
-            int u = 0;
-            camino.add(u);
-            while (u != v) {
-                u = next[u][v];
+            StringBuilder resumen = new StringBuilder("Resumen Floyd:\n");
+            if (dist[inicio][destino] >= Integer.MAX_VALUE / 2) {
+                resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
+                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
+                int u = inicio;
                 camino.add(u);
+                while (u != destino) {
+                    u = next[u][destino];
+                    camino.add(u);
+                }
+                animatePath(camino, () -> {
+                    resumen.append(inicio).append(" -> ").append(destino).append(": ").append(camino)
+                           .append(" | Costo total: ").append(dist[inicio][destino]).append("\n");
+                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
+                    // Limpiar grafo
+                    panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+                    panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
+                });
             }
-            animatePath(camino, () -> {
-                resumen.append("0 -> ").append(v).append(": ").append(camino)
-                       .append(" | Costo total: ").append(dist[0][v]).append("\n");
-                new Timer(500, new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        ((Timer)e.getSource()).stop();
-                        animateNextPathFloyd(v + 1, n, next, dist, resumen, finalCallback);
-                    }
-                }).start();
-            });
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
-    
     
     private void animarDFS(int inicio) {
         grafo.resetearVisitados();
