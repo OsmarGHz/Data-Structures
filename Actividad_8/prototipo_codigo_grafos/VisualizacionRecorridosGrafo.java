@@ -1,7 +1,6 @@
 
 import javax.swing.*;
 import javax.swing.Timer;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.BufferedReader;
@@ -12,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Queue;
 
-//Clase que representa una arista con destino y cossto
+//Clase que representa una arista con destino y costo
 class Arista {
  int destino;
  int peso;
@@ -157,6 +156,13 @@ class Grafo {
     }
 }
 
+class MenuInicial {
+    public static int mostrar() {
+        String[] opciones = {"Nuevo Grafo", "Cargar Grafo Guardado"};
+        return JOptionPane.showOptionDialog(null, "¿Qué desea hacer?", "Menú Inicial",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+    }
+}
 // Panel para dibujar el grafo (distribución circular) y marcar los nodos visitados
 class PanelGrafo extends JPanel {
     private Grafo grafo;
@@ -166,17 +172,58 @@ class PanelGrafo extends JPanel {
     private boolean[][] highlightedEdges;
     // Arreglo para indicar el color de cada vértice (null: sin resaltar)
     private Color[] highlightedVertices;
-    
-    public PanelGrafo(){
-        //setBackground(new Color(0, 128, 255));
+    private Point[] posiciones; // Arreglo para almacenar las posiciones de los vértices
+    private int verticeSeleccionado = -1; // Índice del vértice seleccionado para mover
+
+    public PanelGrafo() {
+        // Agregar listeners de mouse para mover los vértices
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // Verificar si se hizo clic sobre un vértice
+                for (int i = 0; i < posiciones.length; i++) {
+                    if (posiciones[i] != null && e.getPoint().distance(posiciones[i]) <= 15) {
+                        verticeSeleccionado = i;
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                verticeSeleccionado = -1; // Liberar el vértice seleccionado
+            }
+        });
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (verticeSeleccionado != -1) {
+                    // Mover el vértice seleccionado a la posición actual del mouse
+                    posiciones[verticeSeleccionado] = e.getPoint();
+                    repaint(); // Repintar el panel para reflejar el cambio
+                }
+            }
+        });
     }
 
     public void setGrafo(Grafo g) {
         this.grafo = g;
         nodosVisitados.clear();
-        if(g != null) {
+        if (g != null) {
             highlightedEdges = new boolean[g.numeroVertices][g.numeroVertices];
             highlightedVertices = new Color[g.numeroVertices];
+            posiciones = new Point[g.numeroVertices];
+            // Inicializar las posiciones de los vértices en una distribución circular
+            int ancho = getWidth(), alto = getHeight();
+            int radio = Math.min(ancho, alto) / 2 - 50;
+            int centroX = ancho / 2, centroY = alto / 2;
+            for (int i = 0; i < g.numeroVertices; i++) {
+                double angulo = 2 * Math.PI * i / g.numeroVertices;
+                int x = centroX + (int) (radio * Math.cos(angulo));
+                int y = centroY + (int) (radio * Math.sin(angulo));
+                posiciones[i] = new Point(x, y);
+            }
         }
         repaint();
     }
@@ -256,26 +303,16 @@ class PanelGrafo extends JPanel {
     }
     
     
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (grafo == null) return;
-        int n = grafo.numeroVertices;
-        int ancho = getWidth(), alto = getHeight();
-        int radio = Math.min(ancho, alto) / 2 - 50;
-        int centroX = ancho / 2, centroY = alto / 2;
-        Point[] posiciones = new Point[n];
-        for (int i = 0; i < n; i++) {
-            double angulo = 2 * Math.PI * i / n;
-            int x = centroX + (int)(radio * Math.cos(angulo));
-            int y = centroY + (int)(radio * Math.sin(angulo));
-            posiciones[i] = new Point(x, y);
-        }
+        if (grafo == null || posiciones == null) return;
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
+
         // Dibuja aristas
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < grafo.numeroVertices; i++) {
             for (Arista arista : grafo.listaAdyacencia.get(i)) {
                 Point p1 = posiciones[i];
                 Point p2 = posiciones[arista.destino];
@@ -301,11 +338,12 @@ class PanelGrafo extends JPanel {
                 g2.drawString(String.valueOf(arista.peso), midX, midY);
             }
         }
-        // Dibuja nodos: si hay color resaltado en el arreglo se usa; de lo contrario, si fue visitado se pinta en verde, sino en rojo.
-        for (int i = 0; i < n; i++) {
+
+        // Dibuja nodos
+        for (int i = 0; i < grafo.numeroVertices; i++) {
             Point p = posiciones[i];
             Color nodoColor = (highlightedVertices != null && highlightedVertices[i] != null) ? highlightedVertices[i]
-                              : (nodosVisitados.contains(i) ? Color.GREEN : Color.RED);
+                    : (nodosVisitados.contains(i) ? Color.GREEN : Color.RED);
             g2.setColor(nodoColor);
             g2.fillOval(p.x - 15, p.y - 15, 30, 30);
             g2.setColor(Color.WHITE);
@@ -313,15 +351,6 @@ class PanelGrafo extends JPanel {
         }
     }
 }
-
-class MenuInicial {
-    public static int mostrar() {
-        String[] opciones = {"Nuevo Grafo", "Cargar Grafo Guardado"};
-        return JOptionPane.showOptionDialog(null, "¿Qué desea hacer?", "Menú Inicial",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
-    }
-}
-
 
 // Clase principal: ventana que contiene el grafo, el panel de estructura de datos,
 // un toolbar con las opciones en la parte superior, atajos de teclado y un menú.
@@ -339,6 +368,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         // Toolbar en la parte superior
         JToolBar barraHerramientas = new JToolBar();
         barraHerramientas.setFloatable(false);
+        barraHerramientas.setLayout(new FlowLayout(FlowLayout.LEFT));
         
         JButton btnCrearGrafo = new JButton("Crear Grafo (1)");
         btnCrearGrafo.addActionListener(e -> crearGrafo());
@@ -364,79 +394,37 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         btnMatrizDistancias.addActionListener(e -> mostrarMatrizDistancias());
         barraHerramientas.add(btnMatrizDistancias);
 
-        JButton btnGuardarGrafo = new JButton("Guardar Grafo (9)");
+        JButton btnGuardarGrafo = new JButton("Guardar Grafo (7)");
         btnGuardarGrafo.addActionListener(e -> guardarGrafo());
         barraHerramientas.add(btnGuardarGrafo);
-
-        JButton btnSalir = new JButton("Salir (ctr + 0)");
-        btnSalir.addActionListener(e -> System.exit(0));
-        barraHerramientas.add(btnSalir);
-
-        JButton btnDijkstra = new JButton("Salir (ctr + 1)");
+        
+        JButton btnDijkstra = new JButton("Dijkstra (8)");
         btnDijkstra.addActionListener(e -> ejecutarDijkstra());
         barraHerramientas.add(btnDijkstra);
 
-        JButton btnFloyd = new JButton("Salir (ctr + 2)");
+        JButton btnFloyd = new JButton("Floyd (9)");
         btnFloyd.addActionListener(e -> ejecutarFloyd());
         barraHerramientas.add(btnFloyd);
+
+        JButton btnSalir = new JButton("Salir (0)");
+        btnSalir.addActionListener(e -> System.exit(0));
+        barraHerramientas.add(btnSalir);
         
+        //crear ScrollBar
+        // Agregar la barra de herramientas a un JScrollPane para habilitar desplazamiento
+		JScrollPane scrollBarraHerramientas = new JScrollPane(barraHerramientas, 
+		JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
         // Instanciar los paneles
         panelGrafo = new PanelGrafo();
-        
+
         // Panel central que contiene el panel del grafo
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.add(panelGrafo, BorderLayout.CENTER);
-        
+
         // Agregar toolbar y panel principal al content pane
-        getContentPane().add(barraHerramientas, BorderLayout.NORTH);
+		getContentPane().add(scrollBarraHerramientas, BorderLayout.NORTH);
         getContentPane().add(panelPrincipal, BorderLayout.CENTER);
-        
-        // Menú de opciones en la barra de menús
-        JMenuBar barraMenu = new JMenuBar();
-        JMenu menu = new JMenu("Opciones");
-        
-        JMenuItem miCrearGrafo = new JMenuItem("Crear Grafo (1)");
-        miCrearGrafo.addActionListener(e -> crearGrafo());
-        menu.add(miCrearGrafo);
-        
-        JMenuItem miAgregarArista = new JMenuItem("Agregar Arista (2)");
-        miAgregarArista.addActionListener(e -> agregarArista());
-        menu.add(miAgregarArista);
-        
-        JMenuItem miMostrarLista = new JMenuItem("Mostrar Lista (3)");
-        miMostrarLista.addActionListener(e -> mostrarListaAdyacencia());
-        menu.add(miMostrarLista);
-        
-        JMenuItem miEliminarArista = new JMenuItem("Eliminar Arista (6)");
-        miEliminarArista.addActionListener(e -> eliminarArista());
-        menu.add(miEliminarArista);
-        
-        JMenuItem miEliminarGrafo = new JMenuItem("Eliminar Grafo (7)");
-        miEliminarGrafo.addActionListener(e -> eliminarGrafo());
-        menu.add(miEliminarGrafo);
-        
-        JMenuItem miMatrizDistancias = new JMenuItem("Mostrar Matriz de Distancias (8)");
-        miMatrizDistancias.addActionListener(e -> System.exit(0));
-        menu.add(miMatrizDistancias);
-
-        JMenuItem miGuardarGrafo = new JMenuItem("Guardar Grafo (9)");
-        miGuardarGrafo.addActionListener(e -> guardarGrafo());
-        menu.add(miGuardarGrafo);
-        
-        JMenuItem miSalir = new JMenuItem("Salir (ctr + 0)");
-        miSalir.addActionListener(e -> System.exit(0));
-        menu.add(miSalir);
-
-        JMenuItem miDijkstra = new JMenuItem("Dijkstra (ctr + 1)");
-        miDijkstra.addActionListener(e -> ejecutarDijkstra());
-        menu.add(miDijkstra);
-
-        JMenuItem miFloyd = new JMenuItem("Salir (ctr + 2)");
-        miFloyd.addActionListener(e -> ejecutarFloyd());
-        menu.add(miFloyd);
-
-        barraMenu.add(menu);
-        setJMenuBar(barraMenu);
         
         // Configurar atajos de teclado para las opciones (teclas 1 a 8)
         configurarAtajosTeclado();
@@ -488,29 +476,29 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             }
         });
 
-        mapaEntrada.put(KeyStroke.getKeyStroke("9"),"Guardar");
+        mapaEntrada.put(KeyStroke.getKeyStroke("7"),"Guardar");
         mapaAccion.put("Guardar", new AbstractAction(){
             public void actionPerformed(ActionEvent e){
                 guardarGrafo();
             }
         });
-
-        mapaEntrada.put(KeyStroke.getKeyStroke("control 0"), "salir");
-        mapaAccion.put("salir", new AbstractAction() {
-        public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
-
-        mapaEntrada.put(KeyStroke.getKeyStroke("control 1"), "ejecutarDijkstra");
+        
+        mapaEntrada.put(KeyStroke.getKeyStroke("8"), "ejecutarDijkstra");
         mapaAccion.put("ejecutarDijkstra", new AbstractAction() {
         public void actionPerformed(ActionEvent e) {
-                System.exit(0);
+                ejecutarDijkstra();
             }
         });
 
-        mapaEntrada.put(KeyStroke.getKeyStroke("control 2"), "ejecutarFloyd");
+        mapaEntrada.put(KeyStroke.getKeyStroke("9"), "ejecutarFloyd");
         mapaAccion.put("ejecutarFloyd", new AbstractAction() {
+        public void actionPerformed(ActionEvent e) {
+                ejecutarFloyd();
+            }
+        });
+
+        mapaEntrada.put(KeyStroke.getKeyStroke("0"), "salir");
+        mapaAccion.put("salir", new AbstractAction() {
         public void actionPerformed(ActionEvent e) {
                 System.exit(0);
             }

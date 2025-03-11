@@ -14,10 +14,10 @@ class Vertice {
     }
 }
 
-class Arista {
+class Aro {
     Vertice origen, destino;
     
-    public Arista(Vertice origen, Vertice destino) {
+    public Aro(Vertice origen, Vertice destino) {
         this.origen = origen;
         this.destino = destino;
     }
@@ -25,7 +25,7 @@ class Arista {
 
 public class EditorGrafo extends JPanel {
     private final ArrayList<Vertice> vertices = new ArrayList<>();
-    private final ArrayList<Arista> aristas = new ArrayList<>();
+    private final ArrayList<Aro> aristas = new ArrayList<>();
     
     // Para manejo de deshacer (undo)
     private final Stack<Accion> acciones = new Stack<>();
@@ -83,7 +83,7 @@ public class EditorGrafo extends JPanel {
                             } else {
                                 // Si se hace click sobre otro vértice, se crea la arista
                                 if (verticeSeleccionadoParaArista != verticeCandidato) {
-                                    Arista nuevaArista = new Arista(verticeSeleccionadoParaArista, verticeCandidato);
+                                    Aro nuevaArista = new Aro(verticeSeleccionadoParaArista, verticeCandidato);
                                     aristas.add(nuevaArista);
                                     acciones.push(new AccionAgregarArista(nuevaArista));
                                 }
@@ -111,10 +111,10 @@ public class EditorGrafo extends JPanel {
                     // Primero, se verifica si se hizo click derecho sobre un vértice
                     Vertice v = buscarVertice(e.getX(), e.getY());
                     if (v != null) {
-                        List<Arista> aristasEliminadas = new ArrayList<>();
-                        Iterator<Arista> itA = aristas.iterator();
+                        List<Aro> aristasEliminadas = new ArrayList<>();
+                        Iterator<Aro> itA = aristas.iterator();
                         while (itA.hasNext()) {
-                            Arista a = itA.next();
+                            Aro a = itA.next();
                             if (a.origen == v || a.destino == v) {
                                 aristasEliminadas.add(a);
                                 itA.remove();
@@ -128,7 +128,7 @@ public class EditorGrafo extends JPanel {
                         repaint();
                     } else {
                         // Si no fue sobre un vértice, se verifica si fue sobre una arista
-                        Arista aEncontrada = buscarArista(e.getX(), e.getY());
+                        Aro aEncontrada = buscarArista(e.getX(), e.getY());
                         if (aEncontrada != null) {
                             aristas.remove(aEncontrada);
                             acciones.push(new AccionEliminarArista(aEncontrada));
@@ -176,8 +176,8 @@ public class EditorGrafo extends JPanel {
     }
     
     // Retorna una arista que esté cerca del punto (x, y)
-    private Arista buscarArista(int x, int y) {
-        for (Arista a : aristas) {
+    private Aro buscarArista(int x, int y) {
+        for (Aro a : aristas) {
             int x1 = a.origen.x, y1 = a.origen.y, x2 = a.destino.x, y2 = a.destino.y;
             double dist = distanciaPuntoASegmento(x, y, x1, y1, x2, y2);
             if (dist <= 5) {
@@ -221,7 +221,7 @@ public class EditorGrafo extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         // Dibuja las aristas
-        for (Arista a : aristas) {
+        for (Aro a : aristas) {
             g.setColor(Color.BLACK);
             g.drawLine(a.origen.x, a.origen.y, a.destino.x, a.destino.y);
         }
@@ -271,9 +271,9 @@ public class EditorGrafo extends JPanel {
     
     private class AccionEliminarVertice extends Accion {
         private Vertice vertice;
-        private List<Arista> aristasEliminadas;
+        private List<Aro> aristasEliminadas;
         
-        public AccionEliminarVertice(Vertice v, List<Arista> aristasEliminadas) {
+        public AccionEliminarVertice(Vertice v, List<Aro> aristasEliminadas) {
             this.vertice = v;
             this.aristasEliminadas = aristasEliminadas;
         }
@@ -286,9 +286,9 @@ public class EditorGrafo extends JPanel {
     }
     
     private class AccionAgregarArista extends Accion {
-        private Arista arista;
+        private Aro arista;
         
-        public AccionAgregarArista(Arista a) {
+        public AccionAgregarArista(Aro a) {
             this.arista = a;
         }
         
@@ -299,9 +299,9 @@ public class EditorGrafo extends JPanel {
     }
     
     private class AccionEliminarArista extends Accion {
-        private Arista arista;
+        private Aro arista;
         
-        public AccionEliminarArista(Arista a) {
+        public AccionEliminarArista(Aro a) {
             this.arista = a;
         }
         
