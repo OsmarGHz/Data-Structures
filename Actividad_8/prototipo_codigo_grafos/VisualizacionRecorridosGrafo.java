@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -13,11 +12,11 @@ import java.util.Queue;
 // Clase que representa el grafo utilizando listas de adyacencia
 class Grafo {
     int numeroVertices;
-    ArrayList<ArrayList<Integer>> listaAdyacencia;  // Lista de adyacencia
-    ArrayList<Boolean> visitados;                    // Seguimiento de nodos visitados
-    boolean dirigido;                              // true: grafo dirigido, false: no dirigido
-    
-    // Constructor que recibe el número de vértices y el tipo de grafo (dirigido o no)
+    ArrayList<ArrayList<Pair<Integer, Integer>>> listaAdyacencia; // Lista de adyacencia con pesos
+    ArrayList<Boolean> visitados;
+    boolean dirigido;
+
+    // Constructor
     public Grafo(int vertices, boolean dirigido) {
         this.numeroVertices = vertices;
         this.dirigido = dirigido;
@@ -28,46 +27,124 @@ class Grafo {
             visitados.add(false);
         }
     }
-    
-    // Agrega una arista entre dos vértices.
-    // Si el grafo es no dirigido, se agrega la arista en ambos sentidos.
-    public void agregarArista(int origen, int destino) {
-        if (listaAdyacencia.get(origen).contains(destino)) {
+
+    // Clase auxiliar para representar pares (destino, peso)
+    class Pair<A, B> {
+        A first;
+        B second;
+        Pair(A first, B second) {
+            this.first = first;
+            this.second = second;
+        }
+    }
+
+    // Agregar una arista con peso
+    public void agregarArista(int origen, int destino, int peso) {
+        if (listaAdyacencia.get(origen).stream().anyMatch(p -> p.first == destino)) {
             return; // Evita duplicados
         }
-        listaAdyacencia.get(origen).add(destino);
+        listaAdyacencia.get(origen).add(new Pair<>(destino, peso));
         if (!dirigido) {
-            listaAdyacencia.get(destino).add(origen);
+            listaAdyacencia.get(destino).add(new Pair<>(origen, peso));
         }
     }
-    
-    // Elimina una arista entre dos vértices.
-    // En un grafo no dirigido, elimina la conexión de ambos lados.
+
+    // Eliminar una arista
     public void eliminarArista(int origen, int destino) {
-        listaAdyacencia.get(origen).remove((Integer) destino);
+        listaAdyacencia.get(origen).removeIf(p -> p.first == destino);
         if (!dirigido) {
-            listaAdyacencia.get(destino).remove((Integer) origen);
+            listaAdyacencia.get(destino).removeIf(p -> p.first == origen);
         }
     }
-    
-    // Retorna una representación en cadena de la lista de adyacencia.
+
+    // Obtener la lista de adyacencia con pesos
     public String obtenerListaAdyacencia() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < numeroVertices; i++) {
             sb.append(i).append(": ");
-            for (int v : listaAdyacencia.get(i)) {
-                sb.append(v).append(" -> ");
+            for (Pair<Integer, Integer> p : listaAdyacencia.get(i)) {
+                sb.append(p.first).append("(").append(p.second).append(") -> ");
             }
             sb.append("NULL\n");
         }
         return sb.toString();
     }
-    
-    // Resetea la bandera de visitados.
+
     public void resetearVisitados() {
-        for (int i = 0; i < visitados.size(); i++) {
-            visitados.set(i, false);
+        if (visitados == null || visitados.size() != numeroVertices) {
+            // Si la lista no está inicializada o no tiene el tamaño correcto, la reiniciamos
+            visitados = new ArrayList<>(Collections.nCopies(numeroVertices, false));
+        } else {
+            // Si la lista está correctamente inicializada, simplemente la reiniciamos
+            for (int i = 0; i < visitados.size(); i++) {
+                visitados.set(i, false);
+            }
         }
+    }
+    
+    // Calcular la matriz de distancias usando Floyd-Warshall con pesos
+    public int[][] calcularMatrizDistancias() {
+        int[][] distancias = new int[numeroVertices][numeroVertices];
+
+        // Inicializar la matriz de distancias
+        for (int i = 0; i < numeroVertices; i++) {
+            for (int j = 0; j < numeroVertices; j++) {
+                if (i == j) {
+                    distancias[i][j] = 0; // Distancia de un nodo a sí mismo es 0
+                } else {
+                    distancias[i][j] = Integer.MAX_VALUE; // Infinito para nodos no conectados
+                }
+            }
+        }
+
+        // Llenar la matriz con los pesos de las aristas
+        for (int i = 0; i < numeroVertices; i++) {
+            for (Pair<Integer, Integer> p : listaAdyacencia.get(i)) {
+                distancias[i][p.first] = p.second;
+            }
+        }
+
+        // Aplicar el algoritmo de Floyd-Warshall
+        for (int k = 0; k < numeroVertices; k++) {
+            for (int i = 0; i < numeroVertices; i++) {
+                for (int j = 0; j < numeroVertices; j++) {
+                    if (distancias[i][k] != Integer.MAX_VALUE && distancias[k][j] != Integer.MAX_VALUE) {
+                        distancias[i][j] = Math.min(distancias[i][j], distancias[i][k] + distancias[k][j]);
+                    }
+                }
+            }
+        }
+
+        return distancias;
+    }
+
+    // Obtener la matriz de distancias como una cadena formateada
+    public String obtenerMatrizDistancias() {
+        int[][] distancias = calcularMatrizDistancias();
+        StringBuilder sb = new StringBuilder();
+        sb.append("Matriz de Distancias:\n");
+
+        // Encabezado de la matriz
+        sb.append("    ");
+        for (int i = 0; i < numeroVertices; i++) {
+            sb.append(String.format("%-6d", i));
+        }
+        sb.append("\n");
+
+        // Filas de la matriz
+        for (int i = 0; i < numeroVertices; i++) {
+            sb.append(i).append(": ");
+            for (int j = 0; j < numeroVertices; j++) {
+                if (distancias[i][j] == Integer.MAX_VALUE) {
+                    sb.append("INF   "); // Representar infinito como "INF"
+                } else {
+                    sb.append(String.format("%-6d", distancias[i][j]));
+                }
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString();
     }
 }
 
@@ -163,19 +240,27 @@ class PanelGrafo extends JPanel {
         // Dibuja las aristas
         g2.setColor(Color.BLACK);
         for (int i = 0; i < n; i++) {
-            for (int vecino : grafo.listaAdyacencia.get(i)) {
+            for (Grafo.Pair<Integer, Integer> p : grafo.listaAdyacencia.get(i)) {
+                int vecino = p.first;
+                int peso = p.second;
+                Point p1 = posiciones[i];
+                Point p2 = posiciones[vecino];
                 if (grafo.dirigido) {
-                    // Dibuja flecha para cada arista dirigida
-                    drawArrowLine(g2, posiciones[i].x, posiciones[i].y, posiciones[vecino].x, posiciones[vecino].y, 10, 5);
+                    drawArrowLine(g2, p1.x, p1.y, p2.x, p2.y, 10, 5);
                 } else {
-                    // En grafo no dirigido, evita duplicados
                     if (i < vecino) {
-                        g2.drawLine(posiciones[i].x, posiciones[i].y, posiciones[vecino].x, posiciones[vecino].y);
+                        g2.drawLine(p1.x, p1.y, p2.x, p2.y);
                     }
                 }
+                // Dibujar el peso de la arista
+                int midX = (p1.x + p2.x) / 2;
+                int midY = (p1.y + p2.y) / 2;
+                g2.setColor(Color.BLUE);
+                g2.drawString(String.valueOf(peso), midX, midY);
+                g2.setColor(Color.BLACK);
             }
         }
-        // Dibuja los nodos: los visitados se pintan en verde y los no visitados en rojo
+        // Dibuja los nodos
         for (int i = 0; i < n; i++) {
             Point p = posiciones[i];
             if (nodosVisitados.contains(i)) {
@@ -250,7 +335,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
     public VisualizacionRecorridosGrafo() {
         super("Grafo en Java Swing");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 600); // Se amplía el ancho para incluir el panel lateral
+        setSize(1300, 900); // Se amplía el ancho para incluir el panel lateral
         setLocationRelativeTo(null);
         
         // Toolbar en la parte superior
@@ -284,14 +369,18 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnEliminarGrafo = new JButton("Eliminar Grafo (7)");
         btnEliminarGrafo.addActionListener(e -> eliminarGrafo());
         barraHerramientas.add(btnEliminarGrafo);
-        
-        JButton btnSalir = new JButton("Salir (8)");
-        btnSalir.addActionListener(e -> System.exit(0));
-        barraHerramientas.add(btnSalir);
+
+        JButton btnMatrizDistancias = new JButton("Mostrar Matriz de Distancias (8)");
+        btnMatrizDistancias.addActionListener(e -> mostrarMatrizDistancias());
+        barraHerramientas.add(btnMatrizDistancias);
 
         JButton btnGuardarGrafo = new JButton("Guardar Grafo (9)");
-btnGuardarGrafo.addActionListener(e -> guardarGrafo());
-barraHerramientas.add(btnGuardarGrafo);
+        btnGuardarGrafo.addActionListener(e -> guardarGrafo());
+        barraHerramientas.add(btnGuardarGrafo);
+
+        JButton btnSalir = new JButton("Salir (10)");
+        btnSalir.addActionListener(e -> System.exit(0));
+        barraHerramientas.add(btnSalir);
         
         // Instanciar los paneles
         panelGrafo = new PanelGrafo();
@@ -338,14 +427,18 @@ barraHerramientas.add(btnGuardarGrafo);
         miEliminarGrafo.addActionListener(e -> eliminarGrafo());
         menu.add(miEliminarGrafo);
         
-        JMenuItem miSalir = new JMenuItem("Salir (8)");
-        miSalir.addActionListener(e -> System.exit(0));
-        menu.add(miSalir);
+        JMenuItem miMatrizDistancias = new JMenuItem("Mostrar Matriz de Distancias (8)");
+        miMatrizDistancias.addActionListener(e -> System.exit(0));
+        menu.add(miMatrizDistancias);
 
         JMenuItem miGuardarGrafo = new JMenuItem("Guardar Grafo (9)");
         miGuardarGrafo.addActionListener(e -> guardarGrafo());
         menu.add(miGuardarGrafo);
         
+        JMenuItem miSalir = new JMenuItem("Salir (10)");
+        miSalir.addActionListener(e -> System.exit(0));
+        menu.add(miSalir);
+
         barraMenu.add(menu);
         setJMenuBar(barraMenu);
         
@@ -405,11 +498,11 @@ barraHerramientas.add(btnGuardarGrafo);
                 eliminarGrafo();
             }
         });
-        
-        mapaEntrada.put(KeyStroke.getKeyStroke("8"), "salir");
-        mapaAccion.put("salir", new AbstractAction() {
+         
+        mapaEntrada.put(KeyStroke.getKeyStroke("8"), "MatrizDistancias");
+        mapaAccion.put("MatrizDistancias", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                System.exit(0);
+                mostrarMatrizDistancias();
             }
         });
 
@@ -417,6 +510,13 @@ barraHerramientas.add(btnGuardarGrafo);
         mapaAccion.put("Guardar", new AbstractAction(){
             public void actionPerformed(ActionEvent e){
                 guardarGrafo();
+            }
+        });
+
+        mapaEntrada.put(KeyStroke.getKeyStroke("control 0"), "salir");
+        mapaAccion.put("salir", new AbstractAction() {
+        public void actionPerformed(ActionEvent e) {
+                System.exit(0);
             }
         });
     }
@@ -464,20 +564,21 @@ barraHerramientas.add(btnGuardarGrafo);
             JOptionPane.showMessageDialog(null, "Primero debe crear un grafo.");
             return;
         }
-        String input = JOptionPane.showInputDialog("Ingrese dos vértices (origen,destino) separados por coma:");
+        String input = JOptionPane.showInputDialog("Ingrese dos vértices y el peso (origen,destino,peso) separados por coma:");
         try {
             String[] partes = input.split(",");
             int origen = Integer.parseInt(partes[0].trim());
             int destino = Integer.parseInt(partes[1].trim());
+            int peso = Integer.parseInt(partes[2].trim());
             if (origen < 0 || origen >= grafo.numeroVertices || destino < 0 || destino >= grafo.numeroVertices) {
                 JOptionPane.showMessageDialog(null, "Vértice inválido.");
                 return;
             }
-            if (grafo.listaAdyacencia.get(origen).contains(destino)) {
+            if (grafo.listaAdyacencia.get(origen).stream().anyMatch(p -> p.first == destino)) {
                 JOptionPane.showMessageDialog(null, "La arista ya existe.");
                 return;
             }
-            grafo.agregarArista(origen, destino);
+            grafo.agregarArista(origen, destino, peso);
             panelGrafo.repaint();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "Entrada inválida.");
@@ -547,7 +648,7 @@ barraHerramientas.add(btnGuardarGrafo);
                 JOptionPane.showMessageDialog(null, "Vértice inválido.");
                 return;
             }
-            if (!grafo.listaAdyacencia.get(origen).contains(destino)) {
+            if (!grafo.listaAdyacencia.get(origen).stream().anyMatch(p -> p.first == destino)) {
                 JOptionPane.showMessageDialog(null, "La arista no existe.");
                 return;
             }
@@ -568,6 +669,15 @@ barraHerramientas.add(btnGuardarGrafo);
         panelGrafo.setGrafo(null);
         panelEstructura.setEstructuraDatos(new ArrayList<>(), "");
     }
+    //opcion 8: matriz
+    private void mostrarMatrizDistancias() {
+        if (grafo == null) {
+            JOptionPane.showMessageDialog(null, "No hay grafo creado.");
+            return;
+        }
+        String matriz = grafo.obtenerMatrizDistancias();
+        JOptionPane.showMessageDialog(null, matriz, "Matriz de Distancias", JOptionPane.INFORMATION_MESSAGE);
+    }
 
     // Opcion 9: Guardar
     private void guardarGrafo() {
@@ -584,10 +694,10 @@ barraHerramientas.add(btnGuardarGrafo);
             // Guardar número de vértices y tipo de grafo
             writer.write(grafo.numeroVertices + "\n");
             writer.write(grafo.dirigido + "\n");
-            // Guardar aristas
+            // Guardar aristas con pesos
             for (int i = 0; i < grafo.numeroVertices; i++) {
-                for (int vecino : grafo.listaAdyacencia.get(i)) {
-                    writer.write(i + "," + vecino + "\n");
+                for (Grafo.Pair<Integer, Integer> p : grafo.listaAdyacencia.get(i)) {
+                    writer.write(i + "," + p.first + "," + p.second + "\n");
                 }
             }
             JOptionPane.showMessageDialog(null, "Grafo guardado correctamente.");
@@ -608,13 +718,14 @@ barraHerramientas.add(btnGuardarGrafo);
                 int vertices = Integer.parseInt(reader.readLine());
                 boolean dirigido = Boolean.parseBoolean(reader.readLine());
                 grafo = new Grafo(vertices, dirigido);
-                // Leer aristas
+                // Leer aristas con pesos
                 String linea;
                 while ((linea = reader.readLine()) != null) {
                     String[] partes = linea.split(",");
                     int origen = Integer.parseInt(partes[0]);
                     int destino = Integer.parseInt(partes[1]);
-                    grafo.agregarArista(origen, destino);
+                    int peso = Integer.parseInt(partes[2]);
+                    grafo.agregarArista(origen, destino, peso);
                 }
                 panelGrafo.setGrafo(grafo);
                 panelEstructura.setEstructuraDatos(new ArrayList<>(), "");
@@ -647,9 +758,8 @@ barraHerramientas.add(btnGuardarGrafo);
                     grafo.visitados.set(actual, true);
                     ordenVisitados.add(actual);
                     panelGrafo.setNodosVisitados(ordenVisitados);
-                    java.util.List<Integer> vecinos = grafo.listaAdyacencia.get(actual);
-                    for (int i = vecinos.size() - 1; i >= 0; i--) {
-                        int vecino = vecinos.get(i);
+                    for (Grafo.Pair<Integer, Integer> p : grafo.listaAdyacencia.get(actual)) {
+                        int vecino = p.first;
                         if (!grafo.visitados.get(vecino)) {
                             pila.push(vecino);
                         }
@@ -686,7 +796,8 @@ barraHerramientas.add(btnGuardarGrafo);
                     grafo.visitados.set(actual, true);
                     ordenVisitados.add(actual);
                     panelGrafo.setNodosVisitados(ordenVisitados);
-                    for (int vecino : grafo.listaAdyacencia.get(actual)) {
+                    for (Grafo.Pair<Integer, Integer> p : grafo.listaAdyacencia.get(actual)) {
+                        int vecino = p.first;
                         if (!visitadosBFS.get(vecino)) {
                             visitadosBFS.set(vecino, true);
                             cola.add(vecino);
