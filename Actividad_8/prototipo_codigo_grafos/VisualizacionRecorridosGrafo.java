@@ -81,7 +81,7 @@ class Grafo {
             }
         }
     }
-    
+
     // Calcular la matriz de distancias usando Floyd-Warshall con pesos
     public int[][] calcularMatrizDistancias() {
         int[][] distancias = new int[numeroVertices][numeroVertices];
@@ -708,16 +708,27 @@ public class VisualizacionRecorridosGrafo extends JFrame {
 
     //extra cargar grafo
     private void cargarGrafo() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Seleccione un archivo de grafo");
+    JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setDialogTitle("Seleccione un archivo de grafo");
+    
+    while (true) { // Bucle para permitir seleccionar otro archivo en caso de error
         int resultado = fileChooser.showOpenDialog(this);
         if (resultado == JFileChooser.APPROVE_OPTION) {
             File archivo = fileChooser.getSelectedFile();
+            String nombreArchivo = archivo.getName();
+
+            // Verificar si el archivo tiene la extensión .txt
+            if (!nombreArchivo.toLowerCase().endsWith(".txt")) {
+                JOptionPane.showMessageDialog(this, "Error: Solo archivos .txt", "Error", JOptionPane.ERROR_MESSAGE);
+                continue; // Volver a mostrar el diálogo para seleccionar otro archivo
+            }
+
             try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
                 // Leer número de vértices y tipo de grafo
                 int vertices = Integer.parseInt(reader.readLine());
                 boolean dirigido = Boolean.parseBoolean(reader.readLine());
                 grafo = new Grafo(vertices, dirigido);
+
                 // Leer aristas con pesos
                 String linea;
                 while ((linea = reader.readLine()) != null) {
@@ -727,11 +738,20 @@ public class VisualizacionRecorridosGrafo extends JFrame {
                     int peso = Integer.parseInt(partes[2]);
                     grafo.agregarArista(origen, destino, peso);
                 }
+
                 panelGrafo.setGrafo(grafo);
                 panelEstructura.setEstructuraDatos(new ArrayList<>(), "");
-                JOptionPane.showMessageDialog(null, "Grafo cargado correctamente.");
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Error al cargar el grafo.");
+                JOptionPane.showMessageDialog(this, "Grafo cargado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                break; // Salir del bucle si el archivo se cargó correctamente
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Error al cargar el grafo.", "Error", JOptionPane.ERROR_MESSAGE);
+                    break; // Salir del bucle si hay un error al leer el archivo
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Error: El archivo no tiene el formato correcto.", "Error", JOptionPane.ERROR_MESSAGE);
+                    break; // Salir del bucle si el archivo no tiene el formato correcto
+                }
+            } else {
+                break; // Salir del bucle si el usuario cancela la selección
             }
         }
     }
