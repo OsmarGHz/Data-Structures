@@ -379,7 +379,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 600); 
         setLocationRelativeTo(null);
-		setResizable(false);
+	setResizable(true);
         // Toolbar en la parte superior
         JToolBar barraHerramientas = new JToolBar();
         barraHerramientas.setFloatable(false);
