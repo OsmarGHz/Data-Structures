@@ -233,6 +233,39 @@ class Grafo {
 
         return mst;
     }
+
+    // Método para verificar si el grafo es conexo usando DFS
+    public boolean esConexo() {
+        if (numeroVertices == 0) {
+            return false; // Grafo vacío no es conexo
+        }
+    
+        // Arreglo para marcar nodos visitados
+        boolean[] visitados = new boolean[numeroVertices];
+        java.util.Stack<Integer> pila = new java.util.Stack<>();
+        pila.push(0); // Empezar desde el nodo 0
+        visitados[0] = true;
+    
+        // Recorrido DFS
+        while (!pila.isEmpty()) {
+            int u = pila.pop();
+            for (Arista arista : listaAdyacencia.get(u)) {
+                int v = arista.destino;
+                if (!visitados[v]) {
+                    visitados[v] = true;
+                    pila.push(v);
+                }
+            }
+        }
+    
+        // Verificar si todos los nodos fueron visitados
+        for (boolean visitado : visitados) {
+            if (!visitado) {
+                return false; // Si algún nodo no fue visitado, el grafo no es conexo
+            }
+        }
+        return true;
+    }
 }
 
 // Panel para dibujar el grafo (distribución circular) y marcar los nodos
@@ -1121,59 +1154,65 @@ public class VisualizacionRecorridosGrafo extends JFrame {
     }
 
     private void ejecutarPrim() {
-        if (grafo == null) {
-            JOptionPane.showMessageDialog(null, "No hay grafo creado.");
-            return;
-        }
-        if (grafo.dirigido) {
-            JOptionPane.showMessageDialog(null, "El algoritmo de Prim solo aplica a grafos no dirigidos.");
-            return;
-        }
-
-        // Obtener el MST usando el algoritmo de Prim
-        java.util.ArrayList<Arista> mst = grafo.primMST();
-
-        // Animación paso a paso del MST
-        final int[] index = { 0 };
-        final boolean[][] animEdges = new boolean[grafo.numeroVertices][grafo.numeroVertices];
-        final Color[] animVertices = new Color[grafo.numeroVertices];
-        final Color[] colores = { Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA }; // Colores para las
-                                                                                                     // aristas
-
-        Timer timer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (index[0] < mst.size()) {
-                    Arista arista = mst.get(index[0]);
-                    animEdges[arista.peso][arista.destino] = true; // Resaltar la arista
-                    animVertices[arista.peso] = Color.GREEN; // Resaltar el vértice
-                    animVertices[arista.destino] = Color.GREEN; // Resaltar el vértice
-
-                    // Dibujar la arista con un color específico
-                    panelGrafo.setHighlightedEdges(animEdges);
-                    panelGrafo.setHighlightedVertices(animVertices);
-                    panelGrafo.repaint(); // Forzar la actualización del panel
-
-                    index[0]++;
-                } else {
-                    ((Timer) e.getSource()).stop();
-
-                    // Mostrar el resumen del MST
-                    StringBuilder resumen = new StringBuilder("Recorrido del Árbol Abarcador de Costo Mínimo (MST):\n");
-                    int pesoTotal = 0;
-                    for (Arista arista : mst) {
-                        resumen.append(arista.peso).append(" - ").append(arista.destino).append(" (Peso: ")
-                                .append(arista.peso).append(")\n");
-                        pesoTotal += arista.peso;
-                    }
-                    resumen.append("Peso total del MST: ").append(pesoTotal);
-                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado de Prim",
-                            JOptionPane.INFORMATION_MESSAGE);
-                }
-            }
-        });
-        timer.start();
+    if (grafo == null) {
+        JOptionPane.showMessageDialog(null, "No hay grafo creado.");
+        return;
     }
+
+    // Verificar si el grafo es conexo
+    if (!grafo.esConexo()) {
+        JOptionPane.showMessageDialog(null, "El grafo no es conexo. El algoritmo de Prim no puede ejecutarse.");
+        return;
+    }
+
+    // Obtener el MST usando el algoritmo de Prim
+    java.util.ArrayList<Arista> mst = grafo.primMST();
+
+    // Animación paso a paso del MST
+    final int[] index = { 0 };
+    final boolean[][] animEdges = new boolean[grafo.numeroVertices][grafo.numeroVertices];
+    final Color[] animVertices = new Color[grafo.numeroVertices];
+    final Color[] colores = { Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA }; // Colores para las aristas
+
+    Timer timer = new Timer(1000, new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (index[0] < mst.size()) {
+                Arista arista = mst.get(index[0]);
+                animEdges[arista.peso][arista.destino] = true; // Resaltar la arista
+                animVertices[arista.peso] = Color.GREEN; // Resaltar el vértice
+                animVertices[arista.destino] = Color.GREEN; // Resaltar el vértice
+
+                // Dibujar la arista con un color específico
+                panelGrafo.setHighlightedEdges(animEdges);
+                panelGrafo.setHighlightedVertices(animVertices);
+                panelGrafo.repaint(); // Forzar la actualización del panel
+
+                index[0]++;
+            } else {
+                ((Timer) e.getSource()).stop();
+
+                // Mostrar el resumen del MST
+                StringBuilder resumen = new StringBuilder("Recorrido del Árbol Abarcador de Costo Mínimo (MST):\n");
+                int pesoTotal = 0;
+                for (Arista arista : mst) {
+                    resumen.append(arista.peso).append(" - ").append(arista.destino).append(" (Peso: ")
+                            .append(arista.peso).append(")\n");
+                    pesoTotal += arista.peso;
+                }
+                resumen.append("Peso total del MST: ").append(pesoTotal);
+                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado de Prim",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                // Limpiar resaltados después de mostrar el mensaje
+                panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
+                panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
+                panelGrafo.repaint();
+            }
+        }
+    });
+    timer.start();
+}
 
     
     // Nueva Opción: Ejecutar Kruskal para Árbol Abarcador de Costo Mínimo
