@@ -1,3 +1,5 @@
+package codigo_principal;
+
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
@@ -11,21 +13,21 @@ import java.util.*;
 
 //Clase que representa una arista con destino y costo
 class Arista {
- int destino;
- int peso;
+    int destino;
+    int peso;
 
- public Arista(int destino, int peso) {
-     this.destino = destino;
-     this.peso = peso;
- }
+    public Arista(int destino, int peso) {
+        this.destino = destino;
+        this.peso = peso;
+    }
 }
 
 // Clase que representa el grafo utilizando listas de adyacencia
 class Grafo {
     int numeroVertices;
-    java.util.ArrayList<java.util.ArrayList<Arista>> listaAdyacencia;  // Lista de adyacencia de aristas ponderadas
-    java.util.ArrayList<Boolean> visitados;                              // Seguimiento de nodos visitados
-    boolean dirigido;                                                   // true: grafo dirigido, false: no dirigido
+    java.util.ArrayList<java.util.ArrayList<Arista>> listaAdyacencia; // Lista de adyacencia de aristas ponderadas
+    java.util.ArrayList<Boolean> visitados; // Seguimiento de nodos visitados
+    boolean dirigido; // true: grafo dirigido, false: no dirigido
 
     // Constructor que recibe el número de vértices y el tipo de grafo
     public Grafo(int vertices, boolean dirigido) {
@@ -38,7 +40,37 @@ class Grafo {
             visitados.add(false);
         }
     }
-    
+
+    // En la clase Grafo agrega:
+    public void agregarVertice() {
+        numeroVertices++;
+        listaAdyacencia.add(new ArrayList<>());
+        visitados.add(false);
+    }
+
+    public void eliminarVertice(int vertice) {
+        if (vertice < 0 || vertice >= numeroVertices) {
+            throw new IllegalArgumentException("Vértice inválido");
+        }
+        // Se elimina la lista de adyacencia del vértice y se quita de los visitados.
+        listaAdyacencia.remove(vertice);
+        visitados.remove(vertice);
+        numeroVertices--;
+
+        // Se recorren todas las listas para quitar aristas que apunten al vértice
+        // eliminado,
+        // y actualizar los índices de las aristas con destino mayor al vértice
+        // eliminado.
+        for (java.util.List<Arista> lista : listaAdyacencia) {
+            lista.removeIf(arista -> arista.destino == vertice);
+            for (Arista arista : lista) {
+                if (arista.destino > vertice) {
+                    arista.destino--;
+                }
+            }
+        }
+    }
+
     // Agrega una arista con peso entre dos vértices.
     // Si el grafo es no dirigido, se agrega la arista en ambos sentidos.
     public void agregarArista(int origen, int destino, int peso) {
@@ -59,7 +91,7 @@ class Grafo {
             listaAdyacencia.get(destino).add(new Arista(origen, peso));
         }
     }
-    
+
     // Elimina una arista entre dos vértices.
     // En grafo no dirigido, elimina la conexión en ambos sentidos.
     public void eliminarArista(int origen, int destino) {
@@ -68,8 +100,9 @@ class Grafo {
             listaAdyacencia.get(destino).removeIf(arista -> arista.destino == origen);
         }
     }
-    
-    // Retorna una representación en cadena de la lista de adyacencia con ponderación
+
+    // Retorna una representación en cadena de la lista de adyacencia con
+    // ponderación
     public String obtenerListaAdyacencia() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < numeroVertices; i++) {
@@ -88,6 +121,7 @@ class Grafo {
             visitados.set(i, false);
         }
     }
+
     // Calcular la matriz de distancias usando Floyd-Warshall con pesos
     public int[][] calcularMatrizDistancias() {
         int[][] distancias = new int[numeroVertices][numeroVertices];
@@ -103,7 +137,8 @@ class Grafo {
             }
         }
 
-     // Llenar la matriz con los pesos de las aristas usando un for mejorado con Arista
+        // Llenar la matriz con los pesos de las aristas usando un for mejorado con
+        // Arista
         for (int i = 0; i < numeroVertices; i++) {
             for (Arista arista : listaAdyacencia.get(i)) {
                 distancias[i][arista.destino] = arista.peso;
@@ -154,10 +189,11 @@ class Grafo {
     }
 }
 
-// Panel para dibujar el grafo (distribución circular) y marcar los nodos visitados
+// Panel para dibujar el grafo (distribución circular) y marcar los nodos
+// visitados
 class PanelGrafo extends JPanel {
     private Grafo grafo;
-    //private java.util.List<Integer> nodosVisitados = new ArrayList<>();
+    // private java.util.List<Integer> nodosVisitados = new ArrayList<>();
     private java.util.ArrayList<Integer> nodosVisitados = new java.util.ArrayList<>();
     // Arreglo para indicar qué aristas están resaltadas: [origen][destino]
     private boolean[][] highlightedEdges;
@@ -166,60 +202,61 @@ class PanelGrafo extends JPanel {
     private Point[] posiciones; // Arreglo para almacenar las posiciones de los vértices
     private int verticeSeleccionado = -1; // Índice del vértice seleccionado para mover
 
-	public PanelGrafo() {
-		// Agregar listeners de mouse para mover los vértices
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				if (posiciones == null) return; // Add this null check
-				// Verificar si se hizo clic sobre un vértice
-				for (int i = 0; i < posiciones.length; i++) {
-					if (posiciones[i] != null && e.getPoint().distance(posiciones[i]) <= 15) {
-						verticeSeleccionado = i;
-						break;
-					}
-				}
-			}
+    public PanelGrafo() {
+        // Agregar listeners de mouse para mover los vértices
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (posiciones == null)
+                    return; // Add this null check
+                // Verificar si se hizo clic sobre un vértice
+                for (int i = 0; i < posiciones.length; i++) {
+                    if (posiciones[i] != null && e.getPoint().distance(posiciones[i]) <= 15) {
+                        verticeSeleccionado = i;
+                        break;
+                    }
+                }
+            }
 
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				verticeSeleccionado = -1; // Liberar el vértice seleccionado
-			}
-		});
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                verticeSeleccionado = -1; // Liberar el vértice seleccionado
+            }
+        });
 
-		addMouseMotionListener(new MouseMotionAdapter() {
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				if (verticeSeleccionado != -1) {
-					// Limitar los movimientos dentro de los límites del panel
-					int newX = Math.max(15, Math.min(getWidth() - 15, e.getPoint().x));
-					int newY = Math.max(15, Math.min(getHeight() - 15, e.getPoint().y));
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (verticeSeleccionado != -1) {
+                    // Limitar los movimientos dentro de los límites del panel
+                    int newX = Math.max(15, Math.min(getWidth() - 15, e.getPoint().x));
+                    int newY = Math.max(15, Math.min(getHeight() - 15, e.getPoint().y));
 
-					// Verificar si la nueva posición colisiona con otro vértice
-					if (!verificarColision(newX, newY)) {
-						// Si no hay colisión, mover el vértice
-						posiciones[verticeSeleccionado] = new Point(newX, newY);
-						repaint();
-					}
-				}
-			}
-		});
-	}
+                    // Verificar si la nueva posición colisiona con otro vértice
+                    if (!verificarColision(newX, newY)) {
+                        // Si no hay colisión, mover el vértice
+                        posiciones[verticeSeleccionado] = new Point(newX, newY);
+                        repaint();
+                    }
+                }
+            }
+        });
+    }
 
-	// Verificar si el vértice en la nueva posición colisiona con otro
-	private boolean verificarColision(int newX, int newY) {
-		int radio = 15; // Suponiendo que el radio del vértice es de 15px
-		for (int i = 0; i < posiciones.length; i++) {
-			if (posiciones[i] != null && i != verticeSeleccionado) {
-				// Verificar si la distancia entre el vértice y el nuevo punto es menor que el doble del radio (colisión)
-				if (new Point(newX, newY).distance(posiciones[i]) < 2 * radio) {
-					return true; // Hay colisión
-				}
-			}
-		}
-		return false; // No hay colisión
-	}
-
+    // Verificar si el vértice en la nueva posición colisiona con otro
+    private boolean verificarColision(int newX, int newY) {
+        int radio = 15; // Suponiendo que el radio del vértice es de 15px
+        for (int i = 0; i < posiciones.length; i++) {
+            if (posiciones[i] != null && i != verticeSeleccionado) {
+                // Verificar si la distancia entre el vértice y el nuevo punto es menor que el
+                // doble del radio (colisión)
+                if (new Point(newX, newY).distance(posiciones[i]) < 2 * radio) {
+                    return true; // Hay colisión
+                }
+            }
+        }
+        return false; // No hay colisión
+    }
 
     public void setGrafo(Grafo g) {
         this.grafo = g;
@@ -230,7 +267,7 @@ class PanelGrafo extends JPanel {
             posiciones = new Point[g.numeroVertices];
             // Inicializar las posiciones de los vértices en una distribución circular
             int ancho = getWidth(), alto = getHeight();
-            System.out.println("Medidas: "+ancho+", "+alto);
+            System.out.println("Medidas: " + ancho + ", " + alto);
             int radio = Math.min(ancho, alto) / 2 - 50;
             int centroX = ancho / 2, centroY = alto / 2;
             for (int i = 0; i < g.numeroVertices; i++) {
@@ -242,59 +279,63 @@ class PanelGrafo extends JPanel {
         }
         repaint();
     }
-    
+
     public void setNodosVisitados(java.util.ArrayList<Integer> visitados) {
         this.nodosVisitados = new java.util.ArrayList<>(visitados);
         repaint();
     }
-    
+
     // Actualiza la lista de nodos visitados para pintar en verde
     public void setNodosVisitados(java.util.List<Integer> visitados) {
         this.nodosVisitados = new ArrayList<>(visitados);
         repaint();
     }
-    
+
     // Actualiza el arreglo de aristas resaltadas
     public void setHighlightedEdges(boolean[][] edges) {
         highlightedEdges = edges;
         repaint();
     }
-    
+
     // Actualiza el arreglo de vértices resaltados
     public void setHighlightedVertices(Color[] vertices) {
         highlightedVertices = vertices;
         repaint();
     }
-    
-    
+
     /**
      * Dibuja una línea con una flecha al final.
+     * 
      * @param g2 El Graphics2D sobre el que dibujar.
      * @param x1 Coordenada X de inicio.
      * @param y1 Coordenada Y de inicio.
      * @param x2 Coordenada X de destino.
      * @param y2 Coordenada Y de destino.
-     * @param d Longitud de la base de la flecha.
-     * @param h Altura de la flecha.
+     * @param d  Longitud de la base de la flecha.
+     * @param h  Altura de la flecha.
      */
     private void drawArrowLine(Graphics2D g2, int x1, int y1, int x2, int y2, int d, int h) {
         // Radio del nodo (para no dibujar la flecha dentro del nodo destino)
         int nodeRadius = 15;
-        //Se calcula la diferencia en X e Y entre el punto de inicio (x1, y1) y el destino (x2, y2)
+        // Se calcula la diferencia en X e Y entre el punto de inicio (x1, y1) y el
+        // destino (x2, y2)
         int dx = x2 - x1, dy = y2 - y1;
-        //Se obtiene D, la distancia total entre ambos puntos.
+        // Se obtiene D, la distancia total entre ambos puntos.
         double D = Math.sqrt(dx * dx + dy * dy);
-        //Si D es 0 (los puntos son iguales), se sale de la función para evitar dividir por cero.
-        if (D == 0) return;  // Evita división por cero
+        // Si D es 0 (los puntos son iguales), se sale de la función para evitar dividir
+        // por cero.
+        if (D == 0)
+            return; // Evita división por cero
 
-        // Normalizamos la dirección: Se obtiene el vector unitario que apunta desde el origen al destino.
+        // Normalizamos la dirección: Se obtiene el vector unitario que apunta desde el
+        // origen al destino.
         double cos = dx / D, sin = dy / D;
         // Acortar la línea para que termine en el borde del nodo de destino
         double newD = D - nodeRadius;
-        //Se calcula el nuevo punto final (newX2, newY2) multiplicando 
-        //el vector unitario por newD y sumándolo al origen.
-        int newX2 = x1 + (int)(newD * cos);
-        int newY2 = y1 + (int)(newD * sin);
+        // Se calcula el nuevo punto final (newX2, newY2) multiplicando
+        // el vector unitario por newD y sumándolo al origen.
+        int newX2 = x1 + (int) (newD * cos);
+        int newY2 = y1 + (int) (newD * sin);
 
         // Calcula las coordenadas para la flecha
         double xm = newD - d;
@@ -308,20 +349,19 @@ class PanelGrafo extends JPanel {
         double yB = xn * sin + yn * cos + y1;
         int x3 = (int) xB;
         int y3 = (int) yB;
-        
+
         // Dibuja la línea y la flecha
         g2.drawLine(x1, y1, newX2, newY2);
         int[] xpoints = { newX2, x2a, x3 };
         int[] ypoints = { newY2, y2a, y3 };
         g2.fillPolygon(xpoints, ypoints, 3);
     }
-    
-    
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (grafo == null || posiciones == null) return;
+        if (grafo == null || posiciones == null)
+            return;
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -339,7 +379,8 @@ class PanelGrafo extends JPanel {
                     drawArrowLine(g2, p1.x, p1.y, p2.x, p2.y, 10, 5);
                 } else {
                     if (i < arista.destino) {
-                        if (highlightedEdges != null && (highlightedEdges[i][arista.destino] || highlightedEdges[arista.destino][i])) {
+                        if (highlightedEdges != null
+                                && (highlightedEdges[i][arista.destino] || highlightedEdges[arista.destino][i])) {
                             g2.setColor(Color.BLUE);
                         } else {
                             g2.setColor(Color.BLACK);
@@ -366,31 +407,33 @@ class PanelGrafo extends JPanel {
     }
 }
 
-// Clase principal: ventana que contiene el grafo, el panel de estructura de datos,
-// un toolbar con las opciones en la parte superior, atajos de teclado y un menú.
+// Clase principal: ventana que contiene el grafo, el panel de estructura de
+// datos,
+// un toolbar con las opciones en la parte superior, atajos de teclado y un
+// menú.
 public class VisualizacionRecorridosGrafo extends JFrame {
     private static Grafo grafo; // Instancia del grafo
     private static PanelGrafo panelGrafo; // Panel para dibujar el grafo
-    
+
     public VisualizacionRecorridosGrafo() {
         super("Grafo en Java Swing");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 600); 
+        setSize(900, 600);
         setLocationRelativeTo(null);
-	setResizable(true);
+        setResizable(true);
         // Toolbar en la parte superior
         JToolBar barraHerramientas = new JToolBar();
         barraHerramientas.setFloatable(false);
-        //barraHerramientas.setLayout(new FlowLayout(FlowLayout.LEFT));
-        
+        // barraHerramientas.setLayout(new FlowLayout(FlowLayout.LEFT));
+
         JButton btnCrearGrafo = new JButton("Crear Grafo (1)");
         btnCrearGrafo.addActionListener(e -> crearGrafo());
         barraHerramientas.add(btnCrearGrafo);
-        
+
         JButton btnAgregarArista = new JButton("Agregar Arista (2)");
         btnAgregarArista.addActionListener(e -> agregarArista());
         barraHerramientas.add(btnAgregarArista);
-        
+
         JButton btnMostrarLista = new JButton("Mostrar Lista (3)");
         btnMostrarLista.addActionListener(e -> mostrarListaAdyacencia());
         barraHerramientas.add(btnMostrarLista);
@@ -398,7 +441,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnEliminarArista = new JButton("Eliminar Arista (4)");
         btnEliminarArista.addActionListener(e -> eliminarArista());
         barraHerramientas.add(btnEliminarArista);
-        
+
         JButton btnEliminarGrafo = new JButton("Eliminar Grafo (5)");
         btnEliminarGrafo.addActionListener(e -> eliminarGrafo());
         barraHerramientas.add(btnEliminarGrafo);
@@ -406,7 +449,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnMatrizDistancias = new JButton("Mostrar Matriz de Distancias (6)");
         btnMatrizDistancias.addActionListener(e -> mostrarMatrizDistancias());
         barraHerramientas.add(btnMatrizDistancias);
-        
+
         JButton btnDijkstra = new JButton("Dijkstra (7)");
         btnDijkstra.addActionListener(e -> ejecutarDijkstra());
         barraHerramientas.add(btnDijkstra);
@@ -414,11 +457,11 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnFloyd = new JButton("Floyd (8)");
         btnFloyd.addActionListener(e -> ejecutarFloyd());
         barraHerramientas.add(btnFloyd);
-        
+
         JButton btnGuardarGrafo = new JButton("Guardar Grafo (9)");
         btnGuardarGrafo.addActionListener(e -> guardarGrafo());
         barraHerramientas.add(btnGuardarGrafo);
-                
+
         JButton btnCargarGrafo = new JButton("Cargar Grafo (0)");
         btnCargarGrafo.addActionListener(e -> cargarGrafo());
         barraHerramientas.add(btnCargarGrafo);
@@ -430,15 +473,16 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnKruskal = new JButton("Kruskal (K)");
         btnKruskal.addActionListener(e -> ejecutarKruskal());
         barraHerramientas.add(btnKruskal);
-        
-        //crear ScrollBar
-        // Agregar la barra de herramientas a un JScrollPane para habilitar desplazamiento
-		JScrollPane scrollBarraHerramientas = new JScrollPane(barraHerramientas, 
-		JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+        // crear ScrollBar
+        // Agregar la barra de herramientas a un JScrollPane para habilitar
+        // desplazamiento
+        JScrollPane scrollBarraHerramientas = new JScrollPane(barraHerramientas,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
         // Instanciar los paneles
         panelGrafo = new PanelGrafo();
-		System.out.println("Medidas panelGrafo: "+panelGrafo.getWidth()+", "+panelGrafo.getHeight());
+        System.out.println("Medidas panelGrafo: " + panelGrafo.getWidth() + ", " + panelGrafo.getHeight());
 
         // Panel central que contiene el panel del grafo
         JPanel panelPrincipal = new JPanel(new BorderLayout());
@@ -446,95 +490,95 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         panelPrincipal.add(panelGrafo, BorderLayout.CENTER);
 
         // Agregar toolbar y panel principal al content pane
-		//getContentPane().add(scrollBarraHerramientas, BorderLayout.NORTH);
-        //getContentPane().add(barraHerramientas, BorderLayout.NORTH);
+        // getContentPane().add(scrollBarraHerramientas, BorderLayout.NORTH);
+        // getContentPane().add(barraHerramientas, BorderLayout.NORTH);
         getContentPane().add(panelPrincipal, BorderLayout.CENTER);
-        
+
         configurarAtajosTeclado();
     }
-    
+
     private void configurarAtajosTeclado() {
         InputMap mapaEntrada = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap mapaAccion = getRootPane().getActionMap();
-        
+
         mapaEntrada.put(KeyStroke.getKeyStroke("1"), "crearGrafo");
         mapaAccion.put("crearGrafo", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 crearGrafo();
             }
         });
-        
+
         mapaEntrada.put(KeyStroke.getKeyStroke("2"), "agregarArista");
         mapaAccion.put("agregarArista", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 agregarArista();
             }
         });
-        
+
         mapaEntrada.put(KeyStroke.getKeyStroke("3"), "mostrarLista");
         mapaAccion.put("mostrarLista", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 mostrarListaAdyacencia();
             }
         });
-        
+
         mapaEntrada.put(KeyStroke.getKeyStroke("4"), "eliminarArista");
         mapaAccion.put("eliminarArista", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 eliminarArista();
             }
         });
-        
+
         mapaEntrada.put(KeyStroke.getKeyStroke("5"), "eliminarGrafo");
         mapaAccion.put("eliminarGrafo", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 eliminarGrafo();
             }
         });
-         
+
         mapaEntrada.put(KeyStroke.getKeyStroke("6"), "MatrizDistancias");
         mapaAccion.put("MatrizDistancias", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 mostrarMatrizDistancias();
             }
         });
-                
+
         mapaEntrada.put(KeyStroke.getKeyStroke("7"), "ejecutarDijkstra");
         mapaAccion.put("ejecutarDijkstra", new AbstractAction() {
-        public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {
                 ejecutarDijkstra();
             }
         });
 
         mapaEntrada.put(KeyStroke.getKeyStroke("8"), "ejecutarFloyd");
         mapaAccion.put("ejecutarFloyd", new AbstractAction() {
-        public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {
                 ejecutarFloyd();
             }
         });
 
-        mapaEntrada.put(KeyStroke.getKeyStroke("9"),"Guardar");
-        mapaAccion.put("Guardar", new AbstractAction(){
-            public void actionPerformed(ActionEvent e){
+        mapaEntrada.put(KeyStroke.getKeyStroke("9"), "Guardar");
+        mapaAccion.put("Guardar", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
                 guardarGrafo();
             }
         });
-        
-        mapaEntrada.put(KeyStroke.getKeyStroke("0"),"Cargar");
-        mapaAccion.put("Cargar", new AbstractAction(){
-            public void actionPerformed(ActionEvent e){
+
+        mapaEntrada.put(KeyStroke.getKeyStroke("0"), "Cargar");
+        mapaAccion.put("Cargar", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
                 cargarGrafo();
             }
         });
 
         mapaEntrada.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "salir");
         mapaAccion.put("salir", new AbstractAction() {
-        public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {
                 System.exit(0);
             }
         });
     }
-    
+
     // Opción 1: Crear Grafo
     private void crearGrafo() {
         if (grafo != null) {
@@ -547,10 +591,10 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         }
         String input = JOptionPane.showInputDialog("Ingrese el número de vértices:");
         if (input == null) {
-			// Si el usuario cancela, puedes salir o hacer otra acción
-			JOptionPane.showMessageDialog(null, "Operación cancelada.");
-			return;
-		}
+            // Si el usuario cancela, puedes salir o hacer otra acción
+            JOptionPane.showMessageDialog(null, "Operación cancelada.");
+            return;
+        }
         try {
             int numVertices = Integer.parseInt(input.trim());
             if (numVertices <= 0) {
@@ -566,28 +610,29 @@ public class VisualizacionRecorridosGrafo extends JFrame {
                     "¿El grafo es dirigido?\n(Selecciona Sí para dirigido, No para no dirigido)",
                     "Tipo de grafo", JOptionPane.YES_NO_OPTION);
             boolean esDirigido = (directedOption == JOptionPane.YES_OPTION);
-            
+
             // Crear el grafo con el número de vértices y el tipo seleccionado
             grafo = new Grafo(numVertices, esDirigido);
             panelGrafo.setGrafo(grafo);
-            
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
-    
+
     // Opción 2: Agregar Arista
     private void agregarArista() {
         if (grafo == null) {
             JOptionPane.showMessageDialog(null, "Primero debe crear un grafo.");
             return;
         }
-        String input = JOptionPane.showInputDialog("Ingrese origen, destino y peso separados por coma (origen,destino,peso):");
+        String input = JOptionPane
+                .showInputDialog("Ingrese origen, destino y peso separados por coma (origen,destino,peso):");
         if (input == null) {
-			// Si el usuario cancela, puedes salir o hacer otra acción
-			//JOptionPane.showMessageDialog(null, "Operación cancelada.");
-			return;
-		}
+            // Si el usuario cancela, puedes salir o hacer otra acción
+            // JOptionPane.showMessageDialog(null, "Operación cancelada.");
+            return;
+        }
         try {
             String[] partes = input.split(",");
             int origen = Integer.parseInt(partes[0].trim());
@@ -609,7 +654,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
-    
+
     // Opción 3: Mostrar Lista de Adyacencia
     private void mostrarListaAdyacencia() {
         if (grafo == null) {
@@ -619,33 +664,33 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         String lista = grafo.obtenerListaAdyacencia();
         JOptionPane.showMessageDialog(null, lista, "Lista de Adyacencia", JOptionPane.INFORMATION_MESSAGE);
     }
-    
+
     // Opción 4: Eliminar Arista
     private void eliminarArista() {
         if (grafo == null) {
             JOptionPane.showMessageDialog(null, "Primero debe crear un grafo.");
             return;
         }
-		// Verificar si el grafo tiene aristas
-		boolean tieneAristas = false;
-		for (int i = 0; i < grafo.numeroVertices; i++) {
-			if (!grafo.listaAdyacencia.get(i).isEmpty()) {
-				tieneAristas = true;
-				break;
-			}
-		}
+        // Verificar si el grafo tiene aristas
+        boolean tieneAristas = false;
+        for (int i = 0; i < grafo.numeroVertices; i++) {
+            if (!grafo.listaAdyacencia.get(i).isEmpty()) {
+                tieneAristas = true;
+                break;
+            }
+        }
 
-		if (!tieneAristas) {
-			JOptionPane.showMessageDialog(null, "El grafo no tiene aristas.");
-			return;
-		}
-		
+        if (!tieneAristas) {
+            JOptionPane.showMessageDialog(null, "El grafo no tiene aristas.");
+            return;
+        }
+
         String input = JOptionPane.showInputDialog("Ingrese dos vértices (origen,destino) de la arista a eliminar:");
         if (input == null) {
-			// Si el usuario cancela, puedes salir o hacer otra acción
-			//JOptionPane.showMessageDialog(null, "Operación cancelada.");
-			return;
-		}
+            // Si el usuario cancela, puedes salir o hacer otra acción
+            // JOptionPane.showMessageDialog(null, "Operación cancelada.");
+            return;
+        }
         try {
             String[] partes = input.split(",");
             int origen = Integer.parseInt(partes[0].trim());
@@ -671,7 +716,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
-    
+
     // Opción 5: Eliminar Grafo
     private void eliminarGrafo() {
         if (grafo == null) {
@@ -681,7 +726,8 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         grafo = null;
         panelGrafo.setGrafo(null);
     }
-    //opcion 6: matriz
+
+    // opcion 6: matriz
     private void mostrarMatrizDistancias() {
         if (grafo == null) {
             JOptionPane.showMessageDialog(null, "No hay grafo creado.");
@@ -706,88 +752,96 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             // Guardar número de vértices y tipo de grafo
             writer.write(grafo.numeroVertices + "\n");
             writer.write(grafo.dirigido + "\n");
-            
+
             // Guardar aristas con pesos
             for (int i = 0; i < grafo.numeroVertices; i++) {
                 for (Arista arista : grafo.listaAdyacencia.get(i)) {
                     // Si el grafo es dirigido, escribimos todas las aristas
-                    // Si el grafo es no dirigido, solo escribimos cuando i < destino para evitar duplicados
+                    // Si el grafo es no dirigido, solo escribimos cuando i < destino para evitar
+                    // duplicados
                     if (grafo.dirigido || i < arista.destino) {
                         writer.write(i + "," + arista.destino + "," + arista.peso + "\n");
                     }
                 }
             }
-            
+
             JOptionPane.showMessageDialog(null, "Grafo guardado correctamente.");
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "Error al guardar el grafo.");
         }
     }
 
-    //extra cargar grafo
- // Extra cargar grafo
-	private void cargarGrafo() {
-		// Verificar si ya hay un grafo cargado
-		if (grafo != null) {
-			int opcion = JOptionPane.showConfirmDialog(this, "Ya hay un grafo cargado. ¿Deseas cargar otro?", "Cargar otro grafo", JOptionPane.YES_NO_OPTION);
-			if (opcion == JOptionPane.YES_OPTION) {
-				// Llamar a eliminarGrafo() para borrar el grafo actual
-				eliminarGrafo();
-			} else {
-				return; // Si el usuario no quiere cargar otro, se sale del método
-			}
-		}
+    // extra cargar grafo
+    // Extra cargar grafo
+    private void cargarGrafo() {
+        // Verificar si ya hay un grafo cargado
+        if (grafo != null) {
+            int opcion = JOptionPane.showConfirmDialog(this, "Ya hay un grafo cargado. ¿Deseas cargar otro?",
+                    "Cargar otro grafo", JOptionPane.YES_NO_OPTION);
+            if (opcion == JOptionPane.YES_OPTION) {
+                // Llamar a eliminarGrafo() para borrar el grafo actual
+                eliminarGrafo();
+            } else {
+                return; // Si el usuario no quiere cargar otro, se sale del método
+            }
+        }
 
-		JFileChooser fileChooser = new JFileChooser();
-		fileChooser.setDialogTitle("Seleccione un archivo de grafo");
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Seleccione un archivo de grafo");
 
-		while (true) { // Bucle para permitir seleccionar otro archivo en caso de error
-			int resultado = fileChooser.showOpenDialog(this);
-			if (resultado == JFileChooser.APPROVE_OPTION) {
-				File archivo = fileChooser.getSelectedFile();
-				String nombreArchivo = archivo.getName();
+        while (true) { // Bucle para permitir seleccionar otro archivo en caso de error
+            int resultado = fileChooser.showOpenDialog(this);
+            if (resultado == JFileChooser.APPROVE_OPTION) {
+                File archivo = fileChooser.getSelectedFile();
+                String nombreArchivo = archivo.getName();
 
-				// Verificar si el archivo tiene la extensión .txt
-				if (!nombreArchivo.toLowerCase().endsWith(".txt")) {
-					JOptionPane.showMessageDialog(this, "Error: Solo archivos .txt", "Error", JOptionPane.ERROR_MESSAGE);
-					continue; // Volver a mostrar el diálogo para seleccionar otro archivo
-				}
+                // Verificar si el archivo tiene la extensión .txt
+                if (!nombreArchivo.toLowerCase().endsWith(".txt")) {
+                    JOptionPane.showMessageDialog(this, "Error: Solo archivos .txt", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    continue; // Volver a mostrar el diálogo para seleccionar otro archivo
+                }
 
-				try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
-					// Leer número de vértices y tipo de grafo
-					int vertices = Integer.parseInt(reader.readLine());
-					boolean dirigido = Boolean.parseBoolean(reader.readLine());
-					grafo = new Grafo(vertices, dirigido);
+                try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
+                    // Leer número de vértices y tipo de grafo
+                    int vertices = Integer.parseInt(reader.readLine());
+                    boolean dirigido = Boolean.parseBoolean(reader.readLine());
+                    grafo = new Grafo(vertices, dirigido);
 
-					// Leer aristas con pesos
-					String linea;
-					while ((linea = reader.readLine()) != null) {
-						String[] partes = linea.split(",");
-						int origen = Integer.parseInt(partes[0]);
-						int destino = Integer.parseInt(partes[1]);
-						int peso = Integer.parseInt(partes[2]);
-						grafo.agregarArista(origen, destino, peso);
-					}
+                    // Leer aristas con pesos
+                    String linea;
+                    while ((linea = reader.readLine()) != null) {
+                        String[] partes = linea.split(",");
+                        int origen = Integer.parseInt(partes[0]);
+                        int destino = Integer.parseInt(partes[1]);
+                        int peso = Integer.parseInt(partes[2]);
+                        grafo.agregarArista(origen, destino, peso);
+                    }
 
-					panelGrafo.setGrafo(grafo);
-					System.out.println("Grafo cargado correctamente.");
-					JOptionPane.showMessageDialog(this, "Grafo cargado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-					break; // Salir del bucle si el archivo se cargó correctamente
-				} catch (IOException ex) {
-					JOptionPane.showMessageDialog(this, "Error al cargar el grafo.", "Error", JOptionPane.ERROR_MESSAGE);
-					break; // Salir del bucle si hay un error al leer el archivo
-				} catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this, "Error: El archivo no tiene el formato correcto.", "Error", JOptionPane.ERROR_MESSAGE);
-					break; // Salir del bucle si el archivo no tiene el formato correcto
-				}
-			} else {
-				break; // Salir del bucle si el usuario cancela la selección
-			}
-		}
-	}
+                    panelGrafo.setGrafo(grafo);
+                    System.out.println("Grafo cargado correctamente.");
+                    JOptionPane.showMessageDialog(this, "Grafo cargado correctamente.", "Éxito",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    break; // Salir del bucle si el archivo se cargó correctamente
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Error al cargar el grafo.", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    break; // Salir del bucle si hay un error al leer el archivo
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Error: El archivo no tiene el formato correcto.", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    break; // Salir del bucle si el archivo no tiene el formato correcto
+                }
+            } else {
+                break; // Salir del bucle si el usuario cancela la selección
+            }
+        }
+    }
 
-    // Método auxiliar para animar paso a paso un camino (lista de vértices) usando arreglos en lugar de hash
-    // Se resalta: origen (verde), intermedios (amarillo) y destino (cian) y se van "encendiendo" las aristas.
+    // Método auxiliar para animar paso a paso un camino (lista de vértices) usando
+    // arreglos en lugar de hash
+    // Se resalta: origen (verde), intermedios (amarillo) y destino (cian) y se van
+    // "encendiendo" las aristas.
     private void animatePath(java.util.ArrayList<Integer> camino, Runnable callback) {
         final int delay = 1000; // 1 segundo entre pasos
         int n = grafo.numeroVertices;
@@ -799,7 +853,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         animVertices[camino.get(0)] = Color.GREEN;
         panelGrafo.setHighlightedEdges(animEdges);
         panelGrafo.setHighlightedVertices(animVertices);
-        final int[] index = {0};
+        final int[] index = { 0 };
         Timer timer = new Timer(delay, null);
         timer.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -826,6 +880,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         });
         timer.start();
     }
+
     // Función para ejecutar Dijkstra y animar cada camino encontrado
     private void ejecutarDijkstra() {
         if (grafo == null) {
@@ -866,7 +921,8 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             StringBuilder resumen = new StringBuilder("Resumen Dijkstra:\n");
             if (dist[destino] == Integer.MAX_VALUE) {
                 resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
-                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra",
+                        JOptionPane.INFORMATION_MESSAGE);
             } else {
                 java.util.ArrayList<Integer> camino = new java.util.ArrayList<>();
                 int actual = destino;
@@ -877,8 +933,9 @@ public class VisualizacionRecorridosGrafo extends JFrame {
                 Collections.reverse(camino);
                 animatePath(camino, () -> {
                     resumen.append(inicio).append(" -> ").append(destino).append(": ").append(camino)
-                           .append(" | Costo total: ").append(dist[destino]).append("\n");
-                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra", JOptionPane.INFORMATION_MESSAGE);
+                            .append(" | Costo total: ").append(dist[destino]).append("\n");
+                    JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Dijkstra",
+                            JOptionPane.INFORMATION_MESSAGE);
                     // Limpiar grafo
                     panelGrafo.setHighlightedEdges(new boolean[grafo.numeroVertices][grafo.numeroVertices]);
                     panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
@@ -888,8 +945,9 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             JOptionPane.showMessageDialog(null, "Entrada inválida.");
         }
     }
-    
-    // Función para ejecutar Floyd–Warshall y animar los caminos desde un vértice a todos los demás
+
+    // Función para ejecutar Floyd–Warshall y animar los caminos desde un vértice a
+    // todos los demás
     private void ejecutarFloyd() {
         if (grafo == null) {
             JOptionPane.showMessageDialog(null, "No hay grafo creado.");
@@ -932,7 +990,8 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             }
             StringBuilder resumen = new StringBuilder("Resumen Floyd:\n");
             for (int destino = 0; destino < n; destino++) {
-                if (inicio == destino) continue;
+                if (inicio == destino)
+                    continue;
                 if (dist[inicio][destino] >= Integer.MAX_VALUE / 2) {
                     resumen.append(inicio).append(" -> ").append(destino).append(": No alcanzable\n");
                 } else {
@@ -945,7 +1004,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
                     }
                     animatePath(camino, null);
                     resumen.append(inicio).append(" -> ").append(destino).append(": ").append(camino)
-                           .append(" | Costo total: ").append(dist[inicio][destino]).append("\n");
+                            .append(" | Costo total: ").append(dist[inicio][destino]).append("\n");
                 }
             }
             JOptionPane.showMessageDialog(null, resumen.toString(), "Resultado Floyd", JOptionPane.INFORMATION_MESSAGE);
@@ -1015,29 +1074,29 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         resultado.append("Árbol Abarcador de costo mínimo (Kruskal):\n");
         for (Edge edge : mst) {
             resultado.append(edge.origen).append(" - ").append(edge.destino)
-                     .append(" (Peso: ").append(edge.peso).append(")\n");
+                    .append(" (Peso: ").append(edge.peso).append(")\n");
         }
         resultado.append("Costo Total: ").append(totalCost);
         JOptionPane.showMessageDialog(null, resultado.toString(), "Kruskal", JOptionPane.INFORMATION_MESSAGE);
     }
-    
+
     // Clase auxiliar para representar aristas en Kruskal
     private static class Edge {
         int origen;
         int destino;
         int peso;
+
         Edge(int origen, int destino, int peso) {
             this.origen = origen;
             this.destino = destino;
             this.peso = peso;
         }
     }
-        
-    public static void main(String[] args) {
-    SwingUtilities.invokeLater(() -> {
-        VisualizacionRecorridosGrafo ventana = new VisualizacionRecorridosGrafo();
-        ventana.setVisible(true);
-    });
-}
-}
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            VisualizacionRecorridosGrafo ventana = new VisualizacionRecorridosGrafo();
+            ventana.setVisible(true);
+        });
+    }
+}
