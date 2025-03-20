@@ -1,5 +1,3 @@
-package codigo_principal;
-
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
