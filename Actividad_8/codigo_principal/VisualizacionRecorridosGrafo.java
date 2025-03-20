@@ -418,7 +418,7 @@ class PanelGrafo extends JPanel {
                 Point p2 = posiciones[arista.destino];
                 if (grafo.dirigido) {
                     if (highlightedEdges != null && highlightedEdges[i][arista.destino]) {
-                        g2.setColor(Color.BLUE);
+                        g2.setColor(Color.ORANGE);
                     } else {
                         g2.setColor(Color.BLACK);
                     }
@@ -427,7 +427,7 @@ class PanelGrafo extends JPanel {
                     if (i < arista.destino) {
                         if (highlightedEdges != null
                                 && (highlightedEdges[i][arista.destino] || highlightedEdges[arista.destino][i])) {
-                            g2.setColor(Color.BLUE);
+                            g2.setColor(Color.ORANGE);
                         } else {
                             g2.setColor(Color.BLACK);
                         }
@@ -435,8 +435,23 @@ class PanelGrafo extends JPanel {
                     }
                 }
                 int midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2;
-                g2.setColor(Color.BLUE);
-                g2.drawString(String.valueOf(arista.peso), midX, midY);
+                int width = 20;  // Ancho del fondo
+                int height = 15; // Alto del fondo
+                FontMetrics fm = g2.getFontMetrics();
+                int textWidth = fm.stringWidth(String.valueOf(arista.peso));
+                int textHeight = fm.getAscent();  // Altura desde la línea base hasta la parte superior del texto
+
+                // Ajustar posición del texto para que quede centrado en el rectángulo
+                int textX = midX - textWidth / 2;
+                int textY = midY + textHeight / 3;  // Se usa un pequeño ajuste para compensar la altura de la fuente
+
+                // Dibujar fondo blanco
+                g2.setColor(Color.WHITE);
+                g2.fillRect(midX - width / 2, midY - height / 2, width, height);
+
+                // Dibujar el peso centrado
+                g2.setColor(Color.BLACK);
+                g2.drawString(String.valueOf(arista.peso), textX, textY);
             }
         }
 
@@ -447,7 +462,8 @@ class PanelGrafo extends JPanel {
                     : (nodosVisitados.contains(i) ? Color.GREEN : Color.RED);
             g2.setColor(nodoColor);
             g2.fillOval(p.x - 15, p.y - 15, 30, 30);
-            g2.setColor(Color.WHITE);
+            if (nodoColor == Color.RED) g2.setColor(Color.WHITE);
+            else g2.setColor(Color.BLACK);
             g2.drawString(String.valueOf(i), p.x - 5, p.y + 5);
         }
     }
@@ -465,7 +481,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
     public VisualizacionRecorridosGrafo() {
         super("Grafo en Java Swing");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1500, 600);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setResizable(true);
         // Toolbar en la parte superior
@@ -635,6 +651,27 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         mapaAccion.put("ejecutarPrim", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 ejecutarPrim();
+            }
+        });
+        // Configurar atajo de teclado
+        mapaEntrada.put(KeyStroke.getKeyStroke("K"), "ejecutarKruskal");
+        mapaAccion.put("ejecutarKruskal", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+            	ejecutarKruskal();
+            }
+        });
+        // Configurar atajo de teclado
+        mapaEntrada.put(KeyStroke.getKeyStroke("A"), "agregarVerticeUI");
+        mapaAccion.put("agregarVerticeUI", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+            	agregarVerticeUI();
+            }
+        });
+        // Configurar atajo de teclado
+        mapaEntrada.put(KeyStroke.getKeyStroke("E"), "eliminarVerticeUI");
+        mapaAccion.put("eliminarVerticeUI", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+            	eliminarVerticeUI();
             }
         });
 
@@ -1088,6 +1125,10 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             JOptionPane.showMessageDialog(null, "No hay grafo creado.");
             return;
         }
+        if (grafo.dirigido) {
+            JOptionPane.showMessageDialog(null, "El algoritmo de Prim solo aplica a grafos no dirigidos.");
+            return;
+        }
 
         // Obtener el MST usando el algoritmo de Prim
         java.util.ArrayList<Arista> mst = grafo.primMST();
@@ -1184,11 +1225,15 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             }
         }
         // Si el grafo no es conexo, no se forma árbol abarcador
+        /* Un grafo no dirigido es conexo si, para cualquier par de vértices u y v, 
+         * existe una secuencia de aristas que conecta u con v.*/
         if (mst.size() != numVertices - 1) {
             JOptionPane.showMessageDialog(null, "El grafo no es conexo, no se puede formar un Árbol Abarcador.");
             return;
         }
+
         // Construir mensaje de salida
+        /*
         StringBuilder resultado = new StringBuilder();
         resultado.append("Árbol Abarcador de costo mínimo (Kruskal):\n");
         for (Edge edge : mst) {
@@ -1197,6 +1242,9 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         }
         resultado.append("Costo Total: ").append(totalCost);
         JOptionPane.showMessageDialog(null, resultado.toString(), "Kruskal", JOptionPane.INFORMATION_MESSAGE);
+        */
+        // Llamar al método de animación
+        animarKruskal(mst, totalCost);
     }
 
     // Clase auxiliar para representar aristas en Kruskal
@@ -1210,6 +1258,47 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             this.destino = destino;
             this.peso = peso;
         }
+    }
+    
+    /**
+     * Método que maneja la animación del algoritmo de Kruskal
+     */
+    private void animarKruskal(java.util.ArrayList<Edge> mst, int totalCost) {
+        final int[] index = { 0 };
+        final boolean[][] animEdges = new boolean[grafo.numeroVertices][grafo.numeroVertices];
+        final Color[] animVertices = new Color[grafo.numeroVertices];
+
+        Timer timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (index[0] < mst.size()) {
+                    Edge edge = mst.get(index[0]);
+                    animEdges[edge.origen][edge.destino] = true;
+                    animEdges[edge.destino][edge.origen] = true;
+                    animVertices[edge.origen] = Color.GREEN;
+                    animVertices[edge.destino] = Color.GREEN;
+
+                    panelGrafo.setHighlightedEdges(animEdges);
+                    panelGrafo.setHighlightedVertices(animVertices);
+                    panelGrafo.repaint();
+
+                    index[0]++;
+                } else {
+                    ((Timer) e.getSource()).stop();
+
+                    // Mostrar el resumen del MST
+                    StringBuilder resultado = new StringBuilder("Árbol Abarcador de Costo Mínimo (Kruskal):\n");
+                    for (Edge edge : mst) {
+                        resultado.append(edge.origen).append(" - ").append(edge.destino)
+                                .append(" (Peso: ").append(edge.peso).append(")\n");
+                    }
+                    resultado.append("Costo Total: ").append(totalCost);
+                    JOptionPane.showMessageDialog(null, resultado.toString(), "Kruskal", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        });
+
+        timer.start();
     }
 
     // Método para agregar un vértice usando la interfaz
