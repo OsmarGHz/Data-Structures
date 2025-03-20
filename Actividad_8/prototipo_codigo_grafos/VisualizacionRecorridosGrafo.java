@@ -8,7 +8,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.Queue;
 
 //Clase que representa una arista con destino y costo
 class Arista {
@@ -372,7 +371,6 @@ class PanelGrafo extends JPanel {
 public class VisualizacionRecorridosGrafo extends JFrame {
     private static Grafo grafo; // Instancia del grafo
     private static PanelGrafo panelGrafo; // Panel para dibujar el grafo
-    private javax.swing.Timer temporizadorAlgoritmo;  // Temporizador para la animación
     
     public VisualizacionRecorridosGrafo() {
         super("Grafo en Java Swing");
@@ -428,6 +426,10 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnSalir = new JButton("Salir (ESC)");
         btnSalir.addActionListener(e -> System.exit(0));
         barraHerramientas.add(btnSalir);
+
+        JButton btnKruskal = new JButton("Kruskal (K)");
+        btnKruskal.addActionListener(e -> ejecutarKruskal());
+        barraHerramientas.add(btnKruskal);
         
         //crear ScrollBar
         // Agregar la barra de herramientas a un JScrollPane para habilitar desplazamiento
@@ -952,6 +954,82 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             panelGrafo.setHighlightedVertices(new Color[grafo.numeroVertices]);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "Entrada inválida.");
+        }
+    }
+
+    // Nueva Opción: Ejecutar Kruskal para Árbol Abarcador de Costo Mínimo
+    private void ejecutarKruskal() {
+        if (grafo == null) {
+            JOptionPane.showMessageDialog(null, "No hay grafo creado.");
+            return;
+        }
+        if (grafo.dirigido) {
+            JOptionPane.showMessageDialog(null, "El algoritmo de Kruskal solo aplica a grafos no dirigidos.");
+            return;
+        }
+        int numVertices = grafo.numeroVertices;
+        // Recopilar todas las aristas sin duplicados (solo si i < destino)
+        java.util.ArrayList<Edge> edges = new java.util.ArrayList<>();
+        for (int i = 0; i < numVertices; i++) {
+            for (Arista arista : grafo.listaAdyacencia.get(i)) {
+                if (i < arista.destino) {
+                    edges.add(new Edge(i, arista.destino, arista.peso));
+                }
+            }
+        }
+        // Ordenar las aristas por peso
+        edges.sort((e1, e2) -> Integer.compare(e1.peso, e2.peso));
+        // Disjoint set: inicializar padre
+        int[] parent = new int[numVertices];
+        for (int i = 0; i < numVertices; i++) {
+            parent[i] = i;
+        }
+        // Función find con compresión de ruta
+        java.util.function.IntUnaryOperator find = new java.util.function.IntUnaryOperator() {
+            @Override
+            public int applyAsInt(int i) {
+                if (parent[i] != i)
+                    parent[i] = this.applyAsInt(parent[i]);
+                return parent[i];
+            }
+        };
+        // Procesar aristas del menor al mayor
+        java.util.ArrayList<Edge> mst = new java.util.ArrayList<>();
+        int totalCost = 0;
+        for (Edge edge : edges) {
+            int rootU = find.applyAsInt(edge.origen);
+            int rootV = find.applyAsInt(edge.destino);
+            if (rootU != rootV) {
+                mst.add(edge);
+                totalCost += edge.peso;
+                parent[rootV] = rootU;
+            }
+        }
+        // Si el grafo no es conexo, no se forma árbol abarcador
+        if (mst.size() != numVertices - 1) {
+            JOptionPane.showMessageDialog(null, "El grafo no es conexo, no se puede formar un Árbol Abarcador.");
+            return;
+        }
+        // Construir mensaje de salida
+        StringBuilder resultado = new StringBuilder();
+        resultado.append("Árbol Abarcador de costo mínimo (Kruskal):\n");
+        for (Edge edge : mst) {
+            resultado.append(edge.origen).append(" - ").append(edge.destino)
+                     .append(" (Peso: ").append(edge.peso).append(")\n");
+        }
+        resultado.append("Costo Total: ").append(totalCost);
+        JOptionPane.showMessageDialog(null, resultado.toString(), "Kruskal", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    // Clase auxiliar para representar aristas en Kruskal
+    private static class Edge {
+        int origen;
+        int destino;
+        int peso;
+        Edge(int origen, int destino, int peso) {
+            this.origen = origen;
+            this.destino = destino;
+            this.peso = peso;
         }
     }
         

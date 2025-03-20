@@ -8,7 +8,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.Queue;
 
 //Clase que representa una arista con destino y costo
 class Arista {
@@ -372,7 +371,6 @@ class PanelGrafo extends JPanel {
 public class VisualizacionRecorridosPrueba extends JFrame {
     private static Grafo grafo; // Instancia del grafo
     private static PanelGrafo panelGrafo; // Panel para dibujar el grafo
-    private javax.swing.Timer temporizadorAlgoritmo;  // Temporizador para la animación
     
     public VisualizacionRecorridosPrueba() {
         super("Grafo en Java Swing");
