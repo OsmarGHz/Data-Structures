@@ -1,5 +1,3 @@
-package codigo_principal;
-
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
@@ -281,6 +279,7 @@ class Grafo {
 // Panel para dibujar el grafo (distribución circular) y marcar los nodos
 // visitados
 class PanelGrafo extends JPanel {
+    private final int RADIO_VERTICE = 25;
     private Grafo grafo;
     // private java.util.List<Integer> nodosVisitados = new ArrayList<>();
     private java.util.ArrayList<Integer> nodosVisitados = new java.util.ArrayList<>();
@@ -300,7 +299,7 @@ class PanelGrafo extends JPanel {
                     return; // Add this null check
                 // Verificar si se hizo clic sobre un vértice
                 for (int i = 0; i < posiciones.length; i++) {
-                    if (posiciones[i] != null && e.getPoint().distance(posiciones[i]) <= 15) {
+                    if (posiciones[i] != null && e.getPoint().distance(posiciones[i]) <= RADIO_VERTICE) {
                         verticeSeleccionado = i;
                         break;
                     }
@@ -318,8 +317,8 @@ class PanelGrafo extends JPanel {
             public void mouseDragged(MouseEvent e) {
                 if (verticeSeleccionado != -1) {
                     // Limitar los movimientos dentro de los límites del panel
-                    int newX = Math.max(15, Math.min(getWidth() - 15, e.getPoint().x));
-                    int newY = Math.max(15, Math.min(getHeight() - 15, e.getPoint().y));
+                    int newX = Math.max(RADIO_VERTICE, Math.min(getWidth() - RADIO_VERTICE, e.getPoint().x));
+                    int newY = Math.max(RADIO_VERTICE, Math.min(getHeight() - RADIO_VERTICE, e.getPoint().y));
 
                     // Verificar si la nueva posición colisiona con otro vértice
                     if (!verificarColision(newX, newY)) {
@@ -334,12 +333,12 @@ class PanelGrafo extends JPanel {
 
     // Verificar si el vértice en la nueva posición colisiona con otro
     private boolean verificarColision(int newX, int newY) {
-        int radio = 15; // Suponiendo que el radio del vértice es de 15px
+        int radio = RADIO_VERTICE; 
         for (int i = 0; i < posiciones.length; i++) {
             if (posiciones[i] != null && i != verticeSeleccionado) {
                 // Verificar si la distancia entre el vértice y el nuevo punto es menor que el
                 // doble del radio (colisión)
-                if (new Point(newX, newY).distance(posiciones[i]) < 2 * radio) {
+                if (new Point(newX, newY).distance(posiciones[i]) < 2 * RADIO_VERTICE) {
                     return true; // Hay colisión
                 }
             }
@@ -403,9 +402,13 @@ class PanelGrafo extends JPanel {
      * @param d  Longitud de la base de la flecha.
      * @param h  Altura de la flecha.
      */
-    private void drawArrowLine(Graphics2D g2, int x1, int y1, int x2, int y2, int d, int h) {
+    private void drawArrowLine(Graphics2D g2, int x1, int y1, int x2, int y2) {
         // Radio del nodo (para no dibujar la flecha dentro del nodo destino)
-        int nodeRadius = 15;
+        int nodeRadius = RADIO_VERTICE;
+        // Tamaño de la flecha proporcional al radio del nodo
+        double arrowSize = nodeRadius * 0.5; // Puedes ajustar este factor (0.5) según lo grande que quieras la flecha
+        int d = (int) (arrowSize * 1.5); // Longitud de la flecha
+        int h = (int) arrowSize;         // Ancho de la base de la flecha
         // Se calcula la diferencia en X e Y entre el punto de inicio (x1, y1) y el
         // destino (x2, y2)
         int dx = x2 - x1, dy = y2 - y1;
@@ -421,10 +424,14 @@ class PanelGrafo extends JPanel {
         double cos = dx / D, sin = dy / D;
         // Acortar la línea para que termine en el borde del nodo de destino
         double newD = D - nodeRadius;
+        double distanciaRecortada = D - nodeRadius - d;
         // Se calcula el nuevo punto final (newX2, newY2) multiplicando
         // el vector unitario por newD y sumándolo al origen.
         int newX2 = x1 + (int) (newD * cos);
         int newY2 = y1 + (int) (newD * sin);
+        //calcular puntos finales de la distanciaRecortada
+        int drX2 = x1 + (int) (distanciaRecortada * cos);
+        int drY2 = y1 + (int) (distanciaRecortada * sin);
 
         // Calcula las coordenadas para la flecha
         double xm = newD - d;
@@ -440,7 +447,7 @@ class PanelGrafo extends JPanel {
         int y3 = (int) yB;
 
         // Dibuja la línea y la flecha
-        g2.drawLine(x1, y1, newX2, newY2);
+        g2.drawLine(x1, y1, drX2, drY2);
         int[] xpoints = { newX2, x2a, x3 };
         int[] ypoints = { newY2, y2a, y3 };
         g2.fillPolygon(xpoints, ypoints, 3);
@@ -454,18 +461,24 @@ class PanelGrafo extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Dibuja aristas
+     // Dibuja aristas
         for (int i = 0; i < grafo.numeroVertices; i++) {
             for (Arista arista : grafo.listaAdyacencia.get(i)) {
                 Point p1 = posiciones[i];
                 Point p2 = posiciones[arista.destino];
+
+                // Configurar el grosor de la línea en función del tamaño del vértice
+                float grosorLinea = RADIO_VERTICE / 5.0f; // Grosor proporcional al radio del vértice
+                Stroke strokeAnterior = g2.getStroke(); // Guardar el stroke actual
+                g2.setStroke(new BasicStroke(grosorLinea)); // Establecer el nuevo grosor
+
                 if (grafo.dirigido) {
                     if (highlightedEdges != null && highlightedEdges[i][arista.destino]) {
                         g2.setColor(Color.ORANGE);
                     } else {
                         g2.setColor(Color.BLACK);
                     }
-                    drawArrowLine(g2, p1.x, p1.y, p2.x, p2.y, 10, 5);
+                    drawArrowLine(g2, p1.x, p1.y, p2.x, p2.y);
                 } else {
                     if (i < arista.destino) {
                         if (highlightedEdges != null
@@ -477,16 +490,33 @@ class PanelGrafo extends JPanel {
                         g2.drawLine(p1.x, p1.y, p2.x, p2.y);
                     }
                 }
+
+                // Restaurar el grosor de la línea
+                g2.setStroke(strokeAnterior);
+
+                // Calcular el punto medio de la arista
                 int midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2;
-                int width = 20;  // Ancho del fondo
-                int height = 15; // Alto del fondo
+
+                // Configurar el tamaño de la fuente del peso en función del tamaño del vértice
+                int fontSize = (int) (RADIO_VERTICE * 0.8); // Tamaño proporcional al radio del vértice
+                //Font fuenteActual = g2.getFont(); // Obtener la fuente actual
+                //Font nuevaFuente = fuenteActual.deriveFont((float) fontSize); // Derivar la fuente con el nuevo tamaño
+                Font font = new Font("SansSerif", Font.PLAIN, fontSize); // Crear la fuente
+                g2.setFont(font); // Establecer la nueva fuente
+
+                // Calcular dimensiones del texto
                 FontMetrics fm = g2.getFontMetrics();
-                int textWidth = fm.stringWidth(String.valueOf(arista.peso));
-                int textHeight = fm.getAscent();  // Altura desde la línea base hasta la parte superior del texto
+                String pesoTexto = String.valueOf(arista.peso);
+                int textWidth = fm.stringWidth(pesoTexto);
+                int textHeight = fm.getAscent(); // Altura desde la línea base hasta la parte superior del texto
+
+                // Ajustar el tamaño del fondo en función del tamaño del texto
+                int width = textWidth + 10; // Ancho del fondo (texto + margen)
+                int height = textHeight + 5; // Alto del fondo (texto + margen)
 
                 // Ajustar posición del texto para que quede centrado en el rectángulo
                 int textX = midX - textWidth / 2;
-                int textY = midY + textHeight / 3;  // Se usa un pequeño ajuste para compensar la altura de la fuente
+                int textY = midY + textHeight / 3; // Ajuste para centrar verticalmente
 
                 // Dibujar fondo blanco
                 g2.setColor(Color.WHITE);
@@ -494,20 +524,50 @@ class PanelGrafo extends JPanel {
 
                 // Dibujar el peso centrado
                 g2.setColor(Color.BLACK);
-                g2.drawString(String.valueOf(arista.peso), textX, textY);
+                g2.drawString(pesoTexto, textX, textY);
             }
         }
 
-        // Dibuja nodos
+     // Dibuja nodos
         for (int i = 0; i < grafo.numeroVertices; i++) {
             Point p = posiciones[i];
             Color nodoColor = (highlightedVertices != null && highlightedVertices[i] != null) ? highlightedVertices[i]
                     : (nodosVisitados.contains(i) ? Color.GREEN : Color.RED);
+            /*
+            // Dibujar el vértice
+            if (i == verticeSeleccionadoParaArista) {
+                // Vértice resaltado: relleno amarillo y aro gris
+                g.setColor(Color.YELLOW);
+                g.fillOval(p.x - RADIO_VERTICE, p.y - RADIO_VERTICE, RADIO_VERTICE * 2, RADIO_VERTICE * 2);
+                g.setColor(Color.GRAY);
+                g.drawOval(p.x - RADIO_VERTICE - 3, p.y - RADIO_VERTICE - 3, RADIO_VERTICE * 2 + 6, RADIO_VERTICE * 2 + 6);
+            }*/
+            
             g2.setColor(nodoColor);
-            g2.fillOval(p.x - 15, p.y - 15, 30, 30);
-            if (nodoColor == Color.RED) g2.setColor(Color.WHITE);
-            else g2.setColor(Color.BLACK);
-            g2.drawString(String.valueOf(i), p.x - 5, p.y + 5);
+            g2.fillOval(p.x - RADIO_VERTICE, p.y - RADIO_VERTICE, RADIO_VERTICE * 2, RADIO_VERTICE * 2);
+
+            // Configurar el color del texto
+            if (nodoColor == Color.RED) {
+                g2.setColor(Color.WHITE);
+            } else {
+                g2.setColor(Color.BLACK);
+            }
+
+            // Calcular el tamaño de la fuente en función del radio del vértice
+            int fontSize = (int) (RADIO_VERTICE * 1.2); // Tamaño proporcional al radio
+            Font font = new Font("SansSerif", Font.BOLD, fontSize); // Crear la fuente
+            g2.setFont(font); // Establecer la fuente
+
+            // Calcular la posición del texto para centrarlo en el vértice
+            FontMetrics metrics = g2.getFontMetrics();
+            String texto = String.valueOf(i);
+            int textoWidth = metrics.stringWidth(texto); // Ancho del texto
+            int textoHeight = metrics.getHeight(); // Altura del texto
+
+            // Dibujar el texto centrado en el vértice
+            int textoX = p.x - textoWidth / 2; // Centrar horizontalmente
+            int textoY = p.y + textoHeight / 4; // Centrar verticalmente (ajustar según sea necesario)
+            g2.drawString(texto, textoX, textoY);
         }
     }
 }
