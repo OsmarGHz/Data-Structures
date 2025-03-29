@@ -39,7 +39,7 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBackground(new Color(193, 193, 143));
         panel.setLayout(null);
 
-        JLabel bosque = new JLabel(new ImageIcon("Recursos\\bosque.png"));
+        JLabel bosque = new JLabel(new ImageIcon("SegundoExamen\\Recursos\\bosque.png"));
         bosque.setBounds(150, 200, 700, 300);
         panel.add(bosque);
 
@@ -47,18 +47,18 @@ public class GuardianesDelBosques extends JFrame {
         JLabel subtitulo = new JLabel("BIENVENIDOS A LA CAPACITACIÓN PARA", SwingConstants.CENTER);
         subtitulo.setBounds(150, 50, 700, 30);
         subtitulo.setForeground(Color.BLACK);
-        subtitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 25f));
+        subtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 25f));
         panel.add(subtitulo);
 
         // Título
         JLabel titulo = new JLabel("GUARDIANES DEL BOSQUE", SwingConstants.CENTER);
         titulo.setBounds(150, 100, 700, 60);
         titulo.setForeground(Color.BLACK);
-        titulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 55f));
+        titulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 55f));
         panel.add(titulo);
 
         JButton botonIniciar = new JButton("INICIAR");
-        botonIniciar.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 30f));
+        botonIniciar.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 30f));
         botonIniciar.setBackground(new Color(51, 51, 25));
         botonIniciar.setForeground(Color.WHITE);
         botonIniciar.setBounds(400, 530, 200, 50);
@@ -71,7 +71,7 @@ public class GuardianesDelBosques extends JFrame {
         });
         panel.add(botonIniciar);
 
-        ImageIcon iconoX = new ImageIcon(new ImageIcon("Recursos\\botonX.png").getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+        ImageIcon iconoX = new ImageIcon(new ImageIcon("SegundoExamen\\Recursos\\botonX.png").getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
         JButton botonSalir = new JButton(iconoX);
         botonSalir.setBounds(900, 20, 40, 40);
         botonSalir.setFocusPainted(false);
@@ -92,13 +92,13 @@ public class GuardianesDelBosques extends JFrame {
 
         // Título principal
         JLabel titulo = new JLabel("Módulo de aprendizaje", SwingConstants.CENTER);
-        titulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 40f));
+        titulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 40f));
         titulo.setBorder(BorderFactory.createEmptyBorder(30, 10, 10, 10));
         contenedor.add(titulo, BorderLayout.NORTH);
 
         // Subtítulo
         JLabel subtitulo = new JLabel("<html><div style='text-align: center;'>Necesitas superar TRES módulos de aprendizaje,<br>con sus respectivos ejercicios</div></html>", SwingConstants.CENTER);
-        subtitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 25f));
+        subtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 25f));
         subtitulo.setBounds(150, 80, 700, 60);
 
         contenedor.add(subtitulo);
@@ -124,7 +124,7 @@ public class GuardianesDelBosques extends JFrame {
         botonCertificado.setEnabled(false);
         botonCertificado.setBackground(Color.DARK_GRAY);
         botonCertificado.setForeground(Color.WHITE);
-        botonCertificado.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 15f));
+        botonCertificado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 15f));
         botonCertificado.setPreferredSize(new Dimension(350, 40));
 
         JPanel panelInferior = new JPanel();
@@ -147,7 +147,7 @@ public class GuardianesDelBosques extends JFrame {
 
         JLabel lblTitulo = new JLabel("<html><center>" + titulo + "</center></html>", SwingConstants.CENTER);
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblTitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 14f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
         modulo.add(lblTitulo);
         modulo.add(Box.createVerticalStrut(15));
 
@@ -157,12 +157,12 @@ public class GuardianesDelBosques extends JFrame {
             btnAprender.setForeground(Color.WHITE);
             btnAprender.setFocusPainted(false);
             btnAprender.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btnAprender.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            btnAprender.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
             btnAprender.addActionListener(e -> cardLayout.show(mainPanel, "MODULO1"));
             modulo.add(btnAprender);
         } else {
             JButton bloqueado = botonBloqueado("BLOQUEADO");
-            bloqueado.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            bloqueado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
             modulo.add(bloqueado);
         }
 
@@ -170,11 +170,11 @@ public class GuardianesDelBosques extends JFrame {
         
         if (activo) {
             JButton ejercicio = botonEjercicio();
-            ejercicio.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            ejercicio.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
             modulo.add(ejercicio);
         } else {
             JButton bloqueado = botonBloqueado("BLOQUEADO");
-            bloqueado.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            bloqueado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
             modulo.add(bloqueado);
         }
 
@@ -223,11 +223,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT); // Centrado horizontal
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT); // Centrado
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -245,7 +245,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
         Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
         JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
         lblGato.setHorizontalAlignment(SwingConstants.CENTER);
@@ -267,7 +267,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 16f));
+        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
@@ -277,7 +277,7 @@ public class GuardianesDelBosques extends JFrame {
         JButton btnContinuar = new JButton("CONTINUAR");
         btnContinuar.setBackground(new Color(63, 84, 54));
         btnContinuar.setForeground(Color.WHITE);
-        btnContinuar.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 14f));
+        btnContinuar.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
         btnContinuar.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         btnContinuar.addActionListener(e -> cardLayout.show(mainPanel, "MODULOS"));
         btnContinuar.setAlignmentX(Component.CENTER_ALIGNMENT);
