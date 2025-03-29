@@ -18,14 +18,17 @@ public class GuardianesDelBosques extends JFrame {
 
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
-
+        
         // Pantalla de bienvenida
         JPanel menuPrincipal = crearPantallaInicio();
         // Pantalla de módulos
         JPanel modulos = PantallaModulos();
+        // Pantalla Introductoria Seccion1
+        JPanel modulo1 = crearModulo1();
 
         mainPanel.add(menuPrincipal, "MENU");
         mainPanel.add(modulos, "MODULOS");
+        mainPanel.add(modulo1, "MODULO1");
 
         add(mainPanel);
         setVisible(true);
@@ -36,24 +39,18 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBackground(new Color(193, 193, 143));
         panel.setLayout(null);
 
-        ImageIcon arbolIcon1 = new ImageIcon(new ImageIcon("Recursos\\arbol.png").getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH));
-        JLabel arbolIzquierdo = new JLabel(arbolIcon1);
-        arbolIzquierdo.setBounds(50, 200, 250, 250);
-        panel.add(arbolIzquierdo);
+        JLabel bosque = new JLabel(new ImageIcon("Recursos\\bosque.png"));
+        bosque.setBounds(150, 200, 700, 300);
+        panel.add(bosque);
 
-        ImageIcon arbolIcon2 = new ImageIcon(new ImageIcon("Recursos\\arbol.png").getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH));
-        JLabel arbolDerecho  = new JLabel(arbolIcon2);
-        arbolDerecho .setBounds(700, 200, 250, 250);
-        panel.add(arbolDerecho);
-
-        // Subtítulo con fuente 2
+        // Subtítulo
         JLabel subtitulo = new JLabel("BIENVENIDOS A LA CAPACITACIÓN PARA", SwingConstants.CENTER);
         subtitulo.setBounds(150, 50, 700, 30);
         subtitulo.setForeground(Color.BLACK);
         subtitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 25f));
         panel.add(subtitulo);
 
-        // Título con fuente 1
+        // Título
         JLabel titulo = new JLabel("GUARDIANES DEL BOSQUE", SwingConstants.CENTER);
         titulo.setBounds(150, 100, 700, 60);
         titulo.setForeground(Color.BLACK);
@@ -64,7 +61,7 @@ public class GuardianesDelBosques extends JFrame {
         botonIniciar.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 30f));
         botonIniciar.setBackground(new Color(51, 51, 25));
         botonIniciar.setForeground(Color.WHITE);
-        botonIniciar.setBounds(400, 400, 200, 50);
+        botonIniciar.setBounds(400, 530, 200, 50);
         botonIniciar.setFocusPainted(false);
         botonIniciar.addActionListener(new ActionListener() {
             @Override
@@ -88,74 +85,220 @@ public class GuardianesDelBosques extends JFrame {
 
         return panel;
     }
-
+    
     private JPanel PantallaModulos() {
-        JPanel panel = new JPanel();
-        panel.setBackground(new Color(193, 193, 143));
-        panel.setLayout(null);
+        JPanel contenedor = new JPanel(new BorderLayout());
+        contenedor.setBackground(new Color(206, 212, 169));
 
+        // Título principal
         JLabel titulo = new JLabel("Módulo de aprendizaje", SwingConstants.CENTER);
-        titulo.setBounds(200, 30, 600, 40);
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 30));
-        panel.add(titulo);
+        titulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 40f));
+        titulo.setBorder(BorderFactory.createEmptyBorder(30, 10, 10, 10));
+        contenedor.add(titulo, BorderLayout.NORTH);
 
-        JLabel subtitulo = new JLabel("<html>Necesitas superar 3 módulos de aprendizaje, con sus respectivos ejercicios,<br>para convertirte en: ¡Guardián del Bosque!</html>", SwingConstants.CENTER);
-        subtitulo.setBounds(200, 80, 600, 50);
-        subtitulo.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        panel.add(subtitulo);
+        // Subtítulo
+        JLabel subtitulo = new JLabel("<html><div style='text-align: center;'>Necesitas superar TRES módulos de aprendizaje,<br>con sus respectivos ejercicios</div></html>", SwingConstants.CENTER);
+        subtitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 25f));
+        subtitulo.setBounds(150, 80, 700, 60);
 
-        panel.add(crearModulo("Módulo 1:\nExploración de ecosistemas", 100, true, true));
-        panel.add(crearModulo("Módulo 2:\nOptimización de rutas de recolección", 400, true, false));
-        panel.add(crearModulo("Módulo 3:\nDiseño de redes ecológicas", 700, false, false));
+        contenedor.add(subtitulo);
 
-        JButton certificado = new JButton("DESCARGAR CERTIFICADO (BLOQUEADO)");
-        certificado.setBounds(300, 550, 400, 40);
-        certificado.setBackground(new Color(51, 51, 25));
-        certificado.setForeground(Color.WHITE);
-        certificado.setFocusPainted(false);
-        certificado.setFont(new Font("SansSerif", Font.BOLD, 14));
-        panel.add(certificado);
+        // Panel de módulos
+        JPanel panelModulos = new JPanel();
+        panelModulos.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        panelModulos.setOpaque(false);
+        panelModulos.setBorder(BorderFactory.createEmptyBorder(100, 0, 20, 0));
 
-        ImageIcon personaje = new ImageIcon(new ImageIcon("personaje.png").getImage().getScaledInstance(60, 100, Image.SCALE_SMOOTH));
-        JLabel personajeLabel = new JLabel(personaje);
-        personajeLabel.setBounds(470, 590, 60, 100);
-        panel.add(personajeLabel);
+        panelModulos.add(crearModulo("Módulo UNO:<br>Exploración de ecosistemas", "Recursos\\modulo1.png", true));
+        panelModulos.add(crearModulo("Módulo DOS:<br>Optimización<br>de rutas", "Recursos\\modulo2.png", false));
+        panelModulos.add(crearModulo("Módulo TRES:<br>Redes <br>ecológicas", "Recursos\\modulo3.png", false));
 
-        return panel;
+        // Panel contenedor para centrar verticalmente
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setOpaque(false);
+        centerPanel.add(panelModulos, BorderLayout.CENTER);
+        contenedor.add(centerPanel, BorderLayout.CENTER);
+
+        // Botón de certificado bloqueado (esto cambia necesito añadir una variable que cambie el boleano cada que se complete una leccion)
+        JButton botonCertificado = new JButton("DESCARGAR CERTIFICADO (BLOQUEADO)");
+        botonCertificado.setEnabled(false);
+        botonCertificado.setBackground(Color.DARK_GRAY);
+        botonCertificado.setForeground(Color.WHITE);
+        botonCertificado.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 15f));
+        botonCertificado.setPreferredSize(new Dimension(350, 40));
+
+        JPanel panelInferior = new JPanel();
+        panelInferior.setBackground(new Color(206, 212, 169));
+        panelInferior.setBorder(BorderFactory.createEmptyBorder(0, 0, 90, 0));
+        panelInferior.add(botonCertificado);
+
+        contenedor.add(panelInferior, BorderLayout.SOUTH);
+
+        return contenedor;
     }
 
-    private JPanel crearModulo(String texto, int x, boolean puedeAprender, boolean puedeEjercitar) {
+    //crea el modulo de aprendizaje esto es como base y se llena en la de Pantalla de modulos
+    private JPanel crearModulo(String titulo, String rutaImagen, boolean activo) {
         JPanel modulo = new JPanel();
-        modulo.setLayout(null);
+        modulo.setPreferredSize(new Dimension(200, 300));
         modulo.setBackground(Color.WHITE);
-        modulo.setBounds(x, 160, 200, 180);
+        modulo.setLayout(new BoxLayout(modulo, BoxLayout.Y_AXIS));
+        modulo.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
 
-        JLabel titulo = new JLabel("<html>" + texto.replace("\n", "<br>") + "</html>", SwingConstants.CENTER);
-        titulo.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        titulo.setBounds(10, 10, 180, 60);
-        modulo.add(titulo);
+        JLabel lblTitulo = new JLabel("<html><center>" + titulo + "</center></html>", SwingConstants.CENTER);
+        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblTitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 14f));
+        modulo.add(lblTitulo);
+        modulo.add(Box.createVerticalStrut(15));
 
-        JButton boton1 = new JButton(puedeAprender ? "Aprender ahora" : "BLOQUEADO");
-        boton1.setBounds(20, 100, 160, 30);
-        boton1.setBackground(new Color(51, 51, 25));
-        boton1.setForeground(Color.WHITE);
-        boton1.setFocusPainted(false);
-        boton1.setFont(new Font("SansSerif", Font.BOLD, 12));
-        modulo.add(boton1);
+        if (activo) {
+            JButton btnAprender = new JButton("Aprender ahora");
+            btnAprender.setBackground(new Color(87, 124, 88));
+            btnAprender.setForeground(Color.WHITE);
+            btnAprender.setFocusPainted(false);
+            btnAprender.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btnAprender.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            btnAprender.addActionListener(e -> cardLayout.show(mainPanel, "MODULO1"));
+            modulo.add(btnAprender);
+        } else {
+            JButton bloqueado = botonBloqueado("BLOQUEADO");
+            bloqueado.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            modulo.add(bloqueado);
+        }
 
-        JButton boton2 = new JButton((puedeAprender && puedeEjercitar) ? "Hacer el ejercicio" : "BLOQUEADO");
-        boton2.setBounds(20, 140, 160, 30);
-        boton2.setBackground(new Color(51, 51, 25));
-        boton2.setForeground(Color.WHITE);
-        boton2.setFocusPainted(false);
-        boton2.setFont(new Font("SansSerif", Font.BOLD, 12));
-        modulo.add(boton2);
+        modulo.add(Box.createVerticalStrut(10));
+        
+        if (activo) {
+            JButton ejercicio = botonEjercicio();
+            ejercicio.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            modulo.add(ejercicio);
+        } else {
+            JButton bloqueado = botonBloqueado("BLOQUEADO");
+            bloqueado.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 12f));
+            modulo.add(bloqueado);
+        }
+
+        modulo.add(Box.createVerticalStrut(15));
+        ImageIcon icon = new ImageIcon(rutaImagen);
+        JLabel imagen = new JLabel(new ImageIcon(icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH)));
+        imagen.setAlignmentX(Component.CENTER_ALIGNMENT);
+        modulo.add(imagen);
 
         return modulo;
     }
 
-     // Método para cargar fuentes
-     public Font cargarFuente(String ruta, float tamaño) {
+    private JButton botonBloqueado(String texto) {
+        JButton boton = new JButton(texto);
+        boton.setEnabled(false);
+        boton.setBackground(new Color(40, 60, 40));
+        boton.setForeground(Color.WHITE);
+        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return boton;
+    }
+
+    private JButton botonEjercicio() {
+        JButton btn = new JButton("Hacer el ejercicio");
+        btn.setBackground(new Color(87, 124, 88));
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return btn;
+    }
+
+    private JPanel crearModulo1() {
+        JPanel panelPrincipal = new JPanel(new BorderLayout());
+        panelPrincipal.setBackground(new Color(206, 212, 169));
+    
+        // Panel izquierdo dividido en dos partes
+        JPanel panelIzquierdo = new JPanel();
+        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
+        panelIzquierdo.setBackground(new Color(199, 203, 165));
+        panelIzquierdo.setPreferredSize(new Dimension(350, 700));
+    
+        // 1. Panel superior para títulos (ahora centrado)
+        JPanel panelTitulos = new JPanel();
+        panelTitulos.setLayout(new BoxLayout(panelTitulos, BoxLayout.Y_AXIS));
+        panelTitulos.setBackground(new Color(199, 203, 165));
+        panelTitulos.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20)); // Márgenes equilibrados
+        panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT); // Centrado horizontal
+    
+        JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
+        lblTitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT); // Centrado
+    
+        JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
+        lblSubtitulo.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setForeground(Color.WHITE);
+        lblSubtitulo.setBackground(new Color(217, 120, 82));
+        lblSubtitulo.setOpaque(true);
+        lblSubtitulo.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15)); // Más padding horizontal
+        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT); // Centrado
+    
+        panelTitulos.add(Box.createVerticalGlue());
+        panelTitulos.add(lblTitulo);
+        panelTitulos.add(Box.createRigidArea(new Dimension(0, 15)));
+        panelTitulos.add(lblSubtitulo);
+        panelTitulos.add(Box.createVerticalGlue());
+    
+        // 2. Panel inferior para el gato
+        JPanel panelGato = new JPanel(new BorderLayout());
+        panelGato.setBackground(new Color(199, 203, 165));
+        panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
+    
+        ImageIcon iconoGato = new ImageIcon("Recursos\\gatoR.PNG");
+        Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
+        JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
+        lblGato.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        panelGato.add(lblGato, BorderLayout.CENTER);
+    
+        // Agregar ambos paneles al panel izquierdo
+        panelIzquierdo.add(panelTitulos);
+        panelIzquierdo.add(panelGato);
+    
+        // Panel derecho de instrucciones
+        JPanel panelDerecho = new JPanel();
+        panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
+        panelDerecho.setBackground(new Color(226, 229, 203));
+        panelDerecho.setBorder(BorderFactory.createEmptyBorder(150, 50, 150, 50));
+    
+        JTextArea textoGuia = new JTextArea("Hola! Mi nombre es bob,\nseré tu guía que te ayudará\na convertirte en un...\n¡Guardián del bosque!");
+        textoGuia.setEditable(false);
+        textoGuia.setLineWrap(true);
+        textoGuia.setWrapStyleWord(true);
+        textoGuia.setBackground(Color.WHITE);
+        textoGuia.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 16f));
+        textoGuia.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        textoGuia.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        JButton btnContinuar = new JButton("CONTINUAR");
+        btnContinuar.setBackground(new Color(63, 84, 54));
+        btnContinuar.setForeground(Color.WHITE);
+        btnContinuar.setFont(cargarFuente("Recursos\\fuenteTitulo.ttf", 14f));
+        btnContinuar.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+        btnContinuar.addActionListener(e -> cardLayout.show(mainPanel, "MODULOS"));
+        btnContinuar.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        panelDerecho.add(Box.createVerticalGlue());
+        panelDerecho.add(textoGuia);
+        panelDerecho.add(Box.createRigidArea(new Dimension(0, 20)));
+        panelDerecho.add(btnContinuar);
+        panelDerecho.add(Box.createVerticalGlue());
+    
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelIzquierdo, panelDerecho);
+        splitPane.setDividerLocation(350);
+        splitPane.setEnabled(false);
+    
+        panelPrincipal.add(splitPane, BorderLayout.CENTER);
+        
+        return panelPrincipal;
+    }
+    
+    // Cargar fuentes
+    public Font cargarFuente(String ruta, float tamaño) {
         try {
             Font fuente = Font.createFont(Font.TRUETYPE_FONT, new File(ruta));
             fuente = fuente.deriveFont(tamaño);
