@@ -6,28 +6,31 @@ import java.util.Random;
 public class GeneradorGrafo {
     Random random = new Random();
 
-    final int TAM_MATRIZ = 12;
-    int[][] matrizVertices = new int[TAM_MATRIZ][TAM_MATRIZ];
-    int numeroVertices, numeroAristas;
-    int[][] matrizCostos;
-    posVertice[] posicionVertices;
+    public int TAM_MATRIZ = 8;
+    public int[][] matrizVertices = new int[TAM_MATRIZ][TAM_MATRIZ];
+    public int numeroVertices, numeroAristas;
+    public int[][] matrizCostos;
+    public posVertice[] posicionVertices;
+    public Arista[] posicionAristas;
 
     public GeneradorGrafo(){
 
     }
 
-    public GeneradorGrafo(int[][] matrizVertices, int numeroVertices, int numeroAristas, 
-                            int[][] matrizCostos, posVertice[] posicionVertices) 
+    public GeneradorGrafo(int TAM_MATRIZ,int[][] matrizVertices, int numeroVertices, int numeroAristas, 
+                            int[][] matrizCostos, posVertice[] posicionVertices, Arista[] posicionAristas) 
     {
+        this.TAM_MATRIZ = TAM_MATRIZ;
         this.matrizVertices = matrizVertices;
         this.numeroVertices = numeroVertices;
         this.numeroAristas = numeroAristas;
         this.matrizCostos = matrizCostos;
         this.posicionVertices = posicionVertices;
+        this.posicionAristas = posicionAristas;
     }
 
     //indica que tipo de zona (vertice) habra en la matriz de vertices
-    int tipoZona() {
+    public int tipoZona() {
         /* numero entre 0 y 2
          * 0 no hay zona
          * 1 zona no contaminada
@@ -37,7 +40,7 @@ public class GeneradorGrafo {
         return tZona;
     }
 
-    boolean probabilidadAparecer(int probabilidad) {
+    public boolean probabilidadAparecer(int probabilidad) {
         //numero entre 0 y 9
         int numero = random.nextInt(10);
         //representa la probabilidad que se busca tener
@@ -48,7 +51,7 @@ public class GeneradorGrafo {
     }
 
     //llena la matriz de vertices
-    int[][] llenarMatriz() {
+    public int[][] llenarMatriz() {
         //llenar la matriz de forma aleatoria
         for (int i = 0; i < TAM_MATRIZ; i++) {
             for (int j = 0; j < TAM_MATRIZ; j++) {
@@ -62,7 +65,7 @@ public class GeneradorGrafo {
     }
 
     // cuenta los vertices en la matriz de vertices
-    int contarVertices() {
+    public int contarVertices() {
         numeroVertices = 0;
         //cuenta la cantidad de vertices generados
         for (int i = 0; i < TAM_MATRIZ; i++) {
@@ -76,7 +79,7 @@ public class GeneradorGrafo {
     }
 
     //muestra la matriz en consola
-    void mostrarMatriz() {
+    public void mostrarMatriz() {
         System.out.println("La matriz es: ");
         for (int i = 0; i < TAM_MATRIZ; i++) {
             for (int j = 0; j < TAM_MATRIZ; j++) {
@@ -87,7 +90,7 @@ public class GeneradorGrafo {
     }
 
     //muestra la matriz en consola
-    void mostrarMatrizCostos(int[][] matrizCostos) {
+    public void mostrarMatrizCostos(int[][] matrizCostos) {
         System.out.println("La matriz de costos es: ");
         for (int i = 0; i < numeroVertices; i++) {
             for (int j = 0; j < numeroVertices; j++) {
@@ -99,16 +102,16 @@ public class GeneradorGrafo {
 
     //generar la matriz de costos en base a
     //la matriz de vertices
-    int[][] generarMatrizCostos() {
+    public int[][] generarMatrizCostos() {
         this.matrizCostos = new int[this.numeroVertices][this.numeroVertices];
-        posVertice[] posicionVertices = new posVertice[this.numeroVertices];
+        this.posicionVertices = new posVertice[this.numeroVertices];
         int aux = 0;
         //obtener las posiciones de los vertices
         for (int i = 0; i < TAM_MATRIZ; i++) {
             for (int j = 0; j < TAM_MATRIZ; j++) {
                 if (matrizVertices[i][j] != 0) {
-                    //guardamos la posicion del vertice, sus coordenadas
-                    posicionVertices[aux] = new posVertice(i, j);
+                    //guardamos la posicion del vertice, sus coordenadas y su valor
+                    posicionVertices[aux] = new posVertice(i, j, matrizVertices[i][j]);
                     aux++;
                 }
             }
@@ -133,6 +136,7 @@ public class GeneradorGrafo {
         }
 
         //cuenta la cantidad de aristas generadas
+        numeroAristas = 0;
         for (int i = 0; i < numeroVertices; i++) {
             for (int j = 0; j < numeroVertices; j++) {
                 if (matrizCostos[i][j] != 0) {
@@ -140,10 +144,22 @@ public class GeneradorGrafo {
                 }
             }
         }
+        this.posicionAristas = new Arista[this.numeroAristas];
+        //guarda las aristas
+        aux = 0;
+        for (int i = 0; i < numeroVertices; i++) {
+            for (int j = 0; j < numeroVertices; j++) {
+                if (matrizCostos[i][j] != 0) {
+                    posicionAristas[aux] = new Arista(posicionVertices[i], posicionVertices[j], matrizCostos[i][j]);
+                    aux++;
+                }
+            }
+        }
+
         return matrizCostos;
     }
 
-    int[][] grafoDirigido(int[][] matrizCostos) {
+    public int[][] grafoDirigido(int[][] matrizCostos) {
         //manipular para no tener grafos dirigidos bidireccionales
         //recibimos una matriz con un 40% de aristas eliminadas (aprox)
         for (int i = 0; i < matrizCostos.length; i++) {
@@ -161,7 +177,7 @@ public class GeneradorGrafo {
         return matrizCostos;
     }
 
-    int[][] grafoNoDirigido(int[][] matrizCostos) {
+    public int[][] grafoNoDirigido(int[][] matrizCostos) {
         //manipular para no tener grafos dirigidos
         //recibimos una matriz con un 40% de aristas eliminadas (aprox)
         for (int i = 0; i < matrizCostos.length; i++) {
@@ -179,7 +195,7 @@ public class GeneradorGrafo {
         return matrizCostos;
     }
 
-    double calcularDistancia(posVertice vertice1, posVertice vertice2) {
+    public double calcularDistancia(posVertice vertice1, posVertice vertice2) {
         double distanciaX, distanciaY, distancia;
 
         distanciaX = Math.abs(vertice1.x - vertice2.x);
@@ -195,6 +211,8 @@ public class GeneradorGrafo {
 
         return distancia;
     }
+
+
 
     public static void main(String[] args) {
 
