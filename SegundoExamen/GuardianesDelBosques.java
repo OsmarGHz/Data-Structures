@@ -9,6 +9,9 @@ public class GuardianesDelBosques extends JFrame {
 
     CardLayout cardLayout;
     JPanel mainPanel;
+    private JTextArea textoGuia; // Variable de instancia para modificar el texto
+    private boolean primeraParte = true; // Para controlar el estado del texto
+
 
     public GuardianesDelBosques() {
         setTitle("Guardianes del Bosque");
@@ -109,9 +112,9 @@ public class GuardianesDelBosques extends JFrame {
         panelModulos.setOpaque(false);
         panelModulos.setBorder(BorderFactory.createEmptyBorder(100, 0, 20, 0));
 
-        panelModulos.add(crearModulo("Módulo UNO:<br>Exploración de ecosistemas", "Recursos\\modulo1.png", true));
-        panelModulos.add(crearModulo("Módulo DOS:<br>Optimización<br>de rutas", "Recursos\\modulo2.png", false));
-        panelModulos.add(crearModulo("Módulo TRES:<br>Redes <br>ecológicas", "Recursos\\modulo3.png", false));
+        panelModulos.add(crearModulo("Módulo UNO:<br>Exploración de ecosistemas", "SegundoExamen\\Recursos\\modulo1.png", true));
+        panelModulos.add(crearModulo("Módulo DOS:<br>Optimización<br>de rutas", "SegundoExamen\\Recursos\\modulo2.png", false));
+        panelModulos.add(crearModulo("Módulo TRES:<br>Redes <br>ecológicas", "SegundoExamen\\Recursos\\modulo3.png", false));
 
         // Panel contenedor para centrar verticalmente
         JPanel centerPanel = new JPanel(new BorderLayout());
@@ -205,6 +208,7 @@ public class GuardianesDelBosques extends JFrame {
         return btn;
     }
 
+    
     private JPanel crearModulo1() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
@@ -262,15 +266,19 @@ public class GuardianesDelBosques extends JFrame {
         panelDerecho.setBackground(new Color(226, 229, 203));
         panelDerecho.setBorder(BorderFactory.createEmptyBorder(150, 50, 150, 50));
     
-        JTextArea textoGuia = new JTextArea("Hola! Mi nombre es bob,\nseré tu guía que te ayudará\na convertirte en un...\n¡Guardián del bosque!");
+        JTextArea textoGuia = new JTextArea(
+            "Hola! Mi nombre es bob,\nseré tu guía que te ayudará\na convertirte en un...\n"
+            + "¡Guardián del bosque!\nPero antes queremos que primero tengas\nen cuenta las definiciones de que es:"
+            + "\n\n - BFS (Recorrido a lo ancho)\n - DFS (Recorrido a lo profundo)\n\n Asi que comencemos!"
+        );
         textoGuia.setEditable(false);
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
+        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            BorderFactory.createEmptyBorder(10, 25, 10, 20)
         ));
         textoGuia.setAlignmentX(Component.CENTER_ALIGNMENT);
     
@@ -281,7 +289,8 @@ public class GuardianesDelBosques extends JFrame {
         btnContinuar.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         btnContinuar.addActionListener(e -> cardLayout.show(mainPanel, "MODULOS"));
         btnContinuar.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
+        
+
         panelDerecho.add(Box.createVerticalGlue());
         panelDerecho.add(textoGuia);
         panelDerecho.add(Box.createRigidArea(new Dimension(0, 20)));
