@@ -14,6 +14,7 @@ import modelo.posVertice;
 public class PanelMapa extends JPanel {
     private GeneradorGrafo grafo = new GeneradorGrafo();
     private int T_MATRIZ = grafo.TAM_MATRIZ + 1;
+    //private int T_MATRIZ = 13;
     private Image mapa;
     private final int RADIO_VERTICE = 15;
     private posVertice verticeSeleccionado = null;
@@ -24,11 +25,6 @@ public class PanelMapa extends JPanel {
 
     public PanelMapa() {
         mapa = new ImageIcon(getClass().getResource("/recursos/mapa.png")).getImage();
-        grafo.llenarMatriz();
-        grafo.contarVertices();
-        int[][] matrizCostos = grafo.generarMatrizCostos();
-        grafo.mostrarMatrizCostos(matrizCostos);
-        grafo.mostrarMatrizCostos(grafo.grafoNoDirigido(matrizCostos));
         
         inicializarPosicionesPixeles();
 
@@ -157,6 +153,20 @@ public class PanelMapa extends JPanel {
             g2.draw(new Line2D.Double(0, (i+1)*ylineas, getWidth(), (i+1)*ylineas));
         }
 
+        // Dibujar aristas
+        g2.setStroke(new BasicStroke(2));
+        for (int i = 0; i < grafo.numeroAristas; i++) {
+            Point origen = posicionesPixeles.get(grafo.posicionAristas[i].origen);
+            Point destino = posicionesPixeles.get(grafo.posicionAristas[i].destino);
+            
+            g2.setColor(Color.ORANGE);
+            g2.drawLine(origen.x, origen.y, destino.x, destino.y);
+            
+            g2.setColor(Color.WHITE);
+            g2.drawString(String.valueOf(grafo.posicionAristas[i].peso), 
+                (origen.x + destino.x)/2, (origen.y + destino.y)/2);
+        }
+
         // Dibujar vértices
         areasVertices.clear();
         for (int i = 0; i < grafo.posicionVertices.length; i++) {
@@ -170,20 +180,6 @@ public class PanelMapa extends JPanel {
             g2.setColor(Color.BLACK);
             g2.drawString(String.valueOf(i), x + RADIO_VERTICE - 3, y + RADIO_VERTICE + 5);
             areasVertices.add(new Ellipse2D.Double(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2));
-        }
-
-        // Dibujar aristas
-        g2.setStroke(new BasicStroke(2));
-        for (int i = 0; i < grafo.numeroAristas; i++) {
-            Point origen = posicionesPixeles.get(grafo.posicionAristas[i].origen);
-            Point destino = posicionesPixeles.get(grafo.posicionAristas[i].destino);
-            
-            g2.setColor(Color.ORANGE);
-            g2.drawLine(origen.x, origen.y, destino.x, destino.y);
-            
-            g2.setColor(Color.WHITE);
-            g2.drawString(String.valueOf(grafo.posicionAristas[i].peso), 
-                (origen.x + destino.x)/2, (origen.y + destino.y)/2);
         }
     }
 
