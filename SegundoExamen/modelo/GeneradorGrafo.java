@@ -6,27 +6,15 @@ import java.util.Random;
 public class GeneradorGrafo {
     Random random = new Random();
 
-    public int TAM_MATRIZ = 5;
-    public int[][] matrizVertices = new int[TAM_MATRIZ][TAM_MATRIZ];
+    public int TAM_MATRIZ = 8;
+    public int[][] matrizVertices;
     public int numeroVertices, numeroAristas;
     public int[][] matrizCostos;
     public posVertice[] posicionVertices;
     public Arista[] posicionAristas;
 
     public GeneradorGrafo(){
-
-    }
-
-    public GeneradorGrafo(int TAM_MATRIZ,int[][] matrizVertices, int numeroVertices, int numeroAristas, 
-                            int[][] matrizCostos, posVertice[] posicionVertices, Arista[] posicionAristas) 
-    {
-        this.TAM_MATRIZ = TAM_MATRIZ;
-        this.matrizVertices = matrizVertices;
-        this.numeroVertices = numeroVertices;
-        this.numeroAristas = numeroAristas;
-        this.matrizCostos = matrizCostos;
-        this.posicionVertices = posicionVertices;
-        this.posicionAristas = posicionAristas;
+        inicializarGrafo();
     }
 
     //indica que tipo de zona (vertice) habra en la matriz de vertices
@@ -61,6 +49,12 @@ public class GeneradorGrafo {
                 }
             }
         }
+        //pendiente: añadir una condicion por si no se genera ningun vertice
+        /*
+         * if (numeroVertices == 0) {
+            matrizVertices[random.nextInt(TAM_MATRIZ)][random.nextInt(TAM_MATRIZ)] = tipoZona();
+            }
+         */
         return matrizVertices;
     }
 
@@ -78,33 +72,20 @@ public class GeneradorGrafo {
         return numeroVertices;
     }
 
-    //muestra la matriz en consola
-    public void mostrarMatriz() {
-        System.out.println("La matriz es: ");
-        for (int i = 0; i < TAM_MATRIZ; i++) {
-            for (int j = 0; j < TAM_MATRIZ; j++) {
-                System.out.printf("%3d",matrizVertices[i][j]);       
-            }
-            System.out.println();
-        }
-    }
-
-    //muestra la matriz en consola
-    public void mostrarMatrizCostos(int[][] matrizCostos) {
-        System.out.println("La matriz de costos es: ");
+    public int contarAristas() {
+        //cuenta la cantidad de aristas generadas
+        numeroAristas = 0;
         for (int i = 0; i < numeroVertices; i++) {
             for (int j = 0; j < numeroVertices; j++) {
-                System.out.printf("%3d",matrizCostos[i][j]);       
+                if (matrizCostos[i][j] != 0) {
+                    numeroAristas++;
+                }
             }
-            System.out.println();
         }
+        return numeroAristas;
     }
 
-    //generar la matriz de costos en base a
-    //la matriz de vertices
-    public int[][] generarMatrizCostos() {
-        this.matrizCostos = new int[this.numeroVertices][this.numeroVertices];
-        this.posicionVertices = new posVertice[this.numeroVertices];
+    public posVertice[] guardarPosVertices(){
         int aux = 0;
         //obtener las posiciones de los vertices
         for (int i = 0; i < TAM_MATRIZ; i++) {
@@ -116,37 +97,12 @@ public class GeneradorGrafo {
                 }
             }
         }
-        //calculamos las distancias y llenamos la matrizDeCostos
-        for (int i = 0; i < numeroVertices; i++) {
-            for (int j = 0; j < numeroVertices; j++) {
-                //hacemos cero a la diagonal principal
-                if (i == j) {
-                    matrizCostos[i][j] = 0;
-                } else {
-                    //llenamos con un 60% de probabilidad
-                    if (probabilidadAparecer(3)) {
-                        matrizCostos[i][j] = (int) calcularDistancia(posicionVertices[i], posicionVertices[j]);
-                    } else {
-                        matrizCostos[i][j] = 0;
-                    }
-                    
-                    //matrizCostos[i][j] = (int) calcularDistancia(posicionVertices[i], posicionVertices[j]);
-                }
-            }
-        }
+        return posicionVertices;
+    }
 
-        //cuenta la cantidad de aristas generadas
-        numeroAristas = 0;
-        for (int i = 0; i < numeroVertices; i++) {
-            for (int j = 0; j < numeroVertices; j++) {
-                if (matrizCostos[i][j] != 0) {
-                    numeroAristas++;
-                }
-            }
-        }
-        this.posicionAristas = new Arista[this.numeroAristas];
-        //guarda las aristas
-        aux = 0;
+    public Arista[] guardarPosAristas() {
+        //guarda las posiciones de las aristas
+        int aux = 0;
         for (int i = 0; i < numeroVertices; i++) {
             for (int j = 0; j < numeroVertices; j++) {
                 if (matrizCostos[i][j] != 0) {
@@ -155,7 +111,39 @@ public class GeneradorGrafo {
                 }
             }
         }
+        return posicionAristas;
+    }
+    //generar la matriz de costos en base a
+    //la matriz de vertices
+    public int[][] generarMatrizCostos() {
+        // Primera pasada: generar conexiones con una probabilidad del 50%
+        for (int i = 0; i < numeroVertices; i++) {
+            for (int j = 0; j < numeroVertices; j++) { // Ahora recorremos toda la matriz
+                if (i != j && probabilidadAparecer(2)) { // Evitar auto-conexiones
+                    matrizCostos[i][j] = (int) calcularDistancia(posicionVertices[i], posicionVertices[j]);
+                }
+            }
+        }
 
+        // Segunda pasada: asegurar que todos los vértices tengan al menos una arista saliente
+        for (int i = 0; i < numeroVertices; i++) {
+            boolean tieneAristaSaliente = false;
+            for (int j = 0; j < numeroVertices; j++) {
+                if (matrizCostos[i][j] != 0) {
+                    tieneAristaSaliente = true;
+                    break;
+                }
+            }
+            if (!tieneAristaSaliente) {
+                // Si un vértice no tiene aristas salientes, conectar con otro aleatorio
+                int otroVertice;
+                do {
+                    otroVertice = random.nextInt(numeroVertices);
+                } while (otroVertice == i); // Asegurar que no se conecte consigo mismo
+
+                matrizCostos[i][otroVertice] = (int) calcularDistancia(posicionVertices[i], posicionVertices[otroVertice]);
+            }
+        }
         return matrizCostos;
     }
 
@@ -212,21 +200,54 @@ public class GeneradorGrafo {
         return distancia;
     }
 
+    //muestra la matriz en consola
+    public void mostrarMatriz() {
+        System.out.println("La matriz es: ");
+        for (int i = 0; i < TAM_MATRIZ; i++) {
+            for (int j = 0; j < TAM_MATRIZ; j++) {
+                System.out.printf("%3d",matrizVertices[i][j]);       
+            }
+            System.out.println();
+        }
+    }
 
+    //muestra la matriz en consola
+    public void mostrarMatrizCostos() {
+        System.out.println("La matriz de costos es: ");
+        for (int i = 0; i < numeroVertices; i++) {
+            for (int j = 0; j < numeroVertices; j++) {
+                System.out.printf("%3d",matrizCostos[i][j]);       
+            }
+            System.out.println();
+        }
+    }
 
+    private void inicializarGrafo() {
+        matrizVertices = new int[TAM_MATRIZ][TAM_MATRIZ]; // Asegura que la matriz se inicializa
+        
+        llenarMatriz();
+        numeroVertices = contarVertices();
+        posicionVertices = new posVertice[numeroVertices];
+        guardarPosVertices();
+        
+        matrizCostos = new int[numeroVertices][numeroVertices];
+
+        matrizCostos = generarMatrizCostos();
+        numeroAristas = contarAristas();
+        posicionAristas = new Arista[numeroAristas];
+        guardarPosAristas();
+        mostrarMatriz();
+        //mostrarMatrizCostos();
+        //grafoDirigido(matrizCostos);
+        grafoDirigido(matrizCostos);
+        //mostrarMatrizCostos();
+    }
+    
     public static void main(String[] args) {
 
-        GeneradorGrafo g = new GeneradorGrafo();
-        g.llenarMatriz();
-        g.mostrarMatriz();
-        System.out.println("Hay "+g.contarVertices()+" vertices");
-        
-        g.mostrarMatrizCostos(g.generarMatrizCostos());
-        System.out.println("Hay "+g.numeroAristas+" aristas");
-        System.out.println("Grafo no dirigido");
-        g.mostrarMatrizCostos(g.grafoNoDirigido(g.matrizCostos));
-        System.out.println("Grafo dirigido");
-        g.mostrarMatrizCostos(g.grafoDirigido(g.matrizCostos));
+        new GeneradorGrafo();
+        //g.inicializarGrafo();
         
     }
+    
 }
