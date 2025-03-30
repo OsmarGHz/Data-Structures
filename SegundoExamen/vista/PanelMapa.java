@@ -202,5 +202,4 @@ public class PanelMapa extends JPanel {
         ventana.add(new PanelMapa());
         ventana.setVisible(true);
     }
-    */
 }
