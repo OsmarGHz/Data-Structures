@@ -185,7 +185,7 @@ public class PanelMapa extends JPanel {
             g2.drawString(""+grafo.posicionAristas[i].peso, midX, midY);
         }
     }
-    /*
+    
     public static void main(String[] args) {
         JFrame ventana = new JFrame();
         ventana.setTitle("Ventana pruebas");
@@ -197,5 +197,4 @@ public class PanelMapa extends JPanel {
         ventana.add(panelMapa);
         ventana.setVisible(true);
     }
-    */
 }
