@@ -1,0 +1,199 @@
+package vista;
+
+import javax.swing.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
+import java.awt.*;
+import java.awt.geom.Line2D;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+
+import modelo.GeneradorGrafo;
+import modelo.Vertice;
+import modelo.posVertice;
+
+public class PanelMapa extends JPanel {
+    GeneradorGrafo grafo = new GeneradorGrafo();
+    int T_MATRIZ = grafo.TAM_MATRIZ + 1;
+    private Image mapa;
+    private final int RADIO_VERTICE = 15;
+    private posVertice verticeSeleccionado = null;
+    private boolean arrastrando = false;
+    private Point puntoArrastre = null;
+    private List<Ellipse2D> areasVertices = new ArrayList<>();
+
+    public PanelMapa() {
+        // Cargar la imagen
+        mapa = new ImageIcon(getClass().getResource("/recursos/mapa.png")).getImage();
+        //inicializar matriz de costos
+        grafo.llenarMatriz();
+        grafo.contarVertices();
+        grafo.generarMatrizCostos();
+        grafo.mostrarMatriz();
+        
+        // Configurar listeners para el arrastre
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                verificarSeleccionVertice(e.getPoint());
+            }
+            
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                verticeSeleccionado = null;
+                arrastrando = false;
+                puntoArrastre = null;
+            }
+        });
+        
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (arrastrando && verticeSeleccionado != null) {
+                    moverVertice(e.getPoint());
+                }
+            }
+        });
+    }
+    
+    private void verificarSeleccionVertice(Point punto) {
+        areasVertices.clear(); // Limpiar lista de áreas de vértices
+        
+        double xlineas = (double) getWidth() / T_MATRIZ;
+        double ylineas = (double) getHeight() / T_MATRIZ;
+        
+        // Crear áreas de colisión para cada vértice
+        for (int i = 0; i < grafo.posicionVertices.length; i++) {
+            int x = (int) ((grafo.posicionVertices[i].y+1) * xlineas) - RADIO_VERTICE;
+            int y = (int) ((grafo.posicionVertices[i].x+1) * ylineas) - RADIO_VERTICE;
+            
+            Ellipse2D area = new Ellipse2D.Double(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2);
+            areasVertices.add(area);
+            
+            if (area.contains(punto)) {
+                verticeSeleccionado = grafo.posicionVertices[i];
+                arrastrando = true;
+                puntoArrastre = punto;
+                break;
+            }
+        }
+    }
+    
+    private void moverVertice(Point nuevoPunto) {
+        if (verticeSeleccionado == null) return;
+        
+        double xlineas = (double) getWidth() / T_MATRIZ;
+        double ylineas = (double) getHeight() / T_MATRIZ;
+        
+        // Calcular nueva posición en términos de la matriz
+        int nuevaX = (int) ((nuevoPunto.getX() + RADIO_VERTICE) / xlineas) - 1;
+        int nuevaY = (int) ((nuevoPunto.getY() + RADIO_VERTICE) / ylineas) - 1;
+        
+        // Asegurarse de que no salga de los límites del panel
+        nuevaX = Math.max(0, Math.min(grafo.TAM_MATRIZ - 1, nuevaX));
+        nuevaY = Math.max(0, Math.min(grafo.TAM_MATRIZ - 1, nuevaY));
+        
+        // Verificar colisiones con otros vértices
+        boolean colision = false;
+        for (posVertice v : grafo.posicionVertices) {
+            if (v != verticeSeleccionado && v.x == nuevaY && v.y == nuevaX) {
+                colision = true;
+                break;
+            }
+        }
+        
+        if (!colision) {
+            // Actualizar posición del vértice (nota: x y y están invertidos en tu código original)
+            verticeSeleccionado.y = nuevaX;
+            verticeSeleccionado.x = nuevaY;
+            
+            // Actualizar aristas relacionadas
+            actualizarAristas();
+            
+            // Repintar el panel
+            repaint();
+        }
+    }
+    
+    private void actualizarAristas() {
+        // No necesitamos hacer nada aquí ya que las aristas se dibujan basándose en las posiciones de los vértices
+        // El método paintComponent ya dibuja las aristas según las posiciones actuales
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+        g2.drawImage(mapa, 0, 0, getWidth(), getHeight(), this);
+
+        //dibujar filas y columnas segun el valor TAM_MATRIZ
+        double xlineas = (double) getWidth() / T_MATRIZ;
+        double ylineas = (double) getHeight() / T_MATRIZ;
+
+        // Aplicar opacidad
+        float opacidad = 0.8f;
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacidad));
+        g2.setColor(Color.BLACK);
+        g2.setStroke(new BasicStroke(3));
+        
+        //dibujar las lineas verticales y horizontales
+        for (int i = 0; i < T_MATRIZ; i++) {
+            g2.draw(new Line2D.Double((i+1)*xlineas, 0, (i+1)*xlineas, getHeight()));
+            g2.draw(new Line2D.Double(0, (i+1)*ylineas, getWidth(), (i+1)*ylineas));
+        }
+
+        //dibujar vertices
+        areasVertices.clear(); // Limpiar áreas de colisión antes de volver a dibujar
+        for (int i = 0; i < grafo.posicionVertices.length; i++) {
+            int x = (int) ((grafo.posicionVertices[i].y+1) * xlineas) - RADIO_VERTICE;
+            int y = (int) ((grafo.posicionVertices[i].x+1) * ylineas) - RADIO_VERTICE;
+            
+            // Guardar área de colisión para este vértice
+            areasVertices.add(new Ellipse2D.Double(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2));
+            
+            if (grafo.posicionVertices[i].tipoZona == 1) {
+                g2.setColor(Color.BLUE);
+            } else if (grafo.posicionVertices[i].tipoZona == 2) {
+                g2.setColor(Color.YELLOW);
+            }
+            
+            g2.fillOval(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2);
+            
+            // Dibujar número del vértice
+            g2.setColor(Color.WHITE);
+            g2.drawString(String.valueOf(i), x + RADIO_VERTICE - 3, y + RADIO_VERTICE + 5);
+        }
+
+        //dibujar aristas
+        for (int i = 0; i < grafo.numeroAristas; i++) {
+            g2.setColor(Color.ORANGE);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawLine((int) ((grafo.posicionAristas[i].origen.y+1) * xlineas),
+                        (int) ((grafo.posicionAristas[i].origen.x+1) * ylineas), 
+                        (int) ((grafo.posicionAristas[i].destino.y+1) * xlineas), 
+                        (int) ((grafo.posicionAristas[i].destino.x+1) * ylineas));
+                        
+            //dibujar el peso de la arista
+            int midX = ((int) ((grafo.posicionAristas[i].origen.y+1) * xlineas) + 
+                        (int) ((grafo.posicionAristas[i].destino.y+1) * xlineas)) / 2, 
+                midY = ((int) ((grafo.posicionAristas[i].origen.x+1) * ylineas) + 
+                        (int) ((grafo.posicionAristas[i].destino.x+1) * ylineas)) / 2;
+
+            g2.setColor(Color.WHITE);
+            g2.drawString(""+grafo.posicionAristas[i].peso, midX, midY);
+        }
+    }
+    
+    public static void main(String[] args) {
+        JFrame ventana = new JFrame();
+        ventana.setTitle("Ventana pruebas");
+        ventana.setSize(500, 500);
+        ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ventana.setLocationRelativeTo(null);
+
+        PanelMapa panelMapa = new PanelMapa();
+        ventana.add(panelMapa);
+        ventana.setVisible(true);
+    }
+}
