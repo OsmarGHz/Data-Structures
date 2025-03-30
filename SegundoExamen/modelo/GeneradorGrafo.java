@@ -6,7 +6,7 @@ import java.util.Random;
 public class GeneradorGrafo {
     Random random = new Random();
 
-    public int TAM_MATRIZ = 8;
+    public int TAM_MATRIZ = 5;
     public int[][] matrizVertices = new int[TAM_MATRIZ][TAM_MATRIZ];
     public int numeroVertices, numeroAristas;
     public int[][] matrizCostos;
@@ -42,7 +42,7 @@ public class GeneradorGrafo {
 
     public boolean probabilidadAparecer(int probabilidad) {
         //numero entre 0 y 9
-        int numero = random.nextInt(10);
+        int numero = random.nextInt(100);
         //representa la probabilidad que se busca tener
         if (numero < probabilidad) {
             return true;
@@ -56,7 +56,7 @@ public class GeneradorGrafo {
         for (int i = 0; i < TAM_MATRIZ; i++) {
             for (int j = 0; j < TAM_MATRIZ; j++) {
                 //llenamos con un 60% de probabilidad
-                if (probabilidadAparecer(2)){
+                if (probabilidadAparecer(40)){
                     matrizVertices[i][j] = tipoZona();
                 }
             }
@@ -124,7 +124,7 @@ public class GeneradorGrafo {
                     matrizCostos[i][j] = 0;
                 } else {
                     //llenamos con un 60% de probabilidad
-                    if (probabilidadAparecer(6)) {
+                    if (probabilidadAparecer(3)) {
                         matrizCostos[i][j] = (int) calcularDistancia(posicionVertices[i], posicionVertices[j]);
                     } else {
                         matrizCostos[i][j] = 0;
@@ -220,13 +220,13 @@ public class GeneradorGrafo {
         g.llenarMatriz();
         g.mostrarMatriz();
         System.out.println("Hay "+g.contarVertices()+" vertices");
-        /*
+        
         g.mostrarMatrizCostos(g.generarMatrizCostos());
         System.out.println("Hay "+g.numeroAristas+" aristas");
         System.out.println("Grafo no dirigido");
         g.mostrarMatrizCostos(g.grafoNoDirigido(g.matrizCostos));
         System.out.println("Grafo dirigido");
         g.mostrarMatrizCostos(g.grafoDirigido(g.matrizCostos));
-        */
+        
     }
 }

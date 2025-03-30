@@ -25,10 +25,7 @@ public class PanelMapa extends JPanel {
         mapa = new ImageIcon(getClass().getResource("/recursos/mapa.png")).getImage();
         grafo.llenarMatriz();
         grafo.contarVertices();
-        int[][] matrizCostos = grafo.generarMatrizCostos();
-        grafo.mostrarMatrizCostos(matrizCostos);
-        grafo.mostrarMatrizCostos(grafo.grafoNoDirigido(matrizCostos));
-        
+        grafo.grafoNoDirigido(grafo.generarMatrizCostos());
         inicializarPosicionesPixeles();
 
         addMouseListener(new MouseAdapter() {
@@ -166,7 +163,7 @@ public class PanelMapa extends JPanel {
             g2.setColor(grafo.posicionVertices[i].tipoZona == 1 ? Color.BLUE : Color.YELLOW);
             g2.fillOval(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2);
             
-            g2.setColor(Color.BLACK);
+            g2.setColor(Color.WHITE);
             g2.drawString(String.valueOf(i), x + RADIO_VERTICE - 3, y + RADIO_VERTICE + 5);
             areasVertices.add(new Ellipse2D.Double(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2));
         }
