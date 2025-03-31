@@ -1,3 +1,4 @@
+/*
 package vista;
 
 import javax.swing.*;
@@ -309,3 +310,4 @@ public class PanelMapa extends JPanel {
         ventana.setVisible(true);
     }
 }
+*/
