@@ -12,6 +12,7 @@ public class GeneradorGrafo {
     public int[][] matrizCostos;
     public posVertice[] posicionVertices;
     public Arista[] posicionAristas;
+    public boolean esDirigido;
 
     public GeneradorGrafo(){
         inicializarGrafo();
@@ -148,6 +149,24 @@ public class GeneradorGrafo {
     }
 
     public int[][] grafoDirigido(int[][] matrizCostos) {
+        esDirigido = true;
+        //manipular para no tener grafos dirigidos bidireccionales
+        //recibimos una matriz con un 40% de aristas eliminadas (aprox)
+        //eliminar los valores triangulares inferiores
+        for (int i = 0; i < matrizCostos.length; i++) {
+            for (int j = 0; j < matrizCostos.length - (matrizCostos.length - i); j++) {
+                //pasar los elementos de la parte triangular inferior a la superior
+                if (matrizCostos[i][j] != 0 && matrizCostos[j][i] == 0) {
+                    matrizCostos[j][i] = matrizCostos[i][j];
+                }
+                matrizCostos[i][j] = 0;
+            }
+        }
+        return matrizCostos;
+    }
+
+    public int[][] grafoDirigido2(int[][] matrizCostos) {
+        esDirigido = true;
         //manipular para no tener grafos dirigidos bidireccionales
         //recibimos una matriz con un 40% de aristas eliminadas (aprox)
         for (int i = 0; i < matrizCostos.length; i++) {
@@ -166,6 +185,7 @@ public class GeneradorGrafo {
     }
 
     public int[][] grafoNoDirigido(int[][] matrizCostos) {
+        esDirigido = false;
         //manipular para no tener grafos dirigidos
         //recibimos una matriz con un 40% de aristas eliminadas (aprox)
         for (int i = 0; i < matrizCostos.length; i++) {
@@ -215,6 +235,29 @@ public class GeneradorGrafo {
     public void mostrarMatrizCostos() {
         System.out.println("La matriz de costos es: ");
         for (int i = 0; i < numeroVertices; i++) {
+            if (i == 0) {
+                System.out.printf("%6d",i);
+            } else {
+                System.out.printf("%3d",i);
+            }
+            if (i == numeroVertices - 1) System.out.println();
+        }
+        for (int i = 0; i < numeroVertices; i++) {
+            if (i == 0) {
+                System.out.printf("%6s","-");
+            } else {
+                System.out.printf("%3s","---");
+            }
+            if (i == numeroVertices - 1) System.out.println();
+        }
+        /*
+        for (int i = 0; i < numeroVertices; i++) {
+            System.out.printf("-");
+            if (i == numeroVertices - 1) System.out.println();    
+        }
+            */
+        for (int i = 0; i < numeroVertices; i++) {
+            System.out.printf("%2d|", i);
             for (int j = 0; j < numeroVertices; j++) {
                 System.out.printf("%3d",matrizCostos[i][j]);       
             }
@@ -239,7 +282,10 @@ public class GeneradorGrafo {
         mostrarMatriz();
         //mostrarMatrizCostos();
         //grafoDirigido(matrizCostos);
-        grafoDirigido(matrizCostos);
+        grafoNoDirigido(matrizCostos);
+        numeroAristas = contarAristas();
+        posicionAristas = new Arista[numeroAristas];
+        guardarPosAristas();
         //mostrarMatrizCostos();
     }
     
