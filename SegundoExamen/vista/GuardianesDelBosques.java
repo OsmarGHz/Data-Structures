@@ -53,6 +53,15 @@ public class GuardianesDelBosques extends JFrame {
             this.modulo3Completado = Boolean.parseBoolean(datos[3]);
             this.ultimoAcceso = datos.length > 4 ? LocalDateTime.parse(datos[4], DATE_FORMAT) : LocalDateTime.now();
         }
+
+        public boolean isModuloDisponible(int modulo) {
+            switch(modulo) {
+                case 1: return true;  // Siempre disponible
+                case 2: return modulo1Completado;
+                case 3: return modulo2Completado;
+                default: return false;
+            }
+        }
         
         String toFileString() {
             return String.join("|",
@@ -298,7 +307,9 @@ public class GuardianesDelBosques extends JFrame {
             return;
         }
         
+        // Obtener la instancia actualizada del usuario
         usuarioActual = usuariosMap.get(nombreUsuario);
+        usuarioActual.ultimoAcceso = LocalDateTime.now();
         
         // Mostrar mensaje de bienvenida con progreso
         String mensaje = "Bienvenido, " + usuarioActual.nombre + "!\n\n";
@@ -386,14 +397,30 @@ public class GuardianesDelBosques extends JFrame {
         panelModulos.setOpaque(false);
         panelModulos.setBorder(BorderFactory.createEmptyBorder(100, 0, 20, 0));
 
-        //Panel de modlos de aprendizaje y ejercicio del modulo 1
-        panelModulos.add(crearModulo("Módulo UNO:<br>Exploración de ecosistemas", "SegundoExamen\\Recursos\\modulo1.png", true, "MODULO1", "EJERCICIO1"));
-        
-         //Panel de modlos de aprendizaje y ejercicio del modulo 1       
-        panelModulos.add(crearModulo("Módulo DOS:<br>Optimización<br>de rutas", "SegundoExamen\\Recursos\\modulo2.png",true, "MODULO2", "EJERCICIO2"));
-        
-        //Panel de modlos de aprendizaje y ejercicio del modulo 1
-        panelModulos.add(crearModulo("Módulo TRES:<br>Redes <br>ecológicas", "SegundoExamen\\Recursos\\modulo3.png", true, "MODULO3", "EJERCICIO3"));
+        // Versión corregida en PantallaModulos()
+    panelModulos.add(crearModulo(
+        "Módulo UNO:<br>Exploración de<br>ecosistemas", 
+        "modulo1.png", 
+        true,  // Módulo 1 siempre desbloqueado
+        "MODULO1", 
+        "EJERCICIO1"
+    ));
+
+    panelModulos.add(crearModulo(
+        "Módulo DOS:<br>Optimización<br>de rutas", 
+        "modulo2.png", 
+        usuarioActual != null && usuarioActual.modulo1Completado, // Solo si módulo 1 completado
+        "MODULO2", 
+        "EJERCICIO2"
+    ));
+
+    panelModulos.add(crearModulo(
+        "Módulo TRES:<br>Redes <br>ecológicas", 
+        "modulo3.png", 
+        usuarioActual != null && usuarioActual.modulo2Completado, // Solo si módulo 2 completado
+        "MODULO3", 
+        "EJERCICIO3"
+    ));
 
         // Panel contenedor para centrar verticalmente
         JPanel centerPanel = new JPanel(new BorderLayout());
@@ -401,13 +428,22 @@ public class GuardianesDelBosques extends JFrame {
         centerPanel.add(panelModulos, BorderLayout.CENTER);
         contenedor.add(centerPanel, BorderLayout.CENTER);
 
-        // Botón de certificado bloqueado (esto cambia necesito añadir una variable que cambie el boleano cada que se complete una leccion)
-        JButton botonCertificado = new JButton("DESCARGAR CERTIFICADO (BLOQUEADO)");
-        botonCertificado.setEnabled(false);
-        botonCertificado.setBackground(Color.DARK_GRAY);
-        botonCertificado.setForeground(Color.WHITE);
-        botonCertificado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 15f));
-        botonCertificado.setPreferredSize(new Dimension(350, 40));
+        // Botón de certificado (actualizado)
+    botonCertificado = new JButton(usuarioActual != null && usuarioActual.todosModulosCompletados() 
+    ? "DESCARGAR CERTIFICADO" 
+    : "DESCARGAR CERTIFICADO (BLOQUEADO)");
+    botonCertificado.setEnabled(usuarioActual != null && usuarioActual.todosModulosCompletados());
+    botonCertificado.setBackground(usuarioActual != null && usuarioActual.todosModulosCompletados() 
+    ? new Color(87, 124, 88) 
+    : Color.DARK_GRAY);
+    botonCertificado.setForeground(Color.WHITE);
+    botonCertificado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 15f));
+    botonCertificado.setPreferredSize(new Dimension(350, 40));
+
+    // Añadir acción al botón
+    if (usuarioActual != null && usuarioActual.todosModulosCompletados()) {
+    botonCertificado.addActionListener(e -> cardLayout.show(mainPanel, "CERTIFICADO"));
+    }
 
         JPanel panelInferior = new JPanel();
         panelInferior.setBackground(new Color(206, 212, 169));
@@ -419,77 +455,91 @@ public class GuardianesDelBosques extends JFrame {
         return contenedor;
     }
 
-    //Crear los modulos de la pantalla
-    private JPanel crearModulo(String titulo, String rutaImagen, boolean activo, String nombrePanel, String numeroEjercio) {
+    private JPanel crearModulo(String titulo, String nombreImagen, boolean habilitado, 
+                         String idPanelTeoria, String idPanelEjercicio) {
         JPanel modulo = new JPanel();
-        modulo.setPreferredSize(new Dimension(200, 300));
+        modulo.setPreferredSize(new Dimension(220, 320)); // Aumenté ligeramente el tamaño
         modulo.setBackground(Color.WHITE);
         modulo.setLayout(new BoxLayout(modulo, BoxLayout.Y_AXIS));
-        modulo.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
-    
-        JLabel lblTitulo = new JLabel("<html><center>" + titulo + "</center></html>", SwingConstants.CENTER);
+        modulo.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), // Paréntesis añadido aquí
+            BorderFactory.createEmptyBorder(20, 10, 10, 10)
+        ));
+
+        // Título del módulo
+        JLabel lblTitulo = new JLabel("<html><div style='text-align:center;width:180px;'>" + titulo + "</div></html>", SwingConstants.CENTER);
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
         modulo.add(lblTitulo);
         modulo.add(Box.createVerticalStrut(15));
-    
-        if (activo) {
-            JButton btnAprender = new JButton("Aprender ahora");
-            btnAprender.setBackground(new Color(87, 124, 88));
-            btnAprender.setForeground(Color.WHITE);
-            btnAprender.setFocusPainted(false);
-            btnAprender.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btnAprender.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
-            
-            // Cambiar al panel correspondiente según el nombre
-            btnAprender.addActionListener(e -> cardLayout.show(mainPanel, nombrePanel));
-            
-            modulo.add(btnAprender);
-        } else {
-            JButton bloqueado = botonBloqueado("BLOQUEADO");
-            bloqueado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
-            modulo.add(bloqueado);
-        }
-    
+
+        // Botón de Aprender
+        JButton btnAprender = habilitado 
+            ? crearBotonActivo("Aprender ahora", e -> cardLayout.show(mainPanel, idPanelTeoria))
+            : botonBloqueado("BLOQUEADO");
+        modulo.add(btnAprender);
         modulo.add(Box.createVerticalStrut(10));
-        
-        if (activo) {
-            JButton btnEjercicio = new JButton("Comenzar Ejercicio");
-            btnEjercicio.setBackground(new Color(87, 124, 88));
-            btnEjercicio.setForeground(Color.WHITE);
-            btnEjercicio.setFocusPainted(false);
-            btnEjercicio.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btnEjercicio.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
-            
-            // Cambiar al panel correspondiente según el nombre
-            btnEjercicio.addActionListener(e -> cardLayout.show(mainPanel, numeroEjercio));
-            
-            modulo.add(btnEjercicio);
-        } else {
-            JButton bloqueado = botonBloqueado("BLOQUEADO");
-            bloqueado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
-            modulo.add(bloqueado);
-        }
-    
+
+        // Botón de Ejercicio
+        JButton btnEjercicio = habilitado 
+            ? crearBotonActivo("Comenzar Ejercicio", e -> cardLayout.show(mainPanel, idPanelEjercicio))
+            : botonBloqueado("BLOQUEADO");
+        modulo.add(btnEjercicio);
         modulo.add(Box.createVerticalStrut(15));
-        ImageIcon icon = new ImageIcon(rutaImagen);
-        JLabel imagen = new JLabel(new ImageIcon(icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH)));
-        imagen.setAlignmentX(Component.CENTER_ALIGNMENT);
-        modulo.add(imagen);
-    
+
+        // Imagen del módulo
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource("/recursos/" + nombreImagen));
+            JLabel imagen = new JLabel(new ImageIcon(icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH)));
+            imagen.setAlignmentX(Component.CENTER_ALIGNMENT);
+            modulo.add(imagen);
+        } catch (Exception e) {
+            // Imagen por defecto si falla la carga
+            JLabel lblErrorImagen = new JLabel("Imagen no disponible");
+            lblErrorImagen.setAlignmentX(Component.CENTER_ALIGNMENT);
+            modulo.add(lblErrorImagen);
+        }
+
         return modulo;
     }
-    
-    //boton bloqueado
-    private JButton botonBloqueado(String texto) {
+
+    public boolean isModuloCompletado(int numeroModulo) {
+        if (usuarioActual == null) return false;
+        switch (numeroModulo) {
+            case 1: return true;  // Módulo 1 siempre disponible
+            case 2: return usuarioActual.modulo1Completado;
+            case 3: return usuarioActual.modulo2Completado;
+            default: return false;
+        }
+    }
+
+    // Método auxiliar para crear botones activos
+    private JButton crearBotonActivo(String texto, ActionListener action) {
         JButton boton = new JButton(texto);
-        boton.setEnabled(false);
-        boton.setBackground(new Color(40, 60, 40));
+        boton.setBackground(new Color(87, 124, 88));
         boton.setForeground(Color.WHITE);
+        boton.setFocusPainted(false);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
+        boton.setMaximumSize(new Dimension(180, 30));
+        boton.addActionListener(action);
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return boton;
     }
 
+    // Método para botones bloqueados 
+    private JButton botonBloqueado(String texto) {
+        JButton boton = new JButton(texto);
+        boton.setEnabled(false);
+        boton.setBackground(new Color(180, 180, 180));
+        boton.setForeground(Color.DARK_GRAY);
+        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
+        boton.setMaximumSize(new Dimension(180, 30));
+        return boton;
+    }
+
+    
     //Modulo 1
     private JPanel crearModulo1() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
@@ -604,16 +654,207 @@ public class GuardianesDelBosques extends JFrame {
     }
 
     //ejercicio modulo 1
+    
     private JPanel crearModuloEjercicio1() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
         
-        JLabel lblTitulo = new JLabel("Testeo Ejercicio");
+        // Panel izquierdo (imagen y título)
+        JPanel panelIzquierdo = crearPanelLateral();
+        
+        // Panel derecho (contenido del ejercicio)
+        JPanel panelDerecho = new JPanel();
+        panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
+        panelDerecho.setBackground(new Color(226, 229, 203));
+        panelDerecho.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+    
+        // Array de preguntas y respuestas
+        Object[][] preguntas = {
+            {
+                "¿Qué algoritmo explora todos los nodos vecinos primero?",
+                "BFS", // Respuesta correcta
+                new String[]{"BFS", "DFS", "Dijkstra"} // Opciones
+            },
+            {
+                "¿Qué algoritmo usa una estructura de pila para su implementación?",
+                "DFS",
+                new String[]{"BFS", "DFS", "Prim"}
+            },
+            {
+                "¿Qué algoritmo es mejor para encontrar el camino más corto en un grafo no ponderado?",
+                "BFS",
+                new String[]{"Kruskal", "DFS", "BFS"}
+            }
+        };
+    
+        // Componentes que necesitamos actualizar
+        JTextArea textoPregunta = new JTextArea();
+        textoPregunta.setEditable(false);
+        textoPregunta.setLineWrap(true);
+        textoPregunta.setWrapStyleWord(true);
+        textoPregunta.setBackground(new Color(226, 229, 203));
+        textoPregunta.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoPregunta.setBorder(BorderFactory.createEmptyBorder(10, 25, 30, 20));
+    
+        JPanel panelBotones = new JPanel(new GridLayout(1, 3, 15, 0));
+        panelBotones.setBackground(new Color(226, 229, 203));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+    
+        // Variables para controlar el flujo
+        final int[] preguntaActual = {0};
+        final int[] respuestasCorrectas = {0};
+    
+        // Método para actualizar la pregunta
+        ActionListener manejarRespuesta = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JButton botonPresionado = (JButton) e.getSource();
+                String respuestaUsuario = botonPresionado.getText();
+                String respuestaCorrecta = (String) preguntas[preguntaActual[0]][1];
+                
+                if (respuestaUsuario.equals(respuestaCorrecta)) {
+                    respuestasCorrectas[0]++;
+                    if (preguntaActual[0] < preguntas.length - 1) {
+                        preguntaActual[0]++;
+                        mostrarPregunta(preguntaActual[0], textoPregunta, panelBotones, preguntas, this);
+                    } else {
+                        // Todas las preguntas respondidas
+                        evaluarResultadoFinal(respuestasCorrectas[0], preguntas.length);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(panelPrincipal, 
+                        "Incorrecto.",
+                        "Respuesta incorrecta", 
+                        JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        };
+    
+        // Mostrar primera pregunta
+        mostrarPregunta(0, textoPregunta, panelBotones, preguntas, manejarRespuesta);
+    
+        panelDerecho.add(textoPregunta);
+        panelDerecho.add(Box.createVerticalStrut(30));
+        panelDerecho.add(panelBotones);
+        panelDerecho.add(Box.createVerticalGlue());
+    
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelIzquierdo, panelDerecho);
+        splitPane.setDividerLocation(350);
+        splitPane.setEnabled(false);
+    
+        panelPrincipal.add(splitPane, BorderLayout.CENTER);        
+        return panelPrincipal;
+    }
+    
+    private void mostrarPregunta(int numPregunta, JTextArea textoPregunta, JPanel panelBotones, 
+                               Object[][] preguntas, ActionListener listener) {
+        textoPregunta.setText((String) preguntas[numPregunta][0]);
+        panelBotones.removeAll();
+        
+        String[] opciones = (String[]) preguntas[numPregunta][2];
+        
+        for (String opcion : opciones) {
+            JButton btnOpcion = new JButton(opcion);
+            estiloBotonPregunta(btnOpcion);
+            btnOpcion.addActionListener(listener);
+            panelBotones.add(btnOpcion);
+        }
+        
+        panelBotones.revalidate();
+        panelBotones.repaint();
+    }
+    
+    private void evaluarResultadoFinal(int correctas, int totalPreguntas) {
+        if (correctas >= totalPreguntas * 0.7) {
+            usuarioActual.modulo1Completado = true;
+            guardarUsuariosConProgreso();
+            
+            // Actualizar el mapa de usuarios
+            usuariosMap.put(usuarioActual.nombre, usuarioActual);
+            
+            JOptionPane.showMessageDialog(this, 
+                "¡Felicidades! Has completado el módulo 1\n\nEl módulo 2 está ahora disponible",
+                "Módulo completado", 
+                JOptionPane.INFORMATION_MESSAGE);
+                
+            // Recargar la pantalla de módulos para mostrar los cambios
+            recargarPantallaModulos();
+        } else {
+            JOptionPane.showMessageDialog(this, 
+                "Necesitas más práctica. Intenta nuevamente.",
+                "Intenta de nuevo", 
+                JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void recargarPantallaModulos() {
+        // Remover la pantalla existente
+        mainPanel.remove(mainPanel.getComponent(2)); // Asumiendo que MODULOS es el índice 2
+        
+        // Crear y añadir la nueva versión
+        mainPanel.add(PantallaModulos(), "MODULOS");
+        
+        // Mostrar la pantalla actualizada
+        cardLayout.show(mainPanel, "MODULOS");
+    }
+
+    private JPanel crearPanelLateral() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(199, 203, 165));
+        panel.setPreferredSize(new Dimension(350, 700));
+    
+        // Panel de títulos
+        JPanel panelTitulos = new JPanel();
+        panelTitulos.setLayout(new BoxLayout(panelTitulos, BoxLayout.Y_AXIS));
+        panelTitulos.setBackground(new Color(199, 203, 165));
+        panelTitulos.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+        panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        JLabel lblTitulo = new JLabel("Sección de preguntas!");
         lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
     
-        return panelPrincipal;
+        JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setForeground(Color.WHITE);
+        lblSubtitulo.setBackground(new Color(217, 120, 82));
+        lblSubtitulo.setOpaque(true);
+        lblSubtitulo.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        panelTitulos.add(Box.createVerticalGlue());
+        panelTitulos.add(lblTitulo);
+        panelTitulos.add(Box.createRigidArea(new Dimension(0, 15)));
+        panelTitulos.add(lblSubtitulo);
+        panelTitulos.add(Box.createVerticalGlue());
+    
+        // Panel de imagen del gato
+        JPanel panelGato = new JPanel(new BorderLayout());
+        panelGato.setBackground(new Color(199, 203, 165));
+        panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
+    
+        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        if (iconoGato.getImageLoadStatus() == MediaTracker.COMPLETE) {
+            Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
+            JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
+            lblGato.setHorizontalAlignment(SwingConstants.CENTER);
+            panelGato.add(lblGato, BorderLayout.CENTER);
+        }
+    
+        panel.add(panelTitulos);
+        panel.add(panelGato);
+        
+        return panel;
+    }
+    
+    private void estiloBotonPregunta(JButton boton) {
+        boton.setBackground(new Color(87, 124, 88));
+        boton.setForeground(Color.WHITE);
+        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
+        boton.setFocusPainted(false);
+        boton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     //modulo 2
