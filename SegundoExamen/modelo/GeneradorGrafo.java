@@ -281,8 +281,8 @@ public class GeneradorGrafo {
         guardarPosAristas();
         mostrarMatriz();
         //mostrarMatrizCostos();
-        //grafoDirigido(matrizCostos);
-        grafoNoDirigido(matrizCostos);
+        grafoDirigido(matrizCostos);
+        //grafoNoDirigido(matrizCostos);
         numeroAristas = contarAristas();
         posicionAristas = new Arista[numeroAristas];
         guardarPosAristas();
