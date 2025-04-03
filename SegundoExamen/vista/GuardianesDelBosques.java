@@ -1,19 +1,79 @@
-package vista;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.swing.*;
+
 
 public class GuardianesDelBosques extends JFrame {
 
-    CardLayout cardLayout;
-    JPanel mainPanel;
+    private static final String ARCHIVO_USUARIOS = "usuarios.txt";
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    
+    private Usuario usuarioActual;
+    private Map<String, Usuario> usuariosMap = new HashMap<>(); 
+    
+    // Componentes UI
+    private JComboBox<String> comboUsuarios;
+    private JTextField txtNuevoUsuario;
+    private CardLayout cardLayout;
+    private JPanel mainPanel;
+    private JButton botonCertificado;
+
+    //clase usuario
+    class Usuario {
+        String nombre;
+        boolean modulo1Completado;
+        boolean modulo2Completado;
+        boolean modulo3Completado;
+        LocalDateTime ultimoAcceso;
+        
+        Usuario(String nombre) {
+            this.nombre = nombre;
+            this.modulo1Completado = false;
+            this.modulo2Completado = false;
+            this.modulo3Completado = false;
+            this.ultimoAcceso = LocalDateTime.now();
+        }
+        
+        Usuario(String[] datos) {
+            this.nombre = datos[0];
+            this.modulo1Completado = Boolean.parseBoolean(datos[1]);
+            this.modulo2Completado = Boolean.parseBoolean(datos[2]);
+            this.modulo3Completado = Boolean.parseBoolean(datos[3]);
+            this.ultimoAcceso = datos.length > 4 ? LocalDateTime.parse(datos[4], DATE_FORMAT) : LocalDateTime.now();
+        }
+        
+        String toFileString() {
+            return String.join("|",
+                nombre,
+                String.valueOf(modulo1Completado),
+                String.valueOf(modulo2Completado),
+                String.valueOf(modulo3Completado),
+                ultimoAcceso.format(DATE_FORMAT)
+            );
+        }
+        
+        boolean todosModulosCompletados() {
+            return modulo1Completado && modulo2Completado && modulo3Completado;
+        }
+    }
 
     //creacion de las ventanas
     public GuardianesDelBosques() {
+        usuariosMap = new HashMap<>();
+        cargarUsuariosConProgreso();
+
         setTitle("Guardianes del Bosque");
         setSize(1000, 700);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -22,48 +82,24 @@ public class GuardianesDelBosques extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
         
-        // Pantalla de bienvenida
-        JPanel menuPrincipal = crearPantallaInicio();
-
-        //Pantalla de Ingresar o Registro
-        JPanel usuario = crearUsuario();
-
-        // Pantalla de módulos
-        JPanel modulos = PantallaModulos();
-
-        // Pantalla Introductoria Seccion1
-        JPanel modulo1 = crearModulo1();
-        JPanel modulo1E = crearModuloEjercicio1();
-        
-        // Pantalla Introductoria Seccion2
-        JPanel modulo2 = crearModulo2();
-        JPanel modulo2E = crearModuloEjercicio2();
-
-        // Pantalla Introductoria Seccion2
-        JPanel modulo3 = crearModulo3();
-        JPanel modulo3E = crearModuloEjercicio3();
-
-        // Pantalla del certificado donde podra verla y tomar una captura
-        JPanel certificado = PantallaCertificado();
-
-        mainPanel.add(menuPrincipal, "MENU");
-        mainPanel.add(usuario, "USUARIO");
-        mainPanel.add(modulos, "MODULOS");
-        mainPanel.add(modulo1, "MODULO1");
-        mainPanel.add(modulo1E, "EJERCICIO1");
-        mainPanel.add(modulo2, "MODULO2");
-        mainPanel.add(modulo2E, "EJERCICIO2");
-        mainPanel.add(modulo3, "MODULO3");
-        mainPanel.add(modulo3E, "EJERCICIO3");
-        mainPanel.add(certificado, "CERTIFICADO");
-
+        // Crear y añadir todas las pantallas
+        mainPanel.add(PantallaInicio(), "MENU");
+        mainPanel.add(PantallaUsuario(), "USUARIO");
+        mainPanel.add(PantallaModulos(), "MODULOS");
+        mainPanel.add(crearModulo1(), "MODULO1");
+        mainPanel.add(crearModuloEjercicio1(), "EJERCICIO1");
+        mainPanel.add(crearModulo2(), "MODULO2");
+        mainPanel.add(crearModuloEjercicio2(), "EJERCICIO2");
+        mainPanel.add(crearModulo3(), "MODULO3");
+        mainPanel.add(crearModuloEjercicio3(), "EJERCICIO3");
+        mainPanel.add(PantallaCertificado(), "CERTIFICADO");
 
         add(mainPanel);
         setVisible(true);
     }
 
     //pantalla de bienvenida
-    private JPanel crearPantallaInicio() {
+    private JPanel PantallaInicio() {
         JPanel panel = new JPanel();
         panel.setBackground(new Color(193, 193, 143));
         panel.setLayout(null);
@@ -95,7 +131,7 @@ public class GuardianesDelBosques extends JFrame {
         botonIniciar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cardLayout.show(mainPanel, "MODULOS");
+                cardLayout.show(mainPanel, "USUARIO");
             }
         });
         panel.add(botonIniciar);
@@ -115,60 +151,218 @@ public class GuardianesDelBosques extends JFrame {
         return panel;
     }
     
-    //pantalla para generar un usuario y llevar su progreso
-    private JPanel crearUsuario() {
+    private JPanel PantallaUsuario() {
         JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(193, 193, 143));
-        panel.setLayout(null);
-
-        JLabel bosque = new JLabel(new ImageIcon("SegundoExamen\\Recursos\\bosque.png"));
-        bosque.setBounds(150, 200, 700, 300);
-        panel.add(bosque);
-
-        // Subtítulo
-        JLabel subtitulo = new JLabel("BIENVENIDOS A LA CAPACITACIÓN PARA", SwingConstants.CENTER);
-        subtitulo.setBounds(150, 50, 700, 30);
-        subtitulo.setForeground(Color.BLACK);
-        subtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 25f));
-        panel.add(subtitulo);
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         // Título
-        JLabel titulo = new JLabel("GUARDIANES DEL BOSQUE", SwingConstants.CENTER);
-        titulo.setBounds(150, 100, 700, 60);
-        titulo.setForeground(Color.BLACK);
-        titulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 55f));
-        panel.add(titulo);
+        JLabel lblTitulo = new JLabel("Inicia Sesión");
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 32f));
+        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(lblTitulo);
+        panel.add(Box.createVerticalStrut(30));
 
-        JButton botonIniciar = new JButton("INICIAR");
-        botonIniciar.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 30f));
-        botonIniciar.setBackground(new Color(51, 51, 25));
-        botonIniciar.setForeground(Color.WHITE);
-        botonIniciar.setBounds(400, 530, 200, 50);
-        botonIniciar.setFocusPainted(false);
-        botonIniciar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(mainPanel, "MODULOS");
-            }
-        });
-        panel.add(botonIniciar);
+        // Panel de inicio de sesión
+        panel.add(crearPanelLogin());
+        panel.add(Box.createVerticalStrut(30));
 
-        ImageIcon iconoX = new ImageIcon(new ImageIcon("SegundoExamen\\Recursos\\botonX.png").getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
-        JButton botonSalir = new JButton(iconoX);
-        botonSalir.setBounds(900, 20, 40, 40);
-        botonSalir.setFocusPainted(false);
-        botonSalir.setBorderPainted(false);
-        botonSalir.setContentAreaFilled(false);
+        // Separador
+        JSeparator separador = new JSeparator();
+        separador.setMaximumSize(new Dimension(300, 1));
+        panel.add(separador);
+        panel.add(Box.createVerticalStrut(30));
 
-        // Acción de salida
-        botonSalir.addActionListener(e -> System.exit(0));
-
-        panel.add(botonSalir);
+        // Panel de registro
+        panel.add(crearPanelRegistro());
 
         return panel;
     }
 
-    //pantalla de seleccion de nivel
+    private JPanel crearPanelLogin() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 50));
+
+        JLabel lblUsuario = new JLabel("Usuario");
+        lblUsuario.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblUsuario.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(lblUsuario);
+
+        panel.add(Box.createVerticalStrut(5));
+
+        JLabel lblListaUsuarios = new JLabel("Selecciona tu usuario");
+        lblListaUsuarios.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblListaUsuarios.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(lblListaUsuarios);
+
+        panel.add(Box.createVerticalStrut(15));
+
+        // Combo box de usuarios
+        comboUsuarios = new JComboBox<>(usuariosMap.keySet().toArray(new String[0]));
+        comboUsuarios.setMaximumSize(new Dimension(250, 35));
+        comboUsuarios.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(comboUsuarios);
+
+        panel.add(Box.createVerticalStrut(25));
+
+        // Botón de ingreso
+        JButton btnIngresar = new JButton("Ingresar");
+        estiloBoton(btnIngresar, new Color(55, 61, 32), 250);
+        btnIngresar.addActionListener(e -> manejarIngresoUsuario());
+        panel.add(btnIngresar);
+
+        return panel;
+    }
+
+    private JPanel crearPanelRegistro() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 50));
+
+        JLabel lblRegistro = new JLabel("Regístrate!");
+        lblRegistro.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblRegistro.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(lblRegistro);
+
+        panel.add(Box.createVerticalStrut(5));
+
+        JLabel lblInstruccion = new JLabel("Ingresa tu nombre de usuario");
+        lblInstruccion.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblInstruccion.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(lblInstruccion);
+
+        panel.add(Box.createVerticalStrut(15));
+
+        // Campo de texto para nuevo usuario
+        txtNuevoUsuario = new JTextField();
+        txtNuevoUsuario.setMaximumSize(new Dimension(250, 35));
+        txtNuevoUsuario.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(txtNuevoUsuario);
+
+        panel.add(Box.createVerticalStrut(25));
+
+        // Botón de registro
+        JButton btnRegistrar = new JButton("Registrar");
+        estiloBoton(btnRegistrar, new Color(55, 61, 32), 250);
+        btnRegistrar.addActionListener(e -> manejarRegistroUsuario());
+        panel.add(btnRegistrar);
+
+        return panel;
+    }
+
+    private void cargarUsuariosConProgreso() {
+        Path path = Paths.get(ARCHIVO_USUARIOS);
+        if (Files.exists(path)) {
+            try {
+                List<String> lineas = Files.readAllLines(path, StandardCharsets.UTF_8);
+                for (String linea : lineas) {
+                    if (!linea.trim().isEmpty()) {
+                        String[] datos = linea.split("\\|");
+                        if (datos.length >= 4) { // Mínimo nombre + 3 módulos
+                            Usuario usuario = new Usuario(datos);
+                            usuariosMap.put(usuario.nombre, usuario);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                mostrarError("Error al cargar usuarios: " + e.getMessage());
+            }
+        }
+    }
+
+    private void guardarUsuariosConProgreso() {
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                Paths.get(ARCHIVO_USUARIOS), 
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+            
+            for (Usuario usuario : usuariosMap.values()) {
+                writer.write(usuario.toFileString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            mostrarError("Error al guardar usuarios: " + e.getMessage());
+        }
+    }
+
+    private void manejarIngresoUsuario() {
+        String nombreUsuario = (String) comboUsuarios.getSelectedItem();
+        
+        if (nombreUsuario == null || nombreUsuario.trim().isEmpty()) {
+            mostrarError("Debes seleccionar un usuario válido");
+            return;
+        }
+        
+        usuarioActual = usuariosMap.get(nombreUsuario);
+        
+        // Mostrar mensaje de bienvenida con progreso
+        String mensaje = "Bienvenido, " + usuarioActual.nombre + "!\n\n";
+        mensaje += "Progreso actual:\n";
+        mensaje += "- Módulo 1: " + (usuarioActual.modulo1Completado ? "✅" : "❌") + "\n";
+        mensaje += "- Módulo 2: " + (usuarioActual.modulo2Completado ? "✅" : "❌") + "\n";
+        mensaje += "- Módulo 3: " + (usuarioActual.modulo3Completado ? "✅" : "❌");
+        
+        JOptionPane.showMessageDialog(this, mensaje, "Ingreso exitoso", JOptionPane.INFORMATION_MESSAGE);
+        
+        // Actualizar archivo
+        guardarUsuariosConProgreso();
+        
+        // Ir a pantalla de módulos
+        cardLayout.show(mainPanel, "MODULOS");
+    }
+
+    private void manejarRegistroUsuario() {
+        String nuevoNombre = txtNuevoUsuario.getText().trim();
+        
+        if (nuevoNombre.isEmpty()) {
+            mostrarError("El nombre no puede estar vacío");
+            return;
+        }
+        
+        if (usuariosMap.containsKey(nuevoNombre)) {
+            mostrarError("Este usuario ya existe");
+            return;
+        }
+        
+        // Crear nuevo usuario
+        Usuario nuevoUsuario = new Usuario(nuevoNombre);
+        usuariosMap.put(nuevoNombre, nuevoUsuario);
+        comboUsuarios.addItem(nuevoNombre);
+        txtNuevoUsuario.setText("");
+        
+        // Guardar en archivo
+        guardarUsuariosConProgreso();
+        
+        JOptionPane.showMessageDialog(this, 
+            "Usuario registrado exitosamente", 
+            "Registro exitoso", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void estiloBoton(JButton boton, Color colorFondo, int ancho) {
+        boton.setBackground(colorFondo);
+        boton.setForeground(Color.WHITE);
+        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        boton.setMaximumSize(new Dimension(ancho, 40));
+        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
+        boton.setFocusPainted(false);
+        boton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void mostrarError(String mensaje) {
+        JOptionPane.showMessageDialog(this,
+            mensaje,
+            "Error",
+            JOptionPane.ERROR_MESSAGE);
+    }
+
+    //pantalla de seleccion de modulo 
     private JPanel PantallaModulos() {
         JPanel contenedor = new JPanel(new BorderLayout());
         contenedor.setBackground(new Color(206, 212, 169));
@@ -807,7 +1001,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoGuia.setFont(cargarFuente("recursos\\fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 25, 10, 20)
@@ -828,8 +1022,24 @@ public class GuardianesDelBosques extends JFrame {
     private JPanel PantallaCertificado() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
-    
-    
+        
+        JLabel certificado = new JLabel("<html><center><h1>CERTIFICADO</h1><br>" +
+            "Se otorga a:<br><h2>" + (usuarioActual != null ? usuarioActual.nombre : "") + "</h2><br>" +
+            "Por completar todos los módulos de Guardianes del Bosque</center></html>", 
+            SwingConstants.CENTER);
+        
+        certificado.setFont(new Font("Arial", Font.PLAIN, 24));
+        panelPrincipal.add(certificado, BorderLayout.CENTER);
+        
+        // Botón para regresar
+        JButton btnRegresar = new JButton("Regresar");
+        estiloBoton(btnRegresar, new Color(76, 175, 80), 200);
+        btnRegresar.addActionListener(e -> cardLayout.show(mainPanel, "MODULOS"));
+        
+        JPanel panelSur = new JPanel();
+        panelSur.add(btnRegresar);
+        panelPrincipal.add(panelSur, BorderLayout.SOUTH);
+        
         return panelPrincipal;
     }
 
