@@ -1,4 +1,3 @@
-/*
 package vista;
 
 import javax.swing.*;
@@ -16,7 +15,7 @@ public class PanelMapa extends JPanel {
     private int T_MATRIZ = grafo.TAM_MATRIZ + 1;
     //private int T_MATRIZ = 13;
     private Image mapa;
-    private final int RADIO_VERTICE = 15;
+    private final int RADIO_VERTICE = 20;
     private posVertice verticeSeleccionado = null;
     private boolean arrastrando = false;
     private Point puntoArrastre = null;
@@ -189,6 +188,7 @@ public class PanelMapa extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.drawImage(mapa, 0, 0, getWidth(), getHeight(), this);
 
         // Dibujar cuadrícula
@@ -310,4 +310,3 @@ public class PanelMapa extends JPanel {
         ventana.setVisible(true);
     }
 }
-*/
