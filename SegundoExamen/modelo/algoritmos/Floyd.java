@@ -1,4 +1,4 @@
-package modelo;
+package modelo.algoritmos;
 
 public class Floyd {
     public static int[][] floydWarshall(int[][] costMatrix) {

@@ -1,4 +1,4 @@
-package modelo;
+package modelo.grafo;
 
 public class Vertice {
     int x, y, id;

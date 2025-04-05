@@ -1,3 +1,5 @@
+package vista;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import javax.swing.*;
 
+import controlador.BotonesControlador;
+import modelo.grafo.GeneradorGrafo;
+import vista.PanelManejadorMapa;
+
 
 public class GuardianesDelBosques extends JFrame {
 
@@ -22,6 +28,8 @@ public class GuardianesDelBosques extends JFrame {
     
     private Usuario usuarioActual;
     private Map<String, Usuario> usuariosMap = new HashMap<>(); 
+
+    private String ruta = "recursos/";
     
     // Componentes UI
     private JComboBox<String> comboUsuarios;
@@ -89,7 +97,7 @@ public class GuardianesDelBosques extends JFrame {
         setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+        mainPanel = new JPanel(cardLayout); 
         
         // Crear y añadir todas las pantallas
         mainPanel.add(PantallaInicio(), "MENU");
@@ -97,6 +105,7 @@ public class GuardianesDelBosques extends JFrame {
         mainPanel.add(PantallaModulos(), "MODULOS");
         mainPanel.add(crearModulo1(), "MODULO1");
         mainPanel.add(crearModuloEjercicio1(), "EJERCICIO1");
+        //mainPanel.add(crearMapaModulo1(), "MAPA1");
         mainPanel.add(crearModulo2(), "MODULO2");
         mainPanel.add(crearModuloEjercicio2(), "EJERCICIO2");
         mainPanel.add(crearModulo3(), "MODULO3");
@@ -113,7 +122,7 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBackground(new Color(193, 193, 143));
         panel.setLayout(null);
 
-        JLabel bosque = new JLabel(new ImageIcon("SegundoExamen\\Recursos\\bosque.png"));
+        JLabel bosque = new JLabel(new ImageIcon(ruta+"bosque.png"));
         bosque.setBounds(150, 200, 700, 300);
         panel.add(bosque);
 
@@ -121,18 +130,18 @@ public class GuardianesDelBosques extends JFrame {
         JLabel subtitulo = new JLabel("BIENVENIDOS A LA CAPACITACIÓN PARA", SwingConstants.CENTER);
         subtitulo.setBounds(150, 50, 700, 30);
         subtitulo.setForeground(Color.BLACK);
-        subtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 25f));
+        subtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 25f));
         panel.add(subtitulo);
 
         // Título
         JLabel titulo = new JLabel("GUARDIANES DEL BOSQUE", SwingConstants.CENTER);
         titulo.setBounds(150, 100, 700, 60);
         titulo.setForeground(Color.BLACK);
-        titulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 55f));
+        titulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 55f));
         panel.add(titulo);
 
         JButton botonIniciar = new JButton("INICIAR");
-        botonIniciar.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 30f));
+        botonIniciar.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 30f));
         botonIniciar.setBackground(new Color(51, 51, 25));
         botonIniciar.setForeground(Color.WHITE);
         botonIniciar.setBounds(400, 530, 200, 50);
@@ -145,7 +154,7 @@ public class GuardianesDelBosques extends JFrame {
         });
         panel.add(botonIniciar);
 
-        ImageIcon iconoX = new ImageIcon(new ImageIcon("SegundoExamen\\Recursos\\botonX.png").getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+        ImageIcon iconoX = new ImageIcon(new ImageIcon(ruta+"botonX.png").getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
         JButton botonSalir = new JButton(iconoX);
         botonSalir.setBounds(900, 20, 40, 40);
         botonSalir.setFocusPainted(false);
@@ -168,7 +177,7 @@ public class GuardianesDelBosques extends JFrame {
 
         // Título
         JLabel lblTitulo = new JLabel("Inicia Sesión");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 32f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 32f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblTitulo);
         panel.add(Box.createVerticalStrut(30));
@@ -196,14 +205,14 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 50));
 
         JLabel lblUsuario = new JLabel("Usuario");
-        lblUsuario.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblUsuario.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 16f));
         lblUsuario.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblUsuario);
 
         panel.add(Box.createVerticalStrut(5));
 
         JLabel lblListaUsuarios = new JLabel("Selecciona tu usuario");
-        lblListaUsuarios.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblListaUsuarios.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 16f));
         lblListaUsuarios.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblListaUsuarios);
 
@@ -233,14 +242,14 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 50));
 
         JLabel lblRegistro = new JLabel("Regístrate!");
-        lblRegistro.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblRegistro.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 16f));
         lblRegistro.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblRegistro);
 
         panel.add(Box.createVerticalStrut(5));
 
         JLabel lblInstruccion = new JLabel("Ingresa tu nombre de usuario");
-        lblInstruccion.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblInstruccion.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 16f));
         lblInstruccion.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblInstruccion);
 
@@ -360,7 +369,7 @@ public class GuardianesDelBosques extends JFrame {
         boton.setForeground(Color.WHITE);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
         boton.setMaximumSize(new Dimension(ancho, 40));
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
+        boton.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 14f));
         boton.setFocusPainted(false);
         boton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -380,13 +389,13 @@ public class GuardianesDelBosques extends JFrame {
 
         // Título principal
         JLabel titulo = new JLabel("Módulo de aprendizaje", SwingConstants.CENTER);
-        titulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 40f));
+        titulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 40f));
         titulo.setBorder(BorderFactory.createEmptyBorder(30, 10, 10, 10));
         contenedor.add(titulo, BorderLayout.NORTH);
 
         // Subtítulo
         JLabel subtitulo = new JLabel("<html><div style='text-align: center;'>Necesitas superar TRES módulos de aprendizaje,<br>con sus respectivos ejercicios</div></html>", SwingConstants.CENTER);
-        subtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 25f));
+        subtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 25f));
         subtitulo.setBounds(150, 80, 700, 60);
 
         contenedor.add(subtitulo);
@@ -437,7 +446,7 @@ public class GuardianesDelBosques extends JFrame {
     ? new Color(87, 124, 88) 
     : Color.DARK_GRAY);
     botonCertificado.setForeground(Color.WHITE);
-    botonCertificado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 15f));
+    botonCertificado.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 15f));
     botonCertificado.setPreferredSize(new Dimension(350, 40));
 
     // Añadir acción al botón
@@ -469,7 +478,7 @@ public class GuardianesDelBosques extends JFrame {
         // Título del módulo
         JLabel lblTitulo = new JLabel("<html><div style='text-align:center;width:180px;'>" + titulo + "</div></html>", SwingConstants.CENTER);
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 14f));
         modulo.add(lblTitulo);
         modulo.add(Box.createVerticalStrut(15));
 
@@ -520,7 +529,7 @@ public class GuardianesDelBosques extends JFrame {
         boton.setForeground(Color.WHITE);
         boton.setFocusPainted(false);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
+        boton.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 12f));
         boton.setMaximumSize(new Dimension(180, 30));
         boton.addActionListener(action);
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -534,7 +543,7 @@ public class GuardianesDelBosques extends JFrame {
         boton.setBackground(new Color(180, 180, 180));
         boton.setForeground(Color.DARK_GRAY);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
+        boton.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 12f));
         boton.setMaximumSize(new Dimension(180, 30));
         return boton;
     }
@@ -559,11 +568,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -581,7 +590,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon(ruta+"gatoR.PNG");
         Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
         JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
         lblGato.setHorizontalAlignment(SwingConstants.CENTER);
@@ -602,7 +611,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoGuia.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 25, 10, 20)
@@ -622,7 +631,7 @@ public class GuardianesDelBosques extends JFrame {
         JButton btnContinuar = new JButton("CONTINUAR");
         btnContinuar.setBackground(new Color(63, 84, 54));
         btnContinuar.setForeground(Color.WHITE);
-        btnContinuar.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
+        btnContinuar.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 14f));
         btnContinuar.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         btnContinuar.setAlignmentX(Component.CENTER_ALIGNMENT);
     
@@ -693,7 +702,7 @@ public class GuardianesDelBosques extends JFrame {
         textoPregunta.setLineWrap(true);
         textoPregunta.setWrapStyleWord(true);
         textoPregunta.setBackground(new Color(226, 229, 203));
-        textoPregunta.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoPregunta.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 20f));
         textoPregunta.setBorder(BorderFactory.createEmptyBorder(10, 25, 30, 20));
     
         JPanel panelBotones = new JPanel(new GridLayout(1, 3, 15, 0));
@@ -776,7 +785,19 @@ public class GuardianesDelBosques extends JFrame {
                 "¡Felicidades! Has completado el módulo 1\n\nEl módulo 2 está ahora disponible",
                 "Módulo completado", 
                 JOptionPane.INFORMATION_MESSAGE);
-                
+            /*
+            // Crear e instanciar el panelManejadorGrafo
+            PanelManejadorMapa panelManejador = new PanelManejadorMapa();
+            mainPanel.add(panelManejador, "MANEJADOR_MAPA"); // Añadirlo al CardLayout
+
+            // Mensaje antes de cambiar
+            JOptionPane.showMessageDialog(this, "¡Ahora practicarás con grafos!");
+
+            // Mostrar el panel del manejador de grafos
+            cardLayout.show(mainPanel, "MANEJADOR_MAPA");
+            //si creo un método para mostrar el grafo lo puedo llamar aquí y estará 
+            // "listo"
+                */
             // Recargar la pantalla de módulos para mostrar los cambios
             recargarPantallaModulos();
         } else {
@@ -787,7 +808,7 @@ public class GuardianesDelBosques extends JFrame {
         }
     }
 
-    private void recargarPantallaModulos() {
+    public void recargarPantallaModulos() {
         // Remover la pantalla existente
         mainPanel.remove(mainPanel.getComponent(2)); // Asumiendo que MODULOS es el índice 2
         
@@ -812,11 +833,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Sección de preguntas!");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -834,7 +855,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon(ruta+"gatoR.PNG");
         if (iconoGato.getImageLoadStatus() == MediaTracker.COMPLETE) {
             Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
             JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
@@ -851,7 +872,7 @@ public class GuardianesDelBosques extends JFrame {
     private void estiloBotonPregunta(JButton boton) {
         boton.setBackground(new Color(87, 124, 88));
         boton.setForeground(Color.WHITE);
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
+        boton.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 14f));
         boton.setFocusPainted(false);
         boton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -876,11 +897,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -898,7 +919,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon(ruta+"gatoR.PNG");
         Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
         JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
         lblGato.setHorizontalAlignment(SwingConstants.CENTER);
@@ -919,7 +940,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoGuia.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 25, 10, 20)
@@ -939,7 +960,7 @@ public class GuardianesDelBosques extends JFrame {
         JButton btnContinuar = new JButton("CONTINUAR");
         btnContinuar.setBackground(new Color(63, 84, 54));
         btnContinuar.setForeground(Color.WHITE);
-        btnContinuar.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
+        btnContinuar.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 14f));
         btnContinuar.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         btnContinuar.setAlignmentX(Component.CENTER_ALIGNMENT);
     
@@ -989,11 +1010,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -1017,7 +1038,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoGuia.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 25, 10, 20)
@@ -1053,11 +1074,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -1075,7 +1096,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon(ruta+"gatoR.PNG");
         Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
         JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
         lblGato.setHorizontalAlignment(SwingConstants.CENTER);
@@ -1096,7 +1117,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoGuia.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 25, 10, 20)
@@ -1116,7 +1137,7 @@ public class GuardianesDelBosques extends JFrame {
         JButton btnContinuar = new JButton("CONTINUAR");
         btnContinuar.setBackground(new Color(63, 84, 54));
         btnContinuar.setForeground(Color.WHITE);
-        btnContinuar.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
+        btnContinuar.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 14f));
         btnContinuar.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         btnContinuar.setAlignmentX(Component.CENTER_ALIGNMENT);
     
@@ -1166,11 +1187,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -1194,7 +1215,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("recursos\\fuenteTitulo.ttf", 20f));
+        textoGuia.setFont(cargarFuente(ruta+"fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 25, 10, 20)

@@ -1,4 +1,4 @@
-package modelo;
+package modelo.grafo;
 
 public class posVertice {
     public int x;
