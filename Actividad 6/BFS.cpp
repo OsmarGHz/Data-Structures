@@ -128,9 +128,24 @@ void mostrarListaAdyacencia(Grafo *grafo) {
     }
 }
 
-void eliminarArista(Grafo *grafo, int origen, int destino) {
-    Nodo *actual = grafo->listasAdyacencia[origen], *anterior = NULL;
-    while (actual != NULL && actual->vertice != destino) {
+int existeArista(Grafo * grafo, int origen, int destino){
+    Nodo * temp = grafo -> listasAdyacencia[origen];
+    while (temp){
+        if(temp -> vertice == destino){
+            printf("\nYa hay una conexion entre %d y %d\n", origen, destino);
+            return 1;
+        }
+        temp = temp -> siguiente;
+    }
+    return 0;
+}
+
+void eliminarArista(Grafo * grafo, int origen, int destino) {
+    Nodo * actual, * anterior;
+    // Eliminar de la lista de 'origen' el nodo que tenga 'destino'
+    actual = grafo -> listasAdyacencia[origen];
+    anterior = NULL;
+    while (actual != NULL && actual -> vertice != destino) {
         anterior = actual;
         actual = actual->siguiente;
     }
@@ -163,6 +178,14 @@ void eliminarGrafo(Grafo *grafo) {
     }
     free(grafo);
     printf("Grafo eliminado.\n");
+}
+
+// Reinicia el arreglo de visitados
+//usado para hacer varios recorridos en una sola ejecucion
+void reiniciarVisitado(Grafo* grafo) {
+    for (int i = 0; i < grafo->numVertices; i++) {
+        grafo->visitado[i] = 0;
+    }
 }
 
 void BFS_Iterativo(Grafo *grafo, int verticeInicio) {
@@ -199,14 +222,84 @@ int main() {
         printf("7. Salir\nIngrese opción: ");
         while (escaneoEntero(&opcion) == 0);
         switch (opcion) {
-            case 1: if (!grafo) { int v; printf("Vertices: "); while (escaneoEntero(&v) == 0); grafo = crearGrafo(v); }
-                else printf("Ya hay un grafo.\n"); break;
-            case 2: case 5: if (grafo) { int o, d; printf("Origen: "); while (escaneoEntero(&o) == 0); printf("Destino: "); while (escaneoEntero(&d) == 0);
-                if (o >= 0 && d >= 0 && o < grafo->numVertices && d < grafo->numVertices) (opcion == 2) ? agregarArista(grafo, o, d) : eliminarArista(grafo, o, d); }
-                break;
-            case 3: if (grafo) mostrarListaAdyacencia(grafo); break;
-            case 4: if (grafo) { int i; printf("Inicio BFS: "); while (escaneoEntero(&i) == 0); BFS_Iterativo(grafo, i); printf("\n"); } break;
-            case 6: if (grafo) { eliminarGrafo(grafo); grafo = NULL; } break;
+        case 1:
+            if (grafo != NULL) {
+                printf("Ya existe un grafo. Eliminelo para crear uno nuevo.\n");
+            } else {
+                int numVertices;
+                printf("Ingrese el numero de vertices: ");
+                while (escaneoEntero(&numVertices) == 0);
+                grafo = crearGrafo(numVertices);
+                printf("Grafo creado con %d vertices.\n", numVertices);
+            }
+            break;
+        case 2:
+            if (grafo == NULL) {
+                printf("Primero debe crear un grafo.\n");
+            } else {
+                int origen, destino;
+                printf("Ingrese el vertice de origen: ");
+                while (escaneoEntero(&origen) == 0);
+                printf("Ingrese el vertice de destino: ");
+                while (escaneoEntero(&destino) == 0);
+                if (origen < 0 || origen >= grafo -> numVertices || destino < 0 || destino >= grafo -> numVertices) {
+                    printf("Vertice invalido.\n");
+                } else {
+                    if (existeArista(grafo, origen, destino) == 1){ break;}
+                    agregarArista(grafo, origen, destino);
+                    printf("Arista agregada entre %d y %d.\n", origen, destino);
+                }
+            }
+            break;
+        case 3:
+            if (grafo == NULL) {
+                printf("No hay grafo creado.\n");
+            } else {
+                mostrarListaAdyacencia(grafo);
+            }
+            break;
+        case 4:
+            if (grafo == NULL) {
+                printf("No hay grafo creado.\n");
+            } else {
+                int inicio;
+                printf("Ingrese el vertice de inicio para BFS: ");
+                while (escaneoEntero(&inicio) == 0);
+                if (inicio < 0 || inicio >= grafo->numVertices) {
+                    printf("Vertice invalido.\n");
+                } else {
+                    reiniciarVisitado(grafo);
+                    printf("Recorrido BFS iniciado desde el vertice %d:\n", inicio);
+                    BFS_Iterativo(grafo, inicio);
+                    printf("\n");
+                }
+            }
+            break;
+        case 5:
+            if (grafo == NULL) {
+                printf("No hay grafo creado.\n");
+            } else {
+                int origen, destino;
+                printf("Ingrese el vertice de origen de la arista a eliminar: ");
+                while (escaneoEntero(&origen) == 0);+
+                printf("Ingrese el vertice de destino de la arista a eliminar: ");
+                while (escaneoEntero(&destino) == 0);
+                eliminarArista(grafo, origen, destino);
+            }
+            break;
+        case 6:
+            if (grafo == NULL) {
+                printf("No hay grafo creado.\n");
+            } else {
+                eliminarGrafo(grafo);
+                grafo = NULL;
+            }
+            break;
+        case 7:
+            printf("Saliendo...\n");
+            break;
+        default:
+            printf("Opcion no valida.\n");
         }
     } while (opcion != 7);
     return 0;

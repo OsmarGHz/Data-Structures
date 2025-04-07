@@ -1,12 +1,17 @@
+package vista;
+
 import javax.swing.*;
+
+import modelo.grafo.GeneradorGrafo;
+import modelo.grafo.posVertice;
+import vista.animaciones.AnimarBFS;
+
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Ellipse2D;
-import modelo.GeneradorGrafo;
-import modelo.posVertice;
 
 public class PanelMapa extends JPanel {
     private GeneradorGrafo grafo = new GeneradorGrafo();
@@ -19,6 +24,7 @@ public class PanelMapa extends JPanel {
     private Point puntoArrastre = null;
     private List<Ellipse2D> areasVertices = new ArrayList<>();
     private Map<posVertice, Point> posicionesPixeles = new HashMap<>();
+    private AnimarBFS animacionActual;
 
     public PanelMapa() {
         mapa = new ImageIcon(getClass().getResource("/recursos/mapa.png")).getImage();
@@ -129,6 +135,15 @@ public class PanelMapa extends JPanel {
             (int) (xPixel / xlineas) - 1));
         vertice.x = Math.max(0, Math.min(grafo.TAM_MATRIZ - 1, 
             (int) (yPixel / ylineas) - 1));
+    }
+
+    // Añade este getter
+    public Map<posVertice, Point> getPosicionesPixeles() {
+        return this.posicionesPixeles;
+    }
+
+    public void setAnimacionActual(AnimarBFS animacion) {
+        this.animacionActual = animacion;
     }
 
     private void drawArrowLine(Graphics2D g2, int x1, int y1, int x2, int y2) {
@@ -289,6 +304,11 @@ public class PanelMapa extends JPanel {
             //g2.drawString(String.valueOf(i), x + RADIO_VERTICE - 10, y + RADIO_VERTICE + 5);
             areasVertices.add(new Ellipse2D.Double(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2));
         }
+
+        //animaciones
+        if (animacionActual != null) {
+            animacionActual.render(g2, posicionesPixeles);
+        }
     }
 
     @Override
@@ -307,4 +327,5 @@ public class PanelMapa extends JPanel {
         ventana.add(new PanelMapa());
         ventana.setVisible(true);
     }
+        
 }

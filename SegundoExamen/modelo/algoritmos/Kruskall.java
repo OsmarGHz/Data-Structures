@@ -1,4 +1,4 @@
-package modelo;
+package modelo.algoritmos;
 
 import java.util.*;
 

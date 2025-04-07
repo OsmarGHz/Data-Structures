@@ -1,4 +1,4 @@
-package modelo;
+package modelo.grafo;
 
 public class Arista {
     public posVertice origen, destino;

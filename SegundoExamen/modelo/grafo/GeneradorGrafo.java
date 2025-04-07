@@ -1,4 +1,4 @@
-package modelo;
+package modelo.grafo;
 
 import java.util.Random;
 //import java.lang.Math;
@@ -148,6 +148,17 @@ public class GeneradorGrafo {
         return matrizCostos;
     }
 
+    public int[][] grafoNoPonderado (int[][] matrizCostos) {
+        for (int i = 0; i < numeroVertices; i++) {
+            for (int j = 0; j < numeroVertices; j++) { // Ahora recorremos toda la matriz
+                if (i != j && matrizCostos[i][j] != 0) { // Evitar auto-conexiones
+                    matrizCostos[i][j] = 1;
+                }
+            }
+        }
+        return matrizCostos;
+    }
+
     public int[][] grafoDirigido(int[][] matrizCostos) {
         esDirigido = true;
         //manipular para no tener grafos dirigidos bidireccionales
@@ -281,8 +292,8 @@ public class GeneradorGrafo {
         guardarPosAristas();
         mostrarMatriz();
         //mostrarMatrizCostos();
-        grafoDirigido(matrizCostos);
-        //grafoNoDirigido(matrizCostos);
+        //grafoDirigido(matrizCostos);
+        grafoNoDirigido(matrizCostos);
         numeroAristas = contarAristas();
         posicionAristas = new Arista[numeroAristas];
         guardarPosAristas();
