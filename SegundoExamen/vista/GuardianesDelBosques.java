@@ -55,7 +55,7 @@ public class GuardianesDelBosques extends JFrame {
             this.modulo2Completado = Boolean.parseBoolean(datos[2]);
             this.modulo3Completado = Boolean.parseBoolean(datos[3]);
             this.ejercicioFinalCompletado = Boolean.parseBoolean(datos[4]);
-            this.ultimoAcceso = datos.length > 4 ? LocalDateTime.parse(datos[5], DATE_FORMAT) : LocalDateTime.now();
+            this.ultimoAcceso = datos.length > 5 ? LocalDateTime.parse(datos[5], DATE_FORMAT) : LocalDateTime.now();
         }
 
         public boolean isModuloDisponible(int modulo) {
@@ -290,9 +290,13 @@ public class GuardianesDelBosques extends JFrame {
                 for (String linea : lineas) {
                     if (!linea.trim().isEmpty()) {
                         String[] datos = linea.split("\\|");
-                        if (datos.length >= 4) { // Mínimo nombre + 3 módulos
-                            Usuario usuario = new Usuario(datos);
-                            usuariosMap.put(usuario.nombre, usuario);
+                        if (datos.length == 6) {
+                            try {
+                                Usuario usuario = new Usuario(datos);
+                                usuariosMap.put(usuario.nombre, usuario);
+                            } catch (Exception e) {
+                                System.err.println("Error al cargar usuario: " + linea);
+                            }
                         }
                     }
                 }
@@ -326,7 +330,6 @@ public class GuardianesDelBosques extends JFrame {
             return;
         }
         
-        // Obtener la instancia actualizada del usuario
         usuarioActual = usuariosMap.get(nombreUsuario);
         usuarioActual.ultimoAcceso = LocalDateTime.now();
         
@@ -340,9 +343,12 @@ public class GuardianesDelBosques extends JFrame {
         
         JOptionPane.showMessageDialog(this, mensaje, "Ingreso exitoso", JOptionPane.INFORMATION_MESSAGE);
         
+
         // Actualizar archivo
         guardarUsuariosConProgreso();
         
+        recargarPantallaModulos();
+
         // Ir a pantalla de módulos
         cardLayout.show(mainPanel, "MODULOS");
     }
@@ -477,8 +483,8 @@ public class GuardianesDelBosques extends JFrame {
     botonCertificado = new JButton(usuarioActual != null && usuarioActual.todosModulosCompletados() 
     ? "DESCARGAR CERTIFICADO" 
     : "DESCARGAR CERTIFICADO (BLOQUEADO)");
-    botonCertificado.setEnabled(usuarioActual != null && usuarioActual.todosModulosCompletados());
-    botonCertificado.setBackground(usuarioActual != null && usuarioActual.todosModulosCompletados() 
+    botonCertificado.setEnabled(usuarioActual != null && usuarioActual.todosModulosCompletados() && usuarioActual.ejercicioFinalCompletado);
+    botonCertificado.setBackground(usuarioActual != null && usuarioActual.todosModulosCompletados() && usuarioActual.ejercicioFinalCompletado
     ? new Color(87, 124, 88) 
     : Color.DARK_GRAY);
     botonCertificado.setForeground(Color.WHITE);
@@ -486,7 +492,7 @@ public class GuardianesDelBosques extends JFrame {
     botonCertificado.setPreferredSize(new Dimension(350, 40));
 
     // Añadir acción al botón
-    if (usuarioActual != null && usuarioActual.todosModulosCompletados()) {
+    if (usuarioActual != null && usuarioActual.todosModulosCompletados() && usuarioActual.ejercicioFinalCompletado) {
     botonCertificado.addActionListener(e -> cardLayout.show(mainPanel, "CERTIFICADO"));
     }
 
@@ -547,16 +553,6 @@ public class GuardianesDelBosques extends JFrame {
         return modulo;
     }
 
-    public boolean isModuloCompletado(int numeroModulo) {
-        if (usuarioActual == null) return false;
-        switch (numeroModulo) {
-            case 1: return true;  // Módulo 1 siempre disponible
-            case 2: return usuarioActual.modulo1Completado;
-            case 3: return usuarioActual.modulo2Completado;
-            case 4: return usuarioActual.modulo3Completado;
-            default: return false;
-        }
-    }
 
     // Método auxiliar para crear botones activos
     private JButton crearBotonActivo(String texto, ActionListener action) {
@@ -707,7 +703,7 @@ public class GuardianesDelBosques extends JFrame {
         panelPrincipal.setBackground(new Color(206, 212, 169));
         
         // Panel izquierdo (imagen y título)
-        JPanel panelIzquierdo = crearPanelLateral();
+        JPanel panelIzquierdo = crearPanelLateral(1);
         
         // Panel derecho (contenido del ejercicio)
         JPanel panelDerecho = new JPanel();
@@ -718,19 +714,19 @@ public class GuardianesDelBosques extends JFrame {
         // Array de preguntas y respuestas
         Object[][] preguntas = {
             {
-                "¿Qué algoritmo explora todos los nodos vecinos primero?",
-                "BFS", // Respuesta correcta
-                new String[]{"BFS", "DFS", "Dijkstra"} // Opciones
+                "¿Qué algoritmo explora todos los nodos vecinos primero?\n\n\n a) BFS \n\n b) DFS \n\n c) Dijkstra",
+                "Opcion A", // Respuesta correcta
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
             },
             {
-                "¿Qué algoritmo usa una estructura de pila para su implementación?",
-                "DFS",
-                new String[]{"BFS", "DFS", "Prim"}
+                "¿Qué algoritmo usa una estructura de pila para su implementación? \n\n\n a) BFS \n\n b) DFS \n\n c) Prim",
+                "Opcion B",
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
             },
             {
-                "¿Qué algoritmo es mejor para encontrar el camino más corto en un grafo no ponderado?",
-                "BFS",
-                new String[]{"Kruskal", "DFS", "BFS"}
+                "¿Qué algoritmo es mejor para encontrar el camino más corto en un grafo no ponderado? \n\n\n a) Kruskal\n\n b) DFS \n\n c) BFS",
+                "Opcion C",
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
             }
         };
     
@@ -741,11 +737,11 @@ public class GuardianesDelBosques extends JFrame {
         textoPregunta.setWrapStyleWord(true);
         textoPregunta.setBackground(new Color(226, 229, 203));
         textoPregunta.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
-        textoPregunta.setBorder(BorderFactory.createEmptyBorder(10, 25, 30, 20));
+        textoPregunta.setBorder(BorderFactory.createEmptyBorder(20, 30, 30, 30));
     
         JPanel panelBotones = new JPanel(new GridLayout(1, 3, 15, 0));
         panelBotones.setBackground(new Color(226, 229, 203));
-        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 20, 70, 20));
     
         // Variables para controlar el flujo
         final int[] preguntaActual = {0};
@@ -865,7 +861,7 @@ public class GuardianesDelBosques extends JFrame {
         // Lista de textos
         String[] textos = {
             "Es hora de que conozcas a Dijkstra y a floyd Warshall",
-            "BFS recorre el grafo por niveles, explorando todos los nodos vecinos antes de avanzar al siguiente nivel.\n\nDFS explora lo más profundo posible por cada camino antes de retroceder.",
+            " - Dijkstra es encontrar el camino más corto desde un nodo origen a todos los demás en grafos con pesos no negativos.\n\n - Floyd Warshall Calcular las distancias más cortas entre todos los pares de nodos en un grafo dirigido o no dirigido, incluso con pesos negativos (pero sin ciclos negativos).",
             "¡Listo! Ya estás preparado para pasar a los ejercicios.\n¡Buena suerte, proximo guardián del bosque!"
         };
     
@@ -910,63 +906,94 @@ public class GuardianesDelBosques extends JFrame {
     private JPanel crearModuloEjercicio2() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
-    
-        // Panel izquierdo dividido en dos partes
-        JPanel panelIzquierdo = new JPanel();
-        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
-        panelIzquierdo.setBackground(new Color(199, 203, 165));
-        panelIzquierdo.setPreferredSize(new Dimension(350, 700));
-    
-        // 1. Panel superior para títulos
-        JPanel panelTitulos = new JPanel();
-        panelTitulos.setLayout(new BoxLayout(panelTitulos, BoxLayout.Y_AXIS));
-        panelTitulos.setBackground(new Color(199, 203, 165));
-        panelTitulos.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
-        panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
-        lblSubtitulo.setForeground(Color.WHITE);
-        lblSubtitulo.setBackground(new Color(217, 120, 82));
-        lblSubtitulo.setOpaque(true);
-        lblSubtitulo.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        panelTitulos.add(Box.createVerticalGlue());
-        panelTitulos.add(lblTitulo);
-        panelTitulos.add(Box.createRigidArea(new Dimension(0, 15)));
-        panelTitulos.add(lblSubtitulo);
-        panelTitulos.add(Box.createVerticalGlue());
-    
-        // Panel derecho de instrucciones
+        
+        // Panel izquierdo (imagen y título)
+        JPanel panelIzquierdo = crearPanelLateral(2);
+        
+        // Panel derecho (contenido del ejercicio)
         JPanel panelDerecho = new JPanel();
         panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
         panelDerecho.setBackground(new Color(226, 229, 203));
-        panelDerecho.setBorder(BorderFactory.createEmptyBorder(150, 50, 150, 50));
+        panelDerecho.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
     
-        JTextArea textoGuia = new JTextArea();
-        textoGuia.setEditable(false);
-        textoGuia.setLineWrap(true);
-        textoGuia.setWrapStyleWord(true);
-        textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
-        textoGuia.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(10, 25, 10, 20)
-        ));
-        textoGuia.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        // Lista de textos
-        String[] textos = {
-            "¡Hola! Mi nombre es Bob, seré tu guía que te ayudará a convertirte en un ¡Guardián del bosque!\n\nPero antes queremos que tengas en cuenta las definiciones de:\n - BFS (Recorrido a lo ancho)\n - DFS (Recorrido a lo profundo)",
-            "BFS recorre el grafo por niveles, explorando todos los nodos vecinos antes de avanzar al siguiente nivel.\n\nDFS explora lo más profundo posible por cada camino antes de retroceder.",
-            "¡Listo! Ya estás preparado para pasar a los ejercicios.\n¡Buena suerte, proximo guardián del bosque!"
+        // Array de preguntas y respuestas
+        Object[][] preguntas = {
+            {
+                "¿Cuál es la principal limitación del algoritmo de Dijkstra? \n\n\n a) No funciona con grafos que tienen pesos negativos en las aristas. \n\n b) Solo puede usarse en grafos no dirigidos. \n\n c) Su complejidad temporal",
+                "Opcion A", //Respuesta correcta
+
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
+            },
+            {
+                "¿Qué algoritmo usa una estructura de pila para su implementación? \n\n\n a) Es más rápido en grafos dispersos. \n\n b) Calcula las distancias más cortas entre todos los pares de nodos en una sola ejecución. \n\n c) No requiere una matriz de adyacencia.", 
+                "Opcion B", //Respuesta correcta
+
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
+            },
+            {
+                "¿Qué algoritmo es mejor para encontrar el camino más corto en un grafo no ponderado? \n\n\n a) Una pila (stack). \n\n b) Una cola de prioridad (priority queue). \n\n c) Una tabla hash.",
+                "Opcion C", //Respuesta correcta
+
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
+            }
         };
     
+        // Componentes que necesitamos actualizar
+        JTextArea textoPregunta = new JTextArea();
+        textoPregunta.setEditable(false);
+        textoPregunta.setLineWrap(true);
+        textoPregunta.setWrapStyleWord(true);
+        textoPregunta.setBackground(new Color(226, 229, 203));
+        textoPregunta.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoPregunta.setBorder(BorderFactory.createEmptyBorder(20, 30, 30, 30));
+    
+        JPanel panelBotones = new JPanel(new GridLayout(1, 3, 15, 0));
+        panelBotones.setBackground(new Color(226, 229, 203));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 20, 70, 20));
+    
+        // Variables para controlar el flujo
+        final int[] preguntaActual = {0};
+        final int[] respuestasCorrectas = {0};
+    
+        // Método para actualizar la pregunta
+        ActionListener manejarRespuesta = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JButton botonPresionado = (JButton) e.getSource();
+                String respuestaUsuario = botonPresionado.getText();
+                String respuestaCorrecta = (String) preguntas[preguntaActual[0]][1];
+                
+                if (respuestaUsuario.equals(respuestaCorrecta)) {
+                    respuestasCorrectas[0]++;
+                    if (preguntaActual[0] < preguntas.length - 1) {
+                        preguntaActual[0]++;
+                        mostrarPregunta(preguntaActual[0], textoPregunta, panelBotones, preguntas, this);
+                    } else {
+                        // Todas las preguntas respondidas
+                        evaluarResultadoFinal(respuestasCorrectas[0], preguntas.length, 2);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(panelPrincipal, 
+                        "Incorrecto.",
+                        "Respuesta incorrecta", 
+                        JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        };
+    
+        // Mostrar primera pregunta
+        mostrarPregunta(0, textoPregunta, panelBotones, preguntas, manejarRespuesta);
+    
+        panelDerecho.add(textoPregunta);
+        panelDerecho.add(Box.createVerticalStrut(30));
+        panelDerecho.add(panelBotones);
+        panelDerecho.add(Box.createVerticalGlue());
+    
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelIzquierdo, panelDerecho);
+        splitPane.setDividerLocation(350);
+        splitPane.setEnabled(false);
+    
+        panelPrincipal.add(splitPane, BorderLayout.CENTER);        
         return panelPrincipal;
     }
 
@@ -1042,7 +1069,7 @@ public class GuardianesDelBosques extends JFrame {
         // Lista de textos
         String[] textos = {
             "es tiempo de que conozcas prim y kruskal",
-            "BFS recorre el grafo por niveles, explorando todos los nodos vecinos antes de avanzar al siguiente nivel.\n\nDFS explora lo más profundo posible por cada camino antes de retroceder.",
+            " - Prim es encontrar un árbol de expansión mínima (MST) en un grafo conexo y ponderado es decir desde un nodo, expande la arista más cercana.\n\n - Kruskal también encuentra un MST, pero con enfoque diferente es decir ordena todas las aristas y añade las más cortas sin formar ciclo",
             "¡Listo! Ya estás preparado para pasar a los ejercicios.\n¡Buena suerte, proximo guardián del bosque!"
         };
     
@@ -1087,63 +1114,91 @@ public class GuardianesDelBosques extends JFrame {
     private JPanel crearModuloEjercicio3() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
-    
-        // Panel izquierdo dividido en dos partes
-        JPanel panelIzquierdo = new JPanel();
-        panelIzquierdo.setLayout(new BoxLayout(panelIzquierdo, BoxLayout.Y_AXIS));
-        panelIzquierdo.setBackground(new Color(199, 203, 165));
-        panelIzquierdo.setPreferredSize(new Dimension(350, 700));
-    
-        // 1. Panel superior para títulos
-        JPanel panelTitulos = new JPanel();
-        panelTitulos.setLayout(new BoxLayout(panelTitulos, BoxLayout.Y_AXIS));
-        panelTitulos.setBackground(new Color(199, 203, 165));
-        panelTitulos.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
-        panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
-        lblSubtitulo.setForeground(Color.WHITE);
-        lblSubtitulo.setBackground(new Color(217, 120, 82));
-        lblSubtitulo.setOpaque(true);
-        lblSubtitulo.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        panelTitulos.add(Box.createVerticalGlue());
-        panelTitulos.add(lblTitulo);
-        panelTitulos.add(Box.createRigidArea(new Dimension(0, 15)));
-        panelTitulos.add(lblSubtitulo);
-        panelTitulos.add(Box.createVerticalGlue());
-    
-        // Panel derecho de instrucciones
+        
+        // Panel izquierdo (imagen y título)
+        JPanel panelIzquierdo = crearPanelLateral(3);
+        
+        // Panel derecho (contenido del ejercicio)
         JPanel panelDerecho = new JPanel();
         panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
         panelDerecho.setBackground(new Color(226, 229, 203));
-        panelDerecho.setBorder(BorderFactory.createEmptyBorder(150, 50, 150, 50));
+        panelDerecho.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
     
-        JTextArea textoGuia = new JTextArea();
-        textoGuia.setEditable(false);
-        textoGuia.setLineWrap(true);
-        textoGuia.setWrapStyleWord(true);
-        textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
-        textoGuia.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(10, 25, 10, 20)
-        ));
-        textoGuia.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        // Lista de textos
-        String[] textos = {
-            "¡Hola! Mi nombre es Bob, seré tu guía que te ayudará a convertirte en un ¡Guardián del bosque!\n\nPero antes queremos que tengas en cuenta las definiciones de:\n - BFS (Recorrido a lo ancho)\n - DFS (Recorrido a lo profundo)",
-            "BFS recorre el grafo por niveles, explorando todos los nodos vecinos antes de avanzar al siguiente nivel.\n\nDFS explora lo más profundo posible por cada camino antes de retroceder.",
-            "¡Listo! Ya estás preparado para pasar a los ejercicios.\n¡Buena suerte, proximo guardián del bosque!"
+        // Array de preguntas y respuestas
+        Object[][] preguntas = {
+            {
+                "¿Qué algoritmo explora todos los nodos vecinos primero? \n\n\n a) Una cola de prioridad (Heap).\n\n b) Una estructura Union-Find (Disjoint Set). \n\n c) Una tabla hash.",
+                "Opcion B", // Respuesta correcta
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
+            },
+            {
+                "¿Por qué el algoritmo de Prim es adecuado para grafos densos?\n\n\n a) Porque procesa todas las aristas independientemente de su peso. \n\n b) Porque su complejidad depende principalmente del número de nodos. \n\n c) Porque usa búsqueda en profundidad (DFS).",
+                "Opcion B",
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
+            },
+            {
+                "¿Qué garantiza que ambos algoritmos encuentren un árbol de expansión mínima?\n\n\n a) Que siempre seleccionen la arista más pesada disponible.\n\n b) Que usen estrategias voraces (greedy) basadas en pesos mínimos. \n\n c) Que recorran el grafo en amplitud (BFS).",
+                "Opcion B",
+                new String[]{"Opcion A", "Opcion B", "Opcion C"} // Opciones
+            }
         };
     
+        // Componentes que necesitamos actualizar
+        JTextArea textoPregunta = new JTextArea();
+        textoPregunta.setEditable(false);
+        textoPregunta.setLineWrap(true);
+        textoPregunta.setWrapStyleWord(true);
+        textoPregunta.setBackground(new Color(226, 229, 203));
+        textoPregunta.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
+        textoPregunta.setBorder(BorderFactory.createEmptyBorder(20, 30, 30, 30));
+    
+        JPanel panelBotones = new JPanel(new GridLayout(1, 3, 15, 0));
+        panelBotones.setBackground(new Color(226, 229, 203));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(0, 20, 70, 20));
+    
+        // Variables para controlar el flujo
+        final int[] preguntaActual = {0};
+        final int[] respuestasCorrectas = {0};
+    
+        // Método para actualizar la pregunta
+        ActionListener manejarRespuesta = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JButton botonPresionado = (JButton) e.getSource();
+                String respuestaUsuario = botonPresionado.getText();
+                String respuestaCorrecta = (String) preguntas[preguntaActual[0]][1];
+                
+                if (respuestaUsuario.equals(respuestaCorrecta)) {
+                    respuestasCorrectas[0]++;
+                    if (preguntaActual[0] < preguntas.length - 1) {
+                        preguntaActual[0]++;
+                        mostrarPregunta(preguntaActual[0], textoPregunta, panelBotones, preguntas, this);
+                    } else {
+                        // Todas las preguntas respondidas
+                        evaluarResultadoFinal(respuestasCorrectas[0], preguntas.length, 3);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(panelPrincipal, 
+                        "Incorrecto.",
+                        "Respuesta incorrecta", 
+                        JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        };
+    
+        // Mostrar primera pregunta
+        mostrarPregunta(0, textoPregunta, panelBotones, preguntas, manejarRespuesta);
+    
+        panelDerecho.add(textoPregunta);
+        panelDerecho.add(Box.createVerticalStrut(30));
+        panelDerecho.add(panelBotones);
+        panelDerecho.add(Box.createVerticalGlue());
+    
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelIzquierdo, panelDerecho);
+        splitPane.setDividerLocation(350);
+        splitPane.setEnabled(false);
+    
+        panelPrincipal.add(splitPane, BorderLayout.CENTER);        
         return panelPrincipal;
     }
 
@@ -1151,6 +1206,15 @@ public class GuardianesDelBosques extends JFrame {
     private JPanel crearModuloEjercicioFinal() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
+        
+        // Panel izquierdo (imagen y título)
+        JPanel panelIzquierdo = crearPanelLateral(4);
+        
+        // Panel derecho (contenido del ejercicio)
+        JPanel panelDerecho = new JPanel();
+        panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
+        panelDerecho.setBackground(new Color(226, 229, 203));
+        panelDerecho.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
         
         return panelPrincipal;
     }
@@ -1202,6 +1266,7 @@ public class GuardianesDelBosques extends JFrame {
         panelBotones.revalidate();
         panelBotones.repaint();
     }
+
 
     //Evalua los resultados
     private void evaluarResultadoFinal(int correctas, int totalPreguntas, int moduloActual){
@@ -1266,7 +1331,7 @@ public class GuardianesDelBosques extends JFrame {
     }
 
     //Creacion de panel solo como atajo
-    private JPanel crearPanelLateral() {
+    private JPanel crearPanelLateral(int moduloActual) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(199, 203, 165));
@@ -1280,11 +1345,30 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Sección de preguntas!");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen/recursos/fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
-        JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
+        // Determinar el subtítulo según el módulo
+        String subtitulo;
+        switch(moduloActual) {
+            case 1:
+                subtitulo = "EXPLORACIÓN DE ECOSISTEMAS";
+                break;
+            case 2:
+                subtitulo = "OPTIMIZACIÓN DE RUTAS";
+                break;
+            case 3:
+                subtitulo = "REDES ECOLÓGICAS";
+                break;
+            case 4:
+                subtitulo = "EJERCICIO FINAL";
+                break;
+            default:
+                subtitulo = "MÓDULO DESCONOCIDO";
+        }
+    
+        JLabel lblSubtitulo = new JLabel(subtitulo);
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen/recursos/fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -1302,7 +1386,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon(getClass().getResource("/SegundoExamen/recursos/gatoR.PNG"));
         if (iconoGato.getImageLoadStatus() == MediaTracker.COMPLETE) {
             Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
             JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
@@ -1320,10 +1404,11 @@ public class GuardianesDelBosques extends JFrame {
     private void estiloBotonPregunta(JButton boton) {
         boton.setBackground(new Color(87, 124, 88));
         boton.setForeground(Color.WHITE);
-        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
+        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f)); // Fuente más grande
         boton.setFocusPainted(false);
-        boton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        boton.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25)); // Más padding
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        boton.setPreferredSize(new Dimension(100, 50)); // Tamaño más grande
     }
 
     // Cargar fuentes
