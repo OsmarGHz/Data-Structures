@@ -29,6 +29,7 @@ public class GuardianesDelBosques extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private JButton botonCertificado;
+    private JButton botonEjercicioFinal;
 
     //clase usuario
     class Usuario {
@@ -36,6 +37,7 @@ public class GuardianesDelBosques extends JFrame {
         boolean modulo1Completado;
         boolean modulo2Completado;
         boolean modulo3Completado;
+        boolean ejercicioFinalCompletado;
         LocalDateTime ultimoAcceso;
         
         Usuario(String nombre) {
@@ -43,6 +45,7 @@ public class GuardianesDelBosques extends JFrame {
             this.modulo1Completado = false;
             this.modulo2Completado = false;
             this.modulo3Completado = false;
+            this.ejercicioFinalCompletado = false;
             this.ultimoAcceso = LocalDateTime.now();
         }
         
@@ -51,7 +54,8 @@ public class GuardianesDelBosques extends JFrame {
             this.modulo1Completado = Boolean.parseBoolean(datos[1]);
             this.modulo2Completado = Boolean.parseBoolean(datos[2]);
             this.modulo3Completado = Boolean.parseBoolean(datos[3]);
-            this.ultimoAcceso = datos.length > 4 ? LocalDateTime.parse(datos[4], DATE_FORMAT) : LocalDateTime.now();
+            this.ejercicioFinalCompletado = Boolean.parseBoolean(datos[4]);
+            this.ultimoAcceso = datos.length > 4 ? LocalDateTime.parse(datos[5], DATE_FORMAT) : LocalDateTime.now();
         }
 
         public boolean isModuloDisponible(int modulo) {
@@ -59,6 +63,7 @@ public class GuardianesDelBosques extends JFrame {
                 case 1: return true;  // Siempre disponible
                 case 2: return modulo1Completado;
                 case 3: return modulo2Completado;
+                case 4: return modulo3Completado;
                 default: return false;
             }
         }
@@ -69,6 +74,7 @@ public class GuardianesDelBosques extends JFrame {
                 String.valueOf(modulo1Completado),
                 String.valueOf(modulo2Completado),
                 String.valueOf(modulo3Completado),
+                String.valueOf(ejercicioFinalCompletado),
                 ultimoAcceso.format(DATE_FORMAT)
             );
         }
@@ -77,6 +83,10 @@ public class GuardianesDelBosques extends JFrame {
             return modulo1Completado && modulo2Completado && modulo3Completado;
         }
     }
+
+    //-----------------------------------------------------
+    //       SECCION DE CREACION DE LOS PANELES
+    //-----------------------------------------------------
 
     //creacion de las ventanas
     public GuardianesDelBosques() {
@@ -101,6 +111,7 @@ public class GuardianesDelBosques extends JFrame {
         mainPanel.add(crearModuloEjercicio2(), "EJERCICIO2");
         mainPanel.add(crearModulo3(), "MODULO3");
         mainPanel.add(crearModuloEjercicio3(), "EJERCICIO3");
+        mainPanel.add(crearModuloEjercicioFinal(),"EJERCICIO_FINAL");
         mainPanel.add(PantallaCertificado(), "CERTIFICADO");
 
         add(mainPanel);
@@ -113,7 +124,7 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBackground(new Color(193, 193, 143));
         panel.setLayout(null);
 
-        JLabel bosque = new JLabel(new ImageIcon("SegundoExamen\\Recursos\\bosque.png"));
+        JLabel bosque = new JLabel(new ImageIcon("SegundoExamen\\recursos\\bosque.png"));
         bosque.setBounds(150, 200, 700, 300);
         panel.add(bosque);
 
@@ -128,11 +139,11 @@ public class GuardianesDelBosques extends JFrame {
         JLabel titulo = new JLabel("GUARDIANES DEL BOSQUE", SwingConstants.CENTER);
         titulo.setBounds(150, 100, 700, 60);
         titulo.setForeground(Color.BLACK);
-        titulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 55f));
+        titulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 55f));
         panel.add(titulo);
 
         JButton botonIniciar = new JButton("INICIAR");
-        botonIniciar.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 30f));
+        botonIniciar.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 30f));
         botonIniciar.setBackground(new Color(51, 51, 25));
         botonIniciar.setForeground(Color.WHITE);
         botonIniciar.setBounds(400, 530, 200, 50);
@@ -145,7 +156,7 @@ public class GuardianesDelBosques extends JFrame {
         });
         panel.add(botonIniciar);
 
-        ImageIcon iconoX = new ImageIcon(new ImageIcon("SegundoExamen\\Recursos\\botonX.png").getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+        ImageIcon iconoX = new ImageIcon(new ImageIcon("SegundoExamen\\recursos\\botonX.png").getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
         JButton botonSalir = new JButton(iconoX);
         botonSalir.setBounds(900, 20, 40, 40);
         botonSalir.setFocusPainted(false);
@@ -160,6 +171,10 @@ public class GuardianesDelBosques extends JFrame {
         return panel;
     }
     
+    //-----------------------------------------------------
+    //   SECCION DE MODULOS DE INICIO Y REGISTRO
+    //-----------------------------------------------------
+
     private JPanel PantallaUsuario() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -168,7 +183,7 @@ public class GuardianesDelBosques extends JFrame {
 
         // Título
         JLabel lblTitulo = new JLabel("Inicia Sesión");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 32f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 32f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblTitulo);
         panel.add(Box.createVerticalStrut(30));
@@ -196,14 +211,14 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 50));
 
         JLabel lblUsuario = new JLabel("Usuario");
-        lblUsuario.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblUsuario.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
         lblUsuario.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblUsuario);
 
         panel.add(Box.createVerticalStrut(5));
 
         JLabel lblListaUsuarios = new JLabel("Selecciona tu usuario");
-        lblListaUsuarios.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblListaUsuarios.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
         lblListaUsuarios.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblListaUsuarios);
 
@@ -233,14 +248,14 @@ public class GuardianesDelBosques extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 50));
 
         JLabel lblRegistro = new JLabel("Regístrate!");
-        lblRegistro.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblRegistro.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
         lblRegistro.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblRegistro);
 
         panel.add(Box.createVerticalStrut(5));
 
         JLabel lblInstruccion = new JLabel("Ingresa tu nombre de usuario");
-        lblInstruccion.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 16f));
+        lblInstruccion.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
         lblInstruccion.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblInstruccion);
 
@@ -262,6 +277,10 @@ public class GuardianesDelBosques extends JFrame {
 
         return panel;
     }
+
+    //--------------------------------------------------------------------
+    //  SECCION DE VALIDACION, CREACION Y GUARDADO DE REGISTRO E INICIO 
+    //--------------------------------------------------------------------
 
     private void cargarUsuariosConProgreso() {
         Path path = Paths.get(ARCHIVO_USUARIOS);
@@ -316,7 +335,8 @@ public class GuardianesDelBosques extends JFrame {
         mensaje += "Progreso actual:\n";
         mensaje += "- Módulo 1: " + (usuarioActual.modulo1Completado ? "✅" : "❌") + "\n";
         mensaje += "- Módulo 2: " + (usuarioActual.modulo2Completado ? "✅" : "❌") + "\n";
-        mensaje += "- Módulo 3: " + (usuarioActual.modulo3Completado ? "✅" : "❌");
+        mensaje += "- Módulo 3: " + (usuarioActual.modulo3Completado ? "✅" : "❌") + "\n";
+        mensaje += "- Ejercicio Final: " + (usuarioActual.ejercicioFinalCompletado ? "✅" : "❌");
         
         JOptionPane.showMessageDialog(this, mensaje, "Ingreso exitoso", JOptionPane.INFORMATION_MESSAGE);
         
@@ -360,7 +380,7 @@ public class GuardianesDelBosques extends JFrame {
         boton.setForeground(Color.WHITE);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
         boton.setMaximumSize(new Dimension(ancho, 40));
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
+        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
         boton.setFocusPainted(false);
         boton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -373,6 +393,10 @@ public class GuardianesDelBosques extends JFrame {
             JOptionPane.ERROR_MESSAGE);
     }
 
+    //-----------------------------------------------------
+    //       SECCION DE CREACION DE MODULOS
+    //-----------------------------------------------------
+
     //pantalla de seleccion de modulo 
     private JPanel PantallaModulos() {
         JPanel contenedor = new JPanel(new BorderLayout());
@@ -380,13 +404,13 @@ public class GuardianesDelBosques extends JFrame {
 
         // Título principal
         JLabel titulo = new JLabel("Módulo de aprendizaje", SwingConstants.CENTER);
-        titulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 40f));
+        titulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 40f));
         titulo.setBorder(BorderFactory.createEmptyBorder(30, 10, 10, 10));
         contenedor.add(titulo, BorderLayout.NORTH);
 
         // Subtítulo
         JLabel subtitulo = new JLabel("<html><div style='text-align: center;'>Necesitas superar TRES módulos de aprendizaje,<br>con sus respectivos ejercicios</div></html>", SwingConstants.CENTER);
-        subtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 25f));
+        subtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 25f));
         subtitulo.setBounds(150, 80, 700, 60);
 
         contenedor.add(subtitulo);
@@ -400,7 +424,7 @@ public class GuardianesDelBosques extends JFrame {
         // Versión corregida en PantallaModulos()
     panelModulos.add(crearModulo(
         "Módulo UNO:<br>Exploración de<br>ecosistemas", 
-        "modulo1.png", 
+        "SegundoExamen\\recursos\\modulo1.png", 
         true,  // Módulo 1 siempre desbloqueado
         "MODULO1", 
         "EJERCICIO1"
@@ -408,7 +432,7 @@ public class GuardianesDelBosques extends JFrame {
 
     panelModulos.add(crearModulo(
         "Módulo DOS:<br>Optimización<br>de rutas", 
-        "modulo2.png", 
+        "SegundoExamen\\recursos\\Modulo2.png", 
         usuarioActual != null && usuarioActual.modulo1Completado, // Solo si módulo 1 completado
         "MODULO2", 
         "EJERCICIO2"
@@ -416,7 +440,7 @@ public class GuardianesDelBosques extends JFrame {
 
     panelModulos.add(crearModulo(
         "Módulo TRES:<br>Redes <br>ecológicas", 
-        "modulo3.png", 
+        "SegundoExamen\\recursos\\modulo3.png", 
         usuarioActual != null && usuarioActual.modulo2Completado, // Solo si módulo 2 completado
         "MODULO3", 
         "EJERCICIO3"
@@ -428,7 +452,28 @@ public class GuardianesDelBosques extends JFrame {
         centerPanel.add(panelModulos, BorderLayout.CENTER);
         contenedor.add(centerPanel, BorderLayout.CENTER);
 
-        // Botón de certificado (actualizado)
+
+
+    //boton de ejercicio final
+    botonEjercicioFinal = new JButton(usuarioActual != null && usuarioActual.modulo3Completado
+    ? "REALIZAR EJERCICIO FINAL" 
+    : "BLOQUEADO");
+    botonEjercicioFinal.setEnabled(usuarioActual != null && usuarioActual.todosModulosCompletados());
+    botonEjercicioFinal.setBackground(usuarioActual != null && usuarioActual.todosModulosCompletados() 
+    ? new Color(87, 124, 88) 
+    : Color.DARK_GRAY);
+    botonEjercicioFinal.setForeground(Color.WHITE);
+    botonEjercicioFinal.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 15f));
+    botonEjercicioFinal.setPreferredSize(new Dimension(350, 40));
+
+    if (usuarioActual != null && usuarioActual.todosModulosCompletados()) {
+        botonEjercicioFinal.addActionListener(e -> {
+            // Aquí deberías mostrar el ejercicio final
+            cardLayout.show(mainPanel, "EJERCICIO_FINAL"); // Asegúrate de tener este panel
+        });
+    }
+
+    // Botón de certificado (actualizado)
     botonCertificado = new JButton(usuarioActual != null && usuarioActual.todosModulosCompletados() 
     ? "DESCARGAR CERTIFICADO" 
     : "DESCARGAR CERTIFICADO (BLOQUEADO)");
@@ -437,7 +482,7 @@ public class GuardianesDelBosques extends JFrame {
     ? new Color(87, 124, 88) 
     : Color.DARK_GRAY);
     botonCertificado.setForeground(Color.WHITE);
-    botonCertificado.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 15f));
+    botonCertificado.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 15f));
     botonCertificado.setPreferredSize(new Dimension(350, 40));
 
     // Añadir acción al botón
@@ -445,12 +490,11 @@ public class GuardianesDelBosques extends JFrame {
     botonCertificado.addActionListener(e -> cardLayout.show(mainPanel, "CERTIFICADO"));
     }
 
-        JPanel panelInferior = new JPanel();
-        panelInferior.setBackground(new Color(206, 212, 169));
-        panelInferior.setBorder(BorderFactory.createEmptyBorder(0, 0, 90, 0));
-        panelInferior.add(botonCertificado);
-
-        contenedor.add(panelInferior, BorderLayout.SOUTH);
+        // Agregar el botón de ejercicio final al layout correctamente
+        JPanel panelBotonesInferiores = new JPanel(new FlowLayout());
+        panelBotonesInferiores.add(botonEjercicioFinal);
+        panelBotonesInferiores.add(botonCertificado);
+        contenedor.add(panelBotonesInferiores, BorderLayout.SOUTH);
 
         return contenedor;
     }
@@ -469,7 +513,7 @@ public class GuardianesDelBosques extends JFrame {
         // Título del módulo
         JLabel lblTitulo = new JLabel("<html><div style='text-align:center;width:180px;'>" + titulo + "</div></html>", SwingConstants.CENTER);
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
         modulo.add(lblTitulo);
         modulo.add(Box.createVerticalStrut(15));
 
@@ -489,7 +533,7 @@ public class GuardianesDelBosques extends JFrame {
 
         // Imagen del módulo
         try {
-            ImageIcon icon = new ImageIcon(getClass().getResource("/recursos/" + nombreImagen));
+            ImageIcon icon = new ImageIcon(getClass().getResource(nombreImagen));
             JLabel imagen = new JLabel(new ImageIcon(icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH)));
             imagen.setAlignmentX(Component.CENTER_ALIGNMENT);
             modulo.add(imagen);
@@ -509,6 +553,7 @@ public class GuardianesDelBosques extends JFrame {
             case 1: return true;  // Módulo 1 siempre disponible
             case 2: return usuarioActual.modulo1Completado;
             case 3: return usuarioActual.modulo2Completado;
+            case 4: return usuarioActual.modulo3Completado;
             default: return false;
         }
     }
@@ -520,7 +565,7 @@ public class GuardianesDelBosques extends JFrame {
         boton.setForeground(Color.WHITE);
         boton.setFocusPainted(false);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
+        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 12f));
         boton.setMaximumSize(new Dimension(180, 30));
         boton.addActionListener(action);
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -534,12 +579,15 @@ public class GuardianesDelBosques extends JFrame {
         boton.setBackground(new Color(180, 180, 180));
         boton.setForeground(Color.DARK_GRAY);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 12f));
+        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 12f));
         boton.setMaximumSize(new Dimension(180, 30));
         return boton;
     }
 
-    
+    //-----------------------------------------------------
+    //       SECCION DE MODULOS Y SUS EJERCICIOS
+    //-----------------------------------------------------
+
     //Modulo 1
     private JPanel crearModulo1() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
@@ -559,11 +607,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -581,7 +629,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\recursos\\gatoR.PNG");
         Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
         JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
         lblGato.setHorizontalAlignment(SwingConstants.CENTER);
@@ -654,7 +702,6 @@ public class GuardianesDelBosques extends JFrame {
     }
 
     //ejercicio modulo 1
-    
     private JPanel crearModuloEjercicio1() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
@@ -719,7 +766,7 @@ public class GuardianesDelBosques extends JFrame {
                         mostrarPregunta(preguntaActual[0], textoPregunta, panelBotones, preguntas, this);
                     } else {
                         // Todas las preguntas respondidas
-                        evaluarResultadoFinal(respuestasCorrectas[0], preguntas.length);
+                        evaluarResultadoFinal(respuestasCorrectas[0], preguntas.length, 1);
                     }
                 } else {
                     JOptionPane.showMessageDialog(panelPrincipal, 
@@ -745,118 +792,7 @@ public class GuardianesDelBosques extends JFrame {
         panelPrincipal.add(splitPane, BorderLayout.CENTER);        
         return panelPrincipal;
     }
-    
-    private void mostrarPregunta(int numPregunta, JTextArea textoPregunta, JPanel panelBotones, 
-                               Object[][] preguntas, ActionListener listener) {
-        textoPregunta.setText((String) preguntas[numPregunta][0]);
-        panelBotones.removeAll();
-        
-        String[] opciones = (String[]) preguntas[numPregunta][2];
-        
-        for (String opcion : opciones) {
-            JButton btnOpcion = new JButton(opcion);
-            estiloBotonPregunta(btnOpcion);
-            btnOpcion.addActionListener(listener);
-            panelBotones.add(btnOpcion);
-        }
-        
-        panelBotones.revalidate();
-        panelBotones.repaint();
-    }
-    
-    private void evaluarResultadoFinal(int correctas, int totalPreguntas) {
-        if (correctas >= totalPreguntas * 0.7) {
-            usuarioActual.modulo1Completado = true;
-            guardarUsuariosConProgreso();
-            
-            // Actualizar el mapa de usuarios
-            usuariosMap.put(usuarioActual.nombre, usuarioActual);
-            
-            JOptionPane.showMessageDialog(this, 
-                "¡Felicidades! Has completado el módulo 1\n\nEl módulo 2 está ahora disponible",
-                "Módulo completado", 
-                JOptionPane.INFORMATION_MESSAGE);
-                
-            // Recargar la pantalla de módulos para mostrar los cambios
-            recargarPantallaModulos();
-        } else {
-            JOptionPane.showMessageDialog(this, 
-                "Necesitas más práctica. Intenta nuevamente.",
-                "Intenta de nuevo", 
-                JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private void recargarPantallaModulos() {
-        // Remover la pantalla existente
-        mainPanel.remove(mainPanel.getComponent(2)); // Asumiendo que MODULOS es el índice 2
-        
-        // Crear y añadir la nueva versión
-        mainPanel.add(PantallaModulos(), "MODULOS");
-        
-        // Mostrar la pantalla actualizada
-        cardLayout.show(mainPanel, "MODULOS");
-    }
-
-    private JPanel crearPanelLateral() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(new Color(199, 203, 165));
-        panel.setPreferredSize(new Dimension(350, 700));
-    
-        // Panel de títulos
-        JPanel panelTitulos = new JPanel();
-        panelTitulos.setLayout(new BoxLayout(panelTitulos, BoxLayout.Y_AXIS));
-        panelTitulos.setBackground(new Color(199, 203, 165));
-        panelTitulos.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
-        panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        JLabel lblTitulo = new JLabel("Sección de preguntas!");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
-        lblSubtitulo.setForeground(Color.WHITE);
-        lblSubtitulo.setBackground(new Color(217, 120, 82));
-        lblSubtitulo.setOpaque(true);
-        lblSubtitulo.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-        panelTitulos.add(Box.createVerticalGlue());
-        panelTitulos.add(lblTitulo);
-        panelTitulos.add(Box.createRigidArea(new Dimension(0, 15)));
-        panelTitulos.add(lblSubtitulo);
-        panelTitulos.add(Box.createVerticalGlue());
-    
-        // Panel de imagen del gato
-        JPanel panelGato = new JPanel(new BorderLayout());
-        panelGato.setBackground(new Color(199, 203, 165));
-        panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
-    
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
-        if (iconoGato.getImageLoadStatus() == MediaTracker.COMPLETE) {
-            Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
-            JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
-            lblGato.setHorizontalAlignment(SwingConstants.CENTER);
-            panelGato.add(lblGato, BorderLayout.CENTER);
-        }
-    
-        panel.add(panelTitulos);
-        panel.add(panelGato);
-        
-        return panel;
-    }
-    
-    private void estiloBotonPregunta(JButton boton) {
-        boton.setBackground(new Color(87, 124, 88));
-        boton.setForeground(Color.WHITE);
-        boton.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 14f));
-        boton.setFocusPainted(false);
-        boton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
-
+   
     //modulo 2
     private JPanel crearModulo2() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
@@ -876,11 +812,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -898,7 +834,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\recursos\\gatoR.PNG");
         Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
         JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
         lblGato.setHorizontalAlignment(SwingConstants.CENTER);
@@ -989,11 +925,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -1053,11 +989,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -1075,7 +1011,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\Recursos\\gatoR.PNG");
+        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\recursos\\gatoR.PNG");
         Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
         JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
         lblGato.setHorizontalAlignment(SwingConstants.CENTER);
@@ -1166,11 +1102,11 @@ public class GuardianesDelBosques extends JFrame {
         panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblTitulo = new JLabel("Módulo de aprendizaje");
-        lblTitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
         lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
     
         JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
-        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\Recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
         lblSubtitulo.setForeground(Color.WHITE);
         lblSubtitulo.setBackground(new Color(217, 120, 82));
         lblSubtitulo.setOpaque(true);
@@ -1194,7 +1130,7 @@ public class GuardianesDelBosques extends JFrame {
         textoGuia.setLineWrap(true);
         textoGuia.setWrapStyleWord(true);
         textoGuia.setBackground(Color.WHITE);
-        textoGuia.setFont(cargarFuente("recursos\\fuenteTitulo.ttf", 20f));
+        textoGuia.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 20f));
         textoGuia.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 25, 10, 20)
@@ -1211,6 +1147,14 @@ public class GuardianesDelBosques extends JFrame {
         return panelPrincipal;
     }
 
+    //Ejercicio final
+    private JPanel crearModuloEjercicioFinal() {
+        JPanel panelPrincipal = new JPanel(new BorderLayout());
+        panelPrincipal.setBackground(new Color(206, 212, 169));
+        
+        return panelPrincipal;
+    }
+
     //Certificado
     private JPanel PantallaCertificado() {
         JPanel panelPrincipal = new JPanel(new BorderLayout());
@@ -1221,8 +1165,8 @@ public class GuardianesDelBosques extends JFrame {
             "Por completar todos los módulos de Guardianes del Bosque</center></html>", 
             SwingConstants.CENTER);
         
-        certificado.setFont(new Font("Arial", Font.PLAIN, 24));
-        panelPrincipal.add(certificado, BorderLayout.CENTER);
+            certificado.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
+            panelPrincipal.add(certificado, BorderLayout.CENTER);
         
         // Botón para regresar
         JButton btnRegresar = new JButton("Regresar");
@@ -1234,6 +1178,152 @@ public class GuardianesDelBosques extends JFrame {
         panelPrincipal.add(panelSur, BorderLayout.SOUTH);
         
         return panelPrincipal;
+    }
+
+    //-----------------------------------------------------
+    //       SECCION DE VALIDACIONES
+    //-----------------------------------------------------
+
+    //Esto solo muestra cuando algo esta erroneo
+    private void mostrarPregunta(int numPregunta, JTextArea textoPregunta, JPanel panelBotones, 
+                               Object[][] preguntas, ActionListener listener) {
+        textoPregunta.setText((String) preguntas[numPregunta][0]);
+        panelBotones.removeAll();
+        
+        String[] opciones = (String[]) preguntas[numPregunta][2];
+        
+        for (String opcion : opciones) {
+            JButton btnOpcion = new JButton(opcion);
+            estiloBotonPregunta(btnOpcion);
+            btnOpcion.addActionListener(listener);
+            panelBotones.add(btnOpcion);
+        }
+        
+        panelBotones.revalidate();
+        panelBotones.repaint();
+    }
+
+    //Evalua los resultados
+    private void evaluarResultadoFinal(int correctas, int totalPreguntas, int moduloActual){
+        if (correctas >= totalPreguntas * 0.7) {
+                // Marcar el módulo actual como completado
+                switch(moduloActual) {
+                    case 1:
+                        usuarioActual.modulo1Completado = true;
+                        break;
+                    case 2:
+                        usuarioActual.modulo2Completado = true;
+                        break;
+                    case 3:
+                        usuarioActual.modulo3Completado = true;
+                        break;
+                    case 4: // Ejercicio final
+                        usuarioActual.ejercicioFinalCompletado = true;
+                        break;
+                }
+                
+                guardarUsuariosConProgreso();
+                usuariosMap.put(usuarioActual.nombre, usuarioActual);
+                
+                // Determinar el mensaje según el módulo completado
+                String mensaje = "";
+                if (moduloActual == 1) {
+                    mensaje = "¡Felicidades! Has completado el módulo 1\n\n¡Se desbloqueó la sección 2!";
+                } else if (moduloActual == 2) {
+                    mensaje = "¡Felicidades! Has completado el módulo 2\n\n¡Se desbloqueó la sección 3!";
+                } else if (moduloActual == 3) {
+                    mensaje = "¡Felicidades! Has completado el módulo 3\n\n¡Se desbloqueó el ejercicio final!";
+                } else if (moduloActual == 4) {
+                    mensaje = "¡Felicidades! Has completado todos los módulos\n\n¡Se desbloqueó el certificado!";
+                }
+                
+                JOptionPane.showMessageDialog(this, 
+                    mensaje,
+                    "Módulo completado", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                    
+                recargarPantallaModulos();
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Necesitas más práctica. Intenta nuevamente.",
+                    "Intenta de nuevo", 
+                    JOptionPane.WARNING_MESSAGE);
+            }
+        }
+
+    //buffer de los modulos en si los actualiza
+    private void recargarPantallaModulos() {
+
+        Component[] components = mainPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            if (components[i].getName() != null && components[i].getName().equals("MODULOS")) {
+                mainPanel.remove(i);
+                break;
+            }
+        }
+        mainPanel.add(PantallaModulos(), "MODULOS");
+        cardLayout.show(mainPanel, "MODULOS");
+    }
+
+    //Creacion de panel solo como atajo
+    private JPanel crearPanelLateral() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(199, 203, 165));
+        panel.setPreferredSize(new Dimension(350, 700));
+    
+        // Panel de títulos
+        JPanel panelTitulos = new JPanel();
+        panelTitulos.setLayout(new BoxLayout(panelTitulos, BoxLayout.Y_AXIS));
+        panelTitulos.setBackground(new Color(199, 203, 165));
+        panelTitulos.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+        panelTitulos.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        JLabel lblTitulo = new JLabel("Sección de preguntas!");
+        lblTitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 24f));
+        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        JLabel lblSubtitulo = new JLabel("EXPLORACION DE ECOSISTEMAS");
+        lblSubtitulo.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 18f));
+        lblSubtitulo.setForeground(Color.WHITE);
+        lblSubtitulo.setBackground(new Color(217, 120, 82));
+        lblSubtitulo.setOpaque(true);
+        lblSubtitulo.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        lblSubtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+        panelTitulos.add(Box.createVerticalGlue());
+        panelTitulos.add(lblTitulo);
+        panelTitulos.add(Box.createRigidArea(new Dimension(0, 15)));
+        panelTitulos.add(lblSubtitulo);
+        panelTitulos.add(Box.createVerticalGlue());
+    
+        // Panel de imagen del gato
+        JPanel panelGato = new JPanel(new BorderLayout());
+        panelGato.setBackground(new Color(199, 203, 165));
+        panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
+    
+        ImageIcon iconoGato = new ImageIcon("SegundoExamen\\recursos\\gatoR.PNG");
+        if (iconoGato.getImageLoadStatus() == MediaTracker.COMPLETE) {
+            Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
+            JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
+            lblGato.setHorizontalAlignment(SwingConstants.CENTER);
+            panelGato.add(lblGato, BorderLayout.CENTER);
+        }
+    
+        panel.add(panelTitulos);
+        panel.add(panelGato);
+        
+        return panel;
+    }
+
+    //estilo :D
+    private void estiloBotonPregunta(JButton boton) {
+        boton.setBackground(new Color(87, 124, 88));
+        boton.setForeground(Color.WHITE);
+        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 14f));
+        boton.setFocusPainted(false);
+        boton.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     // Cargar fuentes
@@ -1249,6 +1339,10 @@ public class GuardianesDelBosques extends JFrame {
         }
     }
     
+    //-----------------------------------------------------
+    //       SECCION DEL MAIN
+    //-----------------------------------------------------
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new GuardianesDelBosques());
     }

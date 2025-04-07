@@ -1,2 +1,1 @@
-Viri|true|false|false|2025-04-03 14:10:45
-Nabb|false|false|false|2025-04-02 20:42:54
+Nabb|true|false|false|false|2025-04-06 18:40:28
