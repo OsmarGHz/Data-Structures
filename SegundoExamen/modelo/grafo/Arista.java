@@ -9,4 +9,8 @@ public class Arista {
         this.destino = posicionVertices2;
         this.peso = peso;
     }
+
+    public Arista(posVertice origen, posVertice destino) {
+        this(origen, destino, 1);
+    }
 }

@@ -1,10 +1,8 @@
-package vista;
 
 import javax.swing.*;
 
 import modelo.grafo.GeneradorGrafo;
 import modelo.grafo.posVertice;
-import vista.animaciones.AnimarBFS;
 
 import java.awt.event.*;
 import java.util.*;
@@ -14,9 +12,9 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Ellipse2D;
 
 public class PanelMapa extends JPanel {
-    private GeneradorGrafo grafo = new GeneradorGrafo();
-    private int T_MATRIZ = grafo.TAM_MATRIZ + 1;
-    //private int T_MATRIZ = 13;
+    private GeneradorGrafo grafo;
+    //private int T_MATRIZ = grafo.TAM_MATRIZ + 1;
+    private int T_MATRIZ = 13;
     private Image mapa;
     private final int RADIO_VERTICE = 20;
     private posVertice verticeSeleccionado = null;
@@ -24,11 +22,16 @@ public class PanelMapa extends JPanel {
     private Point puntoArrastre = null;
     private List<Ellipse2D> areasVertices = new ArrayList<>();
     private Map<posVertice, Point> posicionesPixeles = new HashMap<>();
-    private AnimarBFS animacionActual;
+
+    //para resaltar vertices y aristas
+    // Arreglo para indicar qué aristas están resaltadas: [origen][destino]
+    private boolean[][] aristasResaltadas;
+    // Arreglo para indicar el color de cada vértice (null: sin resaltar)
+    private Color[] verticesResaltados;
 
     public PanelMapa() {
         mapa = new ImageIcon(getClass().getResource("/recursos/mapa.png")).getImage();
-        
+        grafo = new GeneradorGrafo();
         inicializarPosicionesPixeles();
 
         addMouseListener(new MouseAdapter() {
@@ -142,8 +145,16 @@ public class PanelMapa extends JPanel {
         return this.posicionesPixeles;
     }
 
-    public void setAnimacionActual(AnimarBFS animacion) {
-        this.animacionActual = animacion;
+    // Actualiza el arreglo de aristas resaltadas
+    public void setAristasResaltadas(boolean[][] edges) {
+        aristasResaltadas = edges;
+        repaint();
+    }
+
+    // Actualiza el arreglo de vértices resaltados
+    public void setVerticesResaltados(Color[] vertices) {
+        verticesResaltados = vertices;
+        repaint();
     }
 
     private void drawArrowLine(Graphics2D g2, int x1, int y1, int x2, int y2) {
@@ -219,8 +230,19 @@ public class PanelMapa extends JPanel {
 
         // Dibujar aristas
         for (int i = 0; i < grafo.numeroAristas; i++) {
+
             Point origen = posicionesPixeles.get(grafo.posicionAristas[i].origen);
             Point destino = posicionesPixeles.get(grafo.posicionAristas[i].destino);
+            //se obtienen dos vertices pero no se sabe exactamente cuales son
+            //obtener el vertice origen y el vertice destino (su posicion en el arreglo)
+            int origenM = 0, destinoM = 0;
+            for (int j = 0; j < grafo.numeroVertices; j++) {
+                    if (grafo.posicionVertices[j] == grafo.posicionAristas[i].origen) {
+                        origenM = j;
+                    } else if (grafo.posicionVertices[j] == grafo.posicionAristas[i].destino) {
+                        destinoM = j;
+                    }
+            }
             //grosor de linea
             // Configurar el grosor de la línea en función del tamaño del vértice
             float grosorLinea = RADIO_VERTICE / 5.0f; // Grosor proporcional al radio del vértice
@@ -231,8 +253,20 @@ public class PanelMapa extends JPanel {
                 g2.setColor(Color.ORANGE);
                 drawArrowLine(g2, origen.x, origen.y, destino.x, destino.y);
             } else {
+                
+                    if (aristasResaltadas != null
+                            && (aristasResaltadas[origenM][destinoM] 
+                            || aristasResaltadas[destinoM][origenM])) {
+                        g2.setColor(Color.ORANGE);
+                    } else {
+                        g2.setColor(Color.BLACK);
+                    }
+                    g2.drawLine(origen.x, origen.y, destino.x, destino.y);
+                
+                /*
                 g2.setColor(Color.ORANGE);
                 g2.drawLine(origen.x, origen.y, destino.x, destino.y);
+                */
             }
 
             //g2.drawString(String.valueOf(grafo.posicionAristas[i].peso), 
@@ -279,6 +313,9 @@ public class PanelMapa extends JPanel {
             Point posicion = posicionesPixeles.get(grafo.posicionVertices[i]);
             int x = posicion.x - RADIO_VERTICE;
             int y = posicion.y - RADIO_VERTICE;
+
+            Color nodoColor = (verticesResaltados != null && verticesResaltados[i] != null) ? verticesResaltados[i]
+            : (areasVertices.contains(i) ? Color.GREEN : Color.RED);
             
             g2.setColor(grafo.posicionVertices[i].tipoZona == 1 ? Color.BLUE : Color.YELLOW);
             g2.fillOval(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2);
@@ -304,11 +341,6 @@ public class PanelMapa extends JPanel {
             //g2.drawString(String.valueOf(i), x + RADIO_VERTICE - 10, y + RADIO_VERTICE + 5);
             areasVertices.add(new Ellipse2D.Double(x, y, RADIO_VERTICE * 2, RADIO_VERTICE * 2));
         }
-
-        //animaciones
-        if (animacionActual != null) {
-            animacionActual.render(g2, posicionesPixeles);
-        }
     }
 
     @Override
@@ -317,6 +349,75 @@ public class PanelMapa extends JPanel {
         if (width > 0 && height > 0) {
             inicializarPosicionesPixeles();
         }
+    }
+
+
+    // Métodos agregados para la lógica de botones y algoritmos
+
+    public void ejecutarNuevoGrafo() {
+        // Crea un nuevo grafo y reinicia las posiciones
+        grafo = new GeneradorGrafo();
+        inicializarPosicionesPixeles();
+        repaint();
+        JOptionPane.showMessageDialog(this, "Se generó un nuevo grafo.");
+    }
+
+    public void ejecutarBFS() {
+        JOptionPane.showMessageDialog(this, "Ejecutando BFS (simulación de animación)...\n" +
+                " - Se pedirá seleccionar un vértice de inicio.\n" +
+                " - Al encontrar un vértice contaminado se pausará la animación.");
+        // ...implementación de animación...
+        repaint();
+    }
+
+    public void ejecutarDFS() {
+        JOptionPane.showMessageDialog(this, "Ejecutando DFS (simulación)...\n" +
+                " - Se recorrerán solo los vértices del tipo seleccionado,\n" +
+                "   con disminución de opacidad en los demás.");
+        // ...implementación de animación...
+        repaint();
+    }
+
+    public void ejecutarDijkstra() {
+        JOptionPane.showMessageDialog(this, "Ejecutando Dijkstra (simulación)...\n" +
+                " - Se pedirá seleccionar vértices de inicio y destino.");
+        // ...implementación de animación y resaltado de la ruta...
+        repaint();
+    }
+
+    public void ejecutarFloyd() {
+        JOptionPane.showMessageDialog(this, "Ejecutando Floyd (simulación)...\n" +
+                " - Se pedirá seleccionar un vértice y calculará caminos a vértices del otro tipo.");
+        // ...implementación de animación e informe de costos...
+        repaint();
+    }
+
+    public void ejecutarPrim() {
+        // Se verifica si existen centros de recolección; aquí se simula
+        JOptionPane.showMessageDialog(this, "Ejecutando Prim (simulación)...\n" +
+                " - Se utilizarán los centros de recolección para formar el MST.");
+        // ...animación del MST...
+        repaint();
+    }
+
+    public void ejecutarKruskal() {
+        // Se verifica si existen centros de recolección; aquí se simula
+        JOptionPane.showMessageDialog(this, "Ejecutando Kruskal (simulación)...\n" +
+                " - Se utilizarán los centros de recolección para formar el MST.");
+        // ...animación del MST...
+        repaint();
+    }
+
+    public void toggleCentros() {
+        // Alterna la visualización de centros de recolección
+        JOptionPane.showMessageDialog(this, "Alternando la visualización de los centros de recolección.");
+        // ...lógica para determinar vértices estratégicos y recalcular colores...
+        repaint();
+    }
+
+    public void terminarEjercicio() {
+        JOptionPane.showMessageDialog(this, "Ejercicio terminado.\nRegresando al menú principal...");
+        // Aquí se llamaría a la función que regresa al menú
     }
 
     public static void main(String[] args) {

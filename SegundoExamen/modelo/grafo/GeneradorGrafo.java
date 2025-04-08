@@ -6,7 +6,7 @@ import java.util.Random;
 public class GeneradorGrafo {
     Random random = new Random();
 
-    public int TAM_MATRIZ = 8;
+    public int TAM_MATRIZ = 12;
     public int[][] matrizVertices;
     public int numeroVertices, numeroAristas;
     public int[][] matrizCostos;

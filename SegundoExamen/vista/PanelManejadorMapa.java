@@ -1,36 +1,34 @@
-package vista;
-
 import javax.swing.*;
-
-import controlador.BotonesControlador;
-import modelo.grafo.GeneradorGrafo;
-
 import java.awt.*;
 
 public class PanelManejadorMapa extends JPanel {
     private PanelMapa panelMapa;
     private JPanel panelBotones;
-
+    // Banderas para rastrear la ejecución de cada algoritmo
+    private boolean bfsEjecutado = false, dfsEjecutado = false, dijkstraEjecutado = false,
+                    floydEjecutado = false, primEjecutado = false, kruskalEjecutado = false;
+                    
+    // Referencia al botón Terminar Ejercicio para activarlo
+    private JButton btnTerminarEjercicio;
+    
     public PanelManejadorMapa() {
-        // Configuración del layout principal
         setLayout(new BorderLayout());
-        
-        // 1. Inicializar componentes
         panelMapa = new PanelMapa();
         panelBotones = crearPanelBotones();
 
-        // 2. Configurar JSplitPane
+        // Configurar JSplitPane
         JSplitPane splitPane = new JSplitPane(
             JSplitPane.HORIZONTAL_SPLIT,
             panelMapa,
             panelBotones
         );
         splitPane.setResizeWeight(0.9); // 90% mapa, 10% botones
-        splitPane.setDividerLocation(0.9); // Posición inicial
-        splitPane.setContinuousLayout(true); // Redibujo continuo al mover divisor
-
-        // 3. Añadir al panel principal
+        splitPane.setDividerLocation(0.9);
+        splitPane.setContinuousLayout(true);
         add(splitPane, BorderLayout.CENTER);
+
+        // Asignar action listeners a los botones
+        asignarEventosBotones();
     }
 
     private JPanel crearPanelBotones() {
@@ -38,17 +36,17 @@ public class PanelManejadorMapa extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Botones de ejemplo con estilo
-        JButton btnNuevoGrafo = crearBotonEstilizado("Nuevo Grafo");
+        JButton btnNuevoGrafo = crearBotonEstilizado("Crear nuevo bosque");
         JButton btnBFS = crearBotonEstilizado("Ejecutar BFS");
         JButton btnDFS = crearBotonEstilizado("Ejecutar DFS");
         JButton btnDijkstra = crearBotonEstilizado("Ejecutar Dijkstra");
         JButton btnFloyd = crearBotonEstilizado("Ejecutar Floyd");
         JButton btnPrim = crearBotonEstilizado("Ejecutar Prim");
         JButton btnKruskal = crearBotonEstilizado("Ejecutar Kruskal");
-        JButton btnCentrosR = crearBotonEstilizado("Mostrar CentrosR");
+        JButton btnCentros = crearBotonEstilizado("Poner centros de recolección");
+        btnTerminarEjercicio = crearBotonEstilizado("Terminar ejercicio");
+        btnTerminarEjercicio.setEnabled(false); // Inhabilitado hasta que se ejecuten todos los algoritmos
 
-        // Espaciado entre botones
         panel.add(btnNuevoGrafo);
         panel.add(Box.createVerticalStrut(10));
         panel.add(btnBFS);
@@ -63,55 +61,87 @@ public class PanelManejadorMapa extends JPanel {
         panel.add(Box.createVerticalStrut(10));
         panel.add(btnKruskal);
         panel.add(Box.createVerticalStrut(10));
-        panel.add(btnCentrosR);
+        panel.add(btnCentros);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(btnTerminarEjercicio);
 
         return panel;
+    }
+
+    private void asignarEventosBotones() {
+        // Asignar eventos a los botones según su texto
+        getBoton("Crear nuevo bosque").addActionListener(e -> {
+            panelMapa.ejecutarNuevoGrafo();
+        });
+        getBoton("Ejecutar BFS").addActionListener(e -> {
+            panelMapa.ejecutarBFS();
+            bfsEjecutado = true;
+            activarTerminarSiCorresponde();
+        });
+        getBoton("Ejecutar DFS").addActionListener(e -> {
+            panelMapa.ejecutarDFS();
+            dfsEjecutado = true;
+            activarTerminarSiCorresponde();
+        });
+        getBoton("Ejecutar Dijkstra").addActionListener(e -> {
+            panelMapa.ejecutarDijkstra();
+            dijkstraEjecutado = true;
+            activarTerminarSiCorresponde();
+        });
+        getBoton("Ejecutar Floyd").addActionListener(e -> {
+            panelMapa.ejecutarFloyd();
+            floydEjecutado = true;
+            activarTerminarSiCorresponde();
+        });
+        getBoton("Ejecutar Prim").addActionListener(e -> {
+            panelMapa.ejecutarPrim();
+            primEjecutado = true;
+            activarTerminarSiCorresponde();
+        });
+        getBoton("Ejecutar Kruskal").addActionListener(e -> {
+            panelMapa.ejecutarKruskal();
+            kruskalEjecutado = true;
+            activarTerminarSiCorresponde();
+        });
+        getBoton("Poner centros de recolección").addActionListener(e -> {
+            panelMapa.toggleCentros();
+        });
+        btnTerminarEjercicio.addActionListener(e -> {
+            panelMapa.terminarEjercicio();
+        });
+    }
+
+    private void activarTerminarSiCorresponde() {
+        // Si se han ejecutado todos los algoritmos, habilitar el botón Terminar Ejercicio
+        if (bfsEjecutado && dfsEjecutado && dijkstraEjecutado &&
+            floydEjecutado && primEjecutado && kruskalEjecutado) {
+            btnTerminarEjercicio.setEnabled(true);
+        }
     }
 
     private JButton crearBotonEstilizado(String texto) {
         JButton boton = new JButton(texto);
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40)); // Altura fija
-        boton.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        boton.setFocusPainted(false);
-        boton.setBackground(new Color(70, 130, 180)); // SteelBlue
-        boton.setForeground(Color.WHITE);
-        boton.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createRaisedBevelBorder(),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
         return boton;
     }
 
-    // Métodos para acceder a los componentes desde el controlador
-    public PanelMapa getPanelMapa() {
-        return panelMapa;
-    }
-
-    public JButton getBoton(String nombre) {
+    private JButton getBoton(String texto) {
         for (Component comp : panelBotones.getComponents()) {
-            if (comp instanceof JButton && ((JButton)comp).getText().equals(nombre)) {
-                return (JButton)comp;
+            if (comp instanceof JButton && ((JButton) comp).getText().equals(texto)) {
+                return (JButton) comp;
             }
         }
         return null;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Prueba BFS");
-            GeneradorGrafo modelo = new GeneradorGrafo();
-            PanelManejadorMapa panel = new PanelManejadorMapa();
-            
-            // Configurar controlador
-            new BotonesControlador(panel, modelo);
-            
-            frame.add(panel);
-            frame.setSize(1000, 600);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-        });
-    }
 
+    public static void main(String[] args) {
+        JFrame ventana = new JFrame("Grafo Interactivo");
+        ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ventana.setSize(800, 600);
+        ventana.setLocationRelativeTo(null);
+        ventana.add(new PanelManejadorMapa());
+        ventana.setVisible(true);
+    }
+        
 }

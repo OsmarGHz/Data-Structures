@@ -1204,6 +1204,7 @@ public class GuardianesDelBosques extends JFrame {
 
     //Ejercicio final
     private JPanel crearModuloEjercicioFinal() {
+        /*
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setBackground(new Color(206, 212, 169));
         
@@ -1217,6 +1218,9 @@ public class GuardianesDelBosques extends JFrame {
         panelDerecho.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
         
         return panelPrincipal;
+        */
+        PanelManejadorMapa panelManejador = new PanelManejadorMapa();
+        return panelManejador;
     }
 
     //Certificado
@@ -1386,7 +1390,7 @@ public class GuardianesDelBosques extends JFrame {
         panelGato.setBackground(new Color(199, 203, 165));
         panelGato.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     
-        ImageIcon iconoGato = new ImageIcon(getClass().getResource("/SegundoExamen/recursos/gatoR.PNG"));
+        ImageIcon iconoGato = new ImageIcon(getClass().getResource("/recursos/gatoR.PNG"));
         if (iconoGato.getImageLoadStatus() == MediaTracker.COMPLETE) {
             Image imagenGato = iconoGato.getImage().getScaledInstance(200, 250, Image.SCALE_SMOOTH);
             JLabel lblGato = new JLabel(new ImageIcon(imagenGato));
