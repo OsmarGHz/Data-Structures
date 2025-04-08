@@ -1,5 +1,6 @@
 package modelo.grafo;
 
+import java.util.ArrayList;
 import java.util.Random;
 //import java.lang.Math;
 
@@ -11,8 +12,10 @@ public class GeneradorGrafo {
     public int numeroVertices, numeroAristas;
     public int[][] matrizCostos;
     public posVertice[] posicionVertices;
-    public Arista[] posicionAristas;
+    public Aro[] posicionAristas;
     public boolean esDirigido;
+
+    public java.util.ArrayList<java.util.ArrayList<Arista>> listaAdyacencia; // Lista de adyacencia de aristas ponderadas
 
     public GeneradorGrafo(){
         inicializarGrafo();
@@ -101,13 +104,13 @@ public class GeneradorGrafo {
         return posicionVertices;
     }
 
-    public Arista[] guardarPosAristas() {
+    public Aro[] guardarPosAristas() {
         //guarda las posiciones de las aristas
         int aux = 0;
         for (int i = 0; i < numeroVertices; i++) {
             for (int j = 0; j < numeroVertices; j++) {
                 if (matrizCostos[i][j] != 0) {
-                    posicionAristas[aux] = new Arista(posicionVertices[i], posicionVertices[j], matrizCostos[i][j]);
+                    posicionAristas[aux] = new Aro(posicionVertices[i], posicionVertices[j], matrizCostos[i][j]);
                     aux++;
                 }
             }
@@ -117,6 +120,57 @@ public class GeneradorGrafo {
     //generar la matriz de costos en base a
     //la matriz de vertices
     public int[][] generarMatrizCostos() {
+        // Inicializar lista de adyacencia
+        listaAdyacencia.clear();
+        for (int i = 0; i < numeroVertices; i++) {
+            listaAdyacencia.add(new ArrayList<>());
+        }
+
+        // Primera pasada: conexiones aleatorias
+        for (int i = 0; i < numeroVertices; i++) {
+            for (int j = 0; j < numeroVertices; j++) {
+                if (i != j && probabilidadAparecer(2)) {
+                    int peso = (int) calcularDistancia(posicionVertices[i], posicionVertices[j]);
+                    matrizCostos[i][j] = peso;
+                    matrizCostos[j][i] = peso; // Para mantener la simetría en la matriz de costos
+                    agregarArista(i, j, peso); // Nueva función optimizada
+                }
+            }
+        }
+
+        // Segunda pasada: garantizar al menos una arista saliente
+        for (int i = 0; i < numeroVertices; i++) {
+            if (listaAdyacencia.get(i).isEmpty()) {
+                int otroVertice;
+                do {
+                    otroVertice = random.nextInt(numeroVertices);
+                } while (otroVertice == i);
+                
+                int peso = (int) calcularDistancia(posicionVertices[i], posicionVertices[otroVertice]);
+                matrizCostos[i][otroVertice] = peso;
+                agregarArista(i, otroVertice, peso);
+            }
+        }
+        return matrizCostos;
+    }
+
+    private void agregarArista(int origen, int destino, int peso) {
+        // Verificar si la arista ya existe (para no duplicar)
+        for (Arista arista : listaAdyacencia.get(origen)) {
+            if (arista.destino == destino) {
+                return;
+            }
+        }
+        
+        // Agregar arista en ambas direcciones si el grafo es no dirigido
+        listaAdyacencia.get(origen).add(new Arista(destino, peso));
+
+        listaAdyacencia.get(destino).add(new Arista(origen, peso));
+
+    }
+
+    //genera una matriz pero no guarda en la lista de adyacencia
+    public int[][] generarMatrizCostos2() {
         // Primera pasada: generar conexiones con una probabilidad del 50%
         for (int i = 0; i < numeroVertices; i++) {
             for (int j = 0; j < numeroVertices; j++) { // Ahora recorremos toda la matriz
@@ -276,29 +330,83 @@ public class GeneradorGrafo {
         }
     }
 
-    private void inicializarGrafo() {
-        matrizVertices = new int[TAM_MATRIZ][TAM_MATRIZ]; // Asegura que la matriz se inicializa
-        
-        llenarMatriz();
-        numeroVertices = contarVertices();
-        posicionVertices = new posVertice[numeroVertices];
-        guardarPosVertices();
-        
-        matrizCostos = new int[numeroVertices][numeroVertices];
-
-        matrizCostos = generarMatrizCostos();
-        numeroAristas = contarAristas();
-        posicionAristas = new Arista[numeroAristas];
-        guardarPosAristas();
-        mostrarMatriz();
-        //mostrarMatrizCostos();
-        //grafoDirigido(matrizCostos);
-        grafoNoDirigido(matrizCostos);
-        numeroAristas = contarAristas();
-        posicionAristas = new Arista[numeroAristas];
-        guardarPosAristas();
-        //mostrarMatrizCostos();
+    public void generarGrafoConexo() {
+        listaAdyacencia.clear();
+        for (int i = 0; i < numeroVertices; i++) {
+            listaAdyacencia.add(new ArrayList<>());
+        }
+    
+        boolean[] visitado = new boolean[numeroVertices];
+        ArrayList<Integer> noVisitados = new ArrayList<>();
+        for (int i = 0; i < numeroVertices; i++) noVisitados.add(i);
+    
+        // Escoge un nodo inicial al azar
+        int actual = random.nextInt(numeroVertices);
+        visitado[actual] = true;
+        noVisitados.remove(Integer.valueOf(actual));
+    
+        while (!noVisitados.isEmpty()) {
+            int siguiente = noVisitados.get(random.nextInt(noVisitados.size()));
+    
+            // Encuentra un nodo ya conectado para unirlo
+            ArrayList<Integer> conectados = new ArrayList<>();
+            for (int i = 0; i < numeroVertices; i++) {
+                if (visitado[i]) conectados.add(i);
+            }
+    
+            int destino = conectados.get(random.nextInt(conectados.size()));
+    
+            int peso = (int) calcularDistancia(posicionVertices[siguiente], posicionVertices[destino]);
+            matrizCostos[siguiente][destino] = peso;
+            matrizCostos[destino][siguiente] = peso;
+            agregarArista(siguiente, destino, peso);
+    
+            visitado[siguiente] = true;
+            noVisitados.remove(Integer.valueOf(siguiente));
+        }
+    
+        // Opcional: añadir más aristas aleatorias para "rellenar"
+        for (int i = 0; i < numeroVertices; i++) {
+            for (int j = i + 1; j < numeroVertices; j++) {
+                if (matrizCostos[i][j] == 0 && probabilidadAparecer(10)) { // probabilidad de arista extra
+                    int peso = (int) calcularDistancia(posicionVertices[i], posicionVertices[j]);
+                    matrizCostos[i][j] = peso;
+                    matrizCostos[j][i] = peso;
+                    agregarArista(i, j, peso);
+                }
+            }
+        }
     }
+    
+    private void inicializarGrafo() {
+        matrizVertices = new int[TAM_MATRIZ][TAM_MATRIZ]; // Inicializa matriz de vértices
+    
+        llenarMatriz(); // Llena la matriz con zonas aleatorias
+        numeroVertices = contarVertices(); // Cuenta los vértices creados
+    
+        // Asegura que haya al menos 2 vértices para poder generar un grafo conexo
+        if (numeroVertices < 2) {
+            // Puedes forzar la creación de al menos 2 vértices si quieres
+            matrizVertices[random.nextInt(TAM_MATRIZ)][random.nextInt(TAM_MATRIZ)] = tipoZona();
+            matrizVertices[random.nextInt(TAM_MATRIZ)][random.nextInt(TAM_MATRIZ)] = tipoZona();
+            numeroVertices = contarVertices();
+        }
+    
+        posicionVertices = new posVertice[numeroVertices];
+        guardarPosVertices(); // Guarda posiciones (x, y) de cada vértice
+    
+        listaAdyacencia = new ArrayList<>(numeroVertices);
+        matrizCostos = new int[numeroVertices][numeroVertices];
+    
+        generarGrafoConexo(); // ← ¡Aquí garantizamos que el grafo sea conexo!
+    
+        numeroAristas = contarAristas();
+        posicionAristas = new Aro[numeroAristas];
+        guardarPosAristas();
+    
+        mostrarMatriz(); // Opcional: muestra la matriz de vértices (no la de costos)
+    }
+    
     
     public static void main(String[] args) {
 

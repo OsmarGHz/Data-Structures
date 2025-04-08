@@ -1,7 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 
 public class PanelManejadorMapa extends JPanel {
+    private GuardianesDelBosques guardian;
     private PanelMapa panelMapa;
     private JPanel panelBotones;
     // Banderas para rastrear la ejecución de cada algoritmo
@@ -10,8 +13,31 @@ public class PanelManejadorMapa extends JPanel {
                     
     // Referencia al botón Terminar Ejercicio para activarlo
     private JButton btnTerminarEjercicio;
-    
+
+    // Constructor por defecto
     public PanelManejadorMapa() {
+        setLayout(new BorderLayout());
+        panelMapa = new PanelMapa();
+        panelBotones = crearPanelBotones();
+
+        // Configurar JSplitPane
+        JSplitPane splitPane = new JSplitPane(
+            JSplitPane.HORIZONTAL_SPLIT,
+            panelMapa,
+            panelBotones
+        );
+        splitPane.setResizeWeight(0.95); // 90% mapa, 10% botones
+        splitPane.setDividerLocation(0.95);
+        splitPane.setContinuousLayout(true);
+        add(splitPane, BorderLayout.CENTER);
+
+        // Asignar action listeners a los botones
+        asignarEventosBotones();
+    }
+    
+    public PanelManejadorMapa(GuardianesDelBosques guardian) {
+        this.guardian = guardian;
+
         setLayout(new BorderLayout());
         panelMapa = new PanelMapa();
         panelBotones = crearPanelBotones();
@@ -43,7 +69,8 @@ public class PanelManejadorMapa extends JPanel {
         JButton btnFloyd = crearBotonEstilizado("Ejecutar Floyd");
         JButton btnPrim = crearBotonEstilizado("Ejecutar Prim");
         JButton btnKruskal = crearBotonEstilizado("Ejecutar Kruskal");
-        JButton btnCentros = crearBotonEstilizado("Poner centros de recolección");
+        //JButton btnCentros = crearBotonEstilizado("Poner centros de recolección");
+        JToggleButton btnCentros = crearBotonEstilizadoT("Poner centros de recolección");
         btnTerminarEjercicio = crearBotonEstilizado("Terminar ejercicio");
         btnTerminarEjercicio.setEnabled(false); // Inhabilitado hasta que se ejecuten todos los algoritmos
 
@@ -103,12 +130,22 @@ public class PanelManejadorMapa extends JPanel {
             kruskalEjecutado = true;
             activarTerminarSiCorresponde();
         });
-        getBoton("Poner centros de recolección").addActionListener(e -> {
+        getBotonT("Poner centros de recolección").addActionListener(e -> {
             panelMapa.toggleCentros();
+            //panelMapa.setBoton(btnCentros);  // Aquí pasas el botón a PanelMapa
         });
-        btnTerminarEjercicio.addActionListener(e -> {
-            panelMapa.terminarEjercicio();
-        });
+
+        if (guardian == null) {
+            btnTerminarEjercicio.addActionListener(e -> {
+                panelMapa.terminarEjercicio();
+            });
+        } else {
+            btnTerminarEjercicio.addActionListener(e -> {
+                JOptionPane.showMessageDialog(this, "Ejercicio terminado.\nRegresando al menú principal...");
+                guardian.recargarPantallaModulos();
+            });
+        }
+
     }
 
     private void activarTerminarSiCorresponde() {
@@ -121,6 +158,13 @@ public class PanelManejadorMapa extends JPanel {
 
     private JButton crearBotonEstilizado(String texto) {
         JButton boton = new JButton(texto);
+        boton.setBackground(new Color(87, 124, 88));
+        boton.setForeground(Color.WHITE);
+        //boton.setMaximumSize(new Dimension(ancho, 40));
+        boton.setFont(cargarFuente("recursos/fuenteTitulo.ttf", 16f));
+        boton.setFocusPainted(false);
+        boton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         boton.setAlignmentX(Component.CENTER_ALIGNMENT);
         return boton;
     }
@@ -132,6 +176,41 @@ public class PanelManejadorMapa extends JPanel {
             }
         }
         return null;
+    }
+
+    private JToggleButton crearBotonEstilizadoT(String texto) {
+        JToggleButton boton = new JToggleButton(texto);
+        boton.setBackground(new Color(87, 124, 88));
+        boton.setForeground(Color.WHITE);
+        //boton.setMaximumSize(new Dimension(ancho, 40));
+        boton.setFont(cargarFuente("recursos/fuenteTitulo.ttf", 16f));
+        boton.setFocusPainted(false);
+        boton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return boton;
+    }
+
+    private JToggleButton getBotonT(String texto) {
+        for (Component comp : panelBotones.getComponents()) {
+            if (comp instanceof JToggleButton && ((JToggleButton) comp).getText().equals(texto)) {
+                return (JToggleButton) comp;
+            }
+        }
+        return null;
+    }
+
+        // Cargar fuentes
+    public Font cargarFuente(String ruta, float tamaño) {
+        try {
+            Font fuente = Font.createFont(Font.TRUETYPE_FONT, new File(ruta));
+            fuente = fuente.deriveFont(tamaño);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(fuente);
+            return fuente;
+        } catch (IOException | FontFormatException e) {
+            System.err.println("Error al cargar fuente: " + ruta);
+            return new Font("SansSerif", Font.PLAIN, (int)tamaño);
+        }
     }
 
 

@@ -1,16 +1,20 @@
 package modelo.grafo;
 
 public class Arista {
-    public posVertice origen, destino;
+    public int origen;   // Nuevo campo para el origen (opcional)
+    public int destino;
     public int peso;
-    
-    public Arista(posVertice posicionVertices, posVertice posicionVertices2, int peso) {
-        this.origen = posicionVertices;
-        this.destino = posicionVertices2;
+
+    // Constructor original (usado para representar aristas del grafo)
+    public Arista(int destino, int peso) {
+        this.destino = destino;
         this.peso = peso;
     }
 
-    public Arista(posVertice origen, posVertice destino) {
-        this(origen, destino, 1);
+    // Nuevo constructor para el MST que almacena origen, destino y peso
+    public Arista(int origen, int destino, int peso) {
+        this.origen = origen;
+        this.destino = destino;
+        this.peso = peso;
     }
 }

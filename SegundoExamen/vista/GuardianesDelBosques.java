@@ -1219,7 +1219,7 @@ public class GuardianesDelBosques extends JFrame {
         
         return panelPrincipal;
         */
-        PanelManejadorMapa panelManejador = new PanelManejadorMapa();
+        PanelManejadorMapa panelManejador = new PanelManejadorMapa(this);
         return panelManejador;
     }
 
@@ -1321,7 +1321,7 @@ public class GuardianesDelBosques extends JFrame {
         }
 
     //buffer de los modulos en si los actualiza
-    private void recargarPantallaModulos() {
+    public void recargarPantallaModulos() {
 
         Component[] components = mainPanel.getComponents();
         for (int i = 0; i < components.length; i++) {
