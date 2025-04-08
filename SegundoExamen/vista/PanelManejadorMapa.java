@@ -1,18 +1,21 @@
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import javax.swing.*;
 
 public class PanelManejadorMapa extends JPanel {
     private GuardianesDelBosques guardian;
     private PanelMapa panelMapa;
     private JPanel panelBotones;
+    
     // Banderas para rastrear la ejecución de cada algoritmo
     private boolean bfsEjecutado = false, dfsEjecutado = false, dijkstraEjecutado = false,
                     floydEjecutado = false, primEjecutado = false, kruskalEjecutado = false;
                     
     // Referencia al botón Terminar Ejercicio para activarlo
     private JButton btnTerminarEjercicio;
+
+    
 
     // Constructor por defecto
     public PanelManejadorMapa() {
@@ -35,6 +38,14 @@ public class PanelManejadorMapa extends JPanel {
         asignarEventosBotones();
     }
     
+    // Método que se llama cuando el usuario completa el ejercicio
+    public void ejercicioCompletado() {
+        if (guardian != null) {
+            guardian.evaluarResultadoFinal(1, 1, 4); // Módulo 4 completado
+            guardian.recargarPantallaModulos();
+        }
+    }
+
     public PanelManejadorMapa(GuardianesDelBosques guardian) {
         this.guardian = guardian;
 
@@ -55,8 +66,11 @@ public class PanelManejadorMapa extends JPanel {
 
         // Asignar action listeners a los botones
         asignarEventosBotones();
+
+        
     }
 
+    
     private JPanel crearPanelBotones() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -95,7 +109,7 @@ public class PanelManejadorMapa extends JPanel {
         return panel;
     }
 
-    private void asignarEventosBotones() {
+    public void asignarEventosBotones() {
         // Asignar eventos a los botones según su texto
         getBoton("Crear nuevo bosque").addActionListener(e -> {
             panelMapa.ejecutarNuevoGrafo();
@@ -141,9 +155,15 @@ public class PanelManejadorMapa extends JPanel {
             });
         } else {
             btnTerminarEjercicio.addActionListener(e -> {
-                JOptionPane.showMessageDialog(this, "Ejercicio terminado.\nRegresando al menú principal...");
-                guardian.recargarPantallaModulos();
+                JOptionPane.showMessageDialog(this, 
+                    "¡Felicidades! Has completado todos los algoritmos requeridos.\n" +
+                    "Ejercicio final terminado correctamente.",
+                    "Ejercicio Completado", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                ejercicioCompletado(); // Notificar que se completó el módulo 4
             });
+        
         }
 
     }
@@ -161,7 +181,7 @@ public class PanelManejadorMapa extends JPanel {
         boton.setBackground(new Color(87, 124, 88));
         boton.setForeground(Color.WHITE);
         //boton.setMaximumSize(new Dimension(ancho, 40));
-        boton.setFont(cargarFuente("recursos/fuenteTitulo.ttf", 16f));
+        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
         boton.setFocusPainted(false);
         boton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -183,7 +203,7 @@ public class PanelManejadorMapa extends JPanel {
         boton.setBackground(new Color(87, 124, 88));
         boton.setForeground(Color.WHITE);
         //boton.setMaximumSize(new Dimension(ancho, 40));
-        boton.setFont(cargarFuente("recursos/fuenteTitulo.ttf", 16f));
+        boton.setFont(cargarFuente("SegundoExamen\\recursos\\fuenteTitulo.ttf", 16f));
         boton.setFocusPainted(false);
         boton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));

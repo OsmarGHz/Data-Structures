@@ -438,7 +438,7 @@ public class GuardianesDelBosques extends JFrame {
 
     panelModulos.add(crearModulo(
         "Módulo DOS:<br>Optimización<br>de rutas", 
-        "SegundoExamen\\recursos\\Modulo2.png", 
+        "SegundoExamen\\recursos\\modulo2.png", 
         usuarioActual != null && usuarioActual.modulo1Completado, // Solo si módulo 1 completado
         "MODULO2", 
         "EJERCICIO2"
@@ -480,7 +480,7 @@ public class GuardianesDelBosques extends JFrame {
     }
 
     // Botón de certificado (actualizado)
-    botonCertificado = new JButton(usuarioActual != null && usuarioActual.todosModulosCompletados() 
+    botonCertificado = new JButton(usuarioActual != null && usuarioActual.todosModulosCompletados() && usuarioActual.ejercicioFinalCompletado
     ? "DESCARGAR CERTIFICADO" 
     : "DESCARGAR CERTIFICADO (BLOQUEADO)");
     botonCertificado.setEnabled(usuarioActual != null && usuarioActual.todosModulosCompletados() && usuarioActual.ejercicioFinalCompletado);
@@ -1204,23 +1204,8 @@ public class GuardianesDelBosques extends JFrame {
 
     //Ejercicio final
     private JPanel crearModuloEjercicioFinal() {
-        /*
-        JPanel panelPrincipal = new JPanel(new BorderLayout());
-        panelPrincipal.setBackground(new Color(206, 212, 169));
-        
-        // Panel izquierdo (imagen y título)
-        JPanel panelIzquierdo = crearPanelLateral(4);
-        
-        // Panel derecho (contenido del ejercicio)
-        JPanel panelDerecho = new JPanel();
-        panelDerecho.setLayout(new BoxLayout(panelDerecho, BoxLayout.Y_AXIS));
-        panelDerecho.setBackground(new Color(226, 229, 203));
-        panelDerecho.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
-        
-        return panelPrincipal;
-        */
         PanelManejadorMapa panelManejador = new PanelManejadorMapa(this);
-        return panelManejador;
+        return panelManejador; 
     }
 
     //Certificado
@@ -1273,7 +1258,7 @@ public class GuardianesDelBosques extends JFrame {
 
 
     //Evalua los resultados
-    private void evaluarResultadoFinal(int correctas, int totalPreguntas, int moduloActual){
+    public void evaluarResultadoFinal(int correctas, int totalPreguntas, int moduloActual){
         if (correctas >= totalPreguntas * 0.7) {
                 // Marcar el módulo actual como completado
                 switch(moduloActual) {
