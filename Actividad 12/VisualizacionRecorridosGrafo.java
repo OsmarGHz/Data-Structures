@@ -182,7 +182,46 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         return aristas + contarAristas(vertice.izq) + contarAristas(vertice.der);
     }
     
-
+private void iniciarAnimacionRecorrido(final List<VerticeBinario> recorridoList, final String resumen) {
+        final List<VerticeBinario> recorridoAnimado = new ArrayList<>();
+        final Timer timer = new Timer(1500, null);
+        timer.addActionListener(new ActionListener() {
+            int index = 0;
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (index < recorridoList.size()) {
+                    recorridoAnimado.add(recorridoList.get(index));
+                    panelGrafo.setRecorrido(new ArrayList<>(recorridoAnimado));
+                    index++;
+                } else {
+                    timer.stop();
+                    mostrarResumen(resumen);
+                }
+            }
+        });
+        timer.start();
+    }
+     private void mostrarResumen(String resumen) {
+        JDialog dialog = new JDialog(this, "Resumen del Recorrido", true);
+        dialog.setSize(300, 150);
+        dialog.setLocationRelativeTo(this);
+        JTextArea areaResumen = new JTextArea(resumen);
+        areaResumen.setEditable(false);
+        JButton btnCerrar = new JButton("Cerrar");
+        btnCerrar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.dispose();
+                // limpia el  árbol para poder ver el otro recorrido
+                panelGrafo.setRecorrido(new ArrayList<VerticeBinario>());
+            }
+        });
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JScrollPane(areaResumen), BorderLayout.CENTER);
+        panel.add(btnCerrar, BorderLayout.SOUTH);
+        dialog.setContentPane(panel);
+        dialog.setVisible(true);
+    }
     private void recorridoInorden() {
         if (raiz == null) {
             txtResumen.setText("No hay árbol para recorrer.");
@@ -194,8 +233,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         for (VerticeBinario v : inordenList) {
             sb.append(v.getDato()).append(" ");
         }
-        txtResumen.setText(sb.toString());
-        panelGrafo.setRecorrido(inordenList);
+       iniciarAnimacionRecorrido(inordenList, sb.toString());
     }
 
     private void inorden(VerticeBinario vertice, List<VerticeBinario> list) {
@@ -216,8 +254,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         for (VerticeBinario v : postordenList) {
             sb.append(v.getDato()).append(" ");
         }
-        txtResumen.setText(sb.toString());
-        panelGrafo.setRecorrido(postordenList);
+       iniciarAnimacionRecorrido(postordenList, sb.toString());
     }
 
     private void postorden(VerticeBinario vertice, List<VerticeBinario> list) {
