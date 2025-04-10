@@ -12,14 +12,14 @@ import java.util.Queue;
 
 //Panel donde dibujaremos el arbol
 class PanelGrafo extends JPanel{
-    private final int RADIO_VERTICE = 25;
+    private final int RADIO_VERTICE = 50;
     private ArbolGeneral grafoBinario;
 
     //Se generara un panel en donde, al dibujar el arbol, los nodos se acomodaran como si fuera un arbol binario real
     //Los nodos tendran un tamano fijo relativamente grande. En caso de requerir mas espacio, se usara scroll horitontal y vertical en el panel
     
     public PanelGrafo() {
-        setPreferredSize(new Dimension(800, 600));
+        setPreferredSize(new Dimension(1000, 700));
         setBackground(Color.WHITE);
         setLayout(null); // Usar diseño nulo para posicionar los nodos manualmente
     }
@@ -39,8 +39,10 @@ class PanelGrafo extends JPanel{
 
     private void dibujarArbol(Graphics g, VerticeBinario nodo, int x, int y, int offset) {
         if (nodo != null) {
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+
             // Dibuja el nodo
-            g.setColor(Color.BLUE);
+            g.setColor(new Color(0xFFAA00));
             g.fillOval(x - RADIO_VERTICE / 2, y - RADIO_VERTICE / 2, RADIO_VERTICE, RADIO_VERTICE);
             g.setColor(Color.WHITE);
             g.drawString(String.valueOf(nodo.dato), x - 5, y + 5);
@@ -135,6 +137,29 @@ class ArbolGeneral {
         return buscarNodo(nodo.right, dato); // Buscar en el subárbol derecho
     }
 
+    //Funcion para eliminar un nodo del arbol
+    public boolean eliminarNodo(VerticeBinario nodo, int dato) {
+        if (nodo == null) {
+            return false;
+        }
+        if (nodo.dato == dato) {
+            nodo = null; // Eliminar el nodo
+            return true;
+        }
+        boolean eliminadoIzquierdo = eliminarNodo(nodo.left, dato);
+        if (eliminadoIzquierdo) {
+            nodo.left = null; // Eliminar el hijo izquierdo
+            return true;
+        }
+        boolean eliminadoDerecho = eliminarNodo(nodo.right, dato);
+        if (eliminadoDerecho) {
+            nodo.right = null; // Eliminar el hijo derecho
+            return true;
+        }
+        return false;
+    }
+
+
 }
 
 public class Vista extends JFrame{
@@ -144,7 +169,7 @@ public class Vista extends JFrame{
     public Vista(){
         super("Arbol Binario: Preorden, Inorden y Posorden");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 600);
+        setSize(1000, 700);
         setLocationRelativeTo(null);
         setResizable(true);
         setLayout(new BorderLayout());
@@ -185,9 +210,9 @@ public class Vista extends JFrame{
         btnModificarNodo.addActionListener(e -> modificarNodo());
         barraHerramientas.add(btnModificarNodo);
 
-        // JButton btnEliminarNodo = new JButton("Eliminar Nodo");
-        // btnEliminarNodo.addActionListener(e -> eliminarNodoEHijos());
-        // barraHerramientas.add(btnEliminarNodo);
+        JButton btnEliminarNodo = new JButton("Eliminar Nodo");
+        btnEliminarNodo.addActionListener(e -> eliminarNodoEHijos());
+        barraHerramientas.add(btnEliminarNodo);
 
         // JButton btnRecorrerPreorden = new JButton("Recorrer Preorden");
         // btnRecorrerPreorden.addActionListener(e -> recorrerPreorden());
@@ -217,16 +242,22 @@ public class Vista extends JFrame{
         panelGrafo = new PanelGrafo();
         panelGrafo.setGrafo(grafoBinario);
         add(panelGrafo, BorderLayout.CENTER);
+
+        //Scrollbar para el panel
+        JScrollPane scrollPane = new JScrollPane(panelGrafo);
+        scrollPane.setPreferredSize(new Dimension(1000, 700));
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        add(scrollPane, BorderLayout.CENTER);
+
+
     }
 
     //Funcion para reiniciar el arbol
     private void resetVistaGrafo() {
-        grafoBinario = new ArbolGeneral();
-        panelGrafo = new PanelGrafo();
+        grafoBinario.reset();
         panelGrafo.setGrafo(grafoBinario);
-        add(panelGrafo, BorderLayout.CENTER);
-        revalidate();
-        repaint();
+        JOptionPane.showMessageDialog(this, "Arbol reiniciado.");
     }
 
     //Funcion para agregar un hijo al arbol. Se preguntara si se inserta a la izquierda o a la derecha del padre
@@ -248,18 +279,37 @@ public class Vista extends JFrame{
         String hijoStr = JOptionPane.showInputDialog(this, "Ingrese el nodo hijo:");
         if (padreStr != null && hijoStr != null) {
             int padre = Integer.parseInt(padreStr);
+            //Se busca si existe el nodo padre en el arbol
+            if(grafoBinario.buscarNodo(grafoBinario.root, padre) == null){
+                JOptionPane.showMessageDialog(this, "El nodo padre no existe en el arbol.");
+                return;
+            }
             int hijo = Integer.parseInt(hijoStr);
-            String lado = JOptionPane.showInputDialog(this, "¿Izquierda o Derecha? (I/D):");
-            if (lado != null) {
-                if (lado.equalsIgnoreCase("I")) {
-                    grafoBinario.agregarHijoIzquierdo(padre, hijo);
-                } else if (lado.equalsIgnoreCase("D")) {
-                    grafoBinario.agregarHijoDerecho(padre, hijo);
-                }else{
-                    JOptionPane.showMessageDialog(this, "Opcion no valida. Solo se aceptan I o D");
-                    return;
+            //Se busca si ya existe el valor del nodo hijo en el arbol
+            if(grafoBinario.buscarNodo(grafoBinario.root, hijo) != null){
+                JOptionPane.showMessageDialog(this, "El nodo hijo ya existe en el arbol.");
+                return;
+            }else{
+                String lado = JOptionPane.showInputDialog(this, "¿Izquierda o Derecha? (I/D):");
+                if (lado != null) {
+                    if (lado.equalsIgnoreCase("I")) {
+                        if(grafoBinario.agregarHijoIzquierdo(padre, hijo)){
+                            JOptionPane.showMessageDialog(this, "Nodo hijo agregado a la izquierda del padre.");
+                        }else{
+                            JOptionPane.showMessageDialog(this, "El nodo padre ya tiene un hijo a la izquierda.");
+                        }
+                    } else if (lado.equalsIgnoreCase("D")) {
+                        if(grafoBinario.agregarHijoDerecho(padre, hijo)){
+                            JOptionPane.showMessageDialog(this, "Nodo hijo agregado a la derecha del padre.");
+                        }else{
+                            JOptionPane.showMessageDialog(this, "El nodo padre ya tiene un hijo a la derecha.");
+                        }
+                    }else{
+                        JOptionPane.showMessageDialog(this, "Opcion no valida. Solo se aceptan I o D");
+                        return;
+                    }
+                    panelGrafo.setGrafo(grafoBinario);
                 }
-                panelGrafo.setGrafo(grafoBinario);
             }
         }
     }
@@ -272,9 +322,40 @@ public class Vista extends JFrame{
             int nodo = Integer.parseInt(nodoStr);
             int nuevo = Integer.parseInt(nuevoStr);
             VerticeBinario vertice = grafoBinario.buscarNodo(grafoBinario.root, nodo);
+            if (vertice == null) {
+                JOptionPane.showMessageDialog(this, "El nodo no existe en el arbol.");
+                return;
+            }
             if (vertice != null) {
-                vertice.dato = nuevo;
+                //Se busca si ya existe el valor del nodo hijo en el arbol
+                if(grafoBinario.buscarNodo(grafoBinario.root, nuevo) != null){
+                    JOptionPane.showMessageDialog(this, "El nuevo nodo ya existe en el arbol.");
+                    return;
+                }else{
+                    vertice.dato = nuevo;
+                    panelGrafo.setGrafo(grafoBinario);
+                    JOptionPane.showMessageDialog(this, "Nodo modificado correctamente.");
+                }
+            }
+        }
+    }
+
+    //Funcion para eliminar un nodo y sus hijos del arbol
+    private void eliminarNodoEHijos() {
+        String nodoStr = JOptionPane.showInputDialog(this, "Ingrese el nodo a eliminar:");
+        if (nodoStr != null) {
+            int nodo = Integer.parseInt(nodoStr);
+            VerticeBinario vertice = grafoBinario.buscarNodo(grafoBinario.root, nodo);
+            if (vertice == null) {
+                JOptionPane.showMessageDialog(this, "El nodo no existe en el arbol.");
+                return;
+            }
+            if (vertice != null) {
+                vertice.left = null;
+                vertice.right = null;
+                grafoBinario.eliminarNodo(grafoBinario.root, nodo);
                 panelGrafo.setGrafo(grafoBinario);
+                JOptionPane.showMessageDialog(this, "Nodo eliminado correctamente.");
             }
         }
     }
