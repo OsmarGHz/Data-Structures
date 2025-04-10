@@ -13,7 +13,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class VisualizacionRecorridosGrafo extends JFrame {
@@ -32,9 +31,14 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         panelGrafo = new PanelGrafo();
 
         JPanel panelBotones = new JPanel(new GridLayout(1, 4, 5, 5));
+
         JButton btnInsertar = new JButton("Insertar Vertice");
         btnInsertar.addActionListener(e -> insertarVe());
         panelBotones.add(btnInsertar);
+
+        JButton btnEliminar = new JButton("Eliminar Vertice");
+        btnEliminar.addActionListener(e -> eliminarVe());
+        panelBotones.add(btnEliminar);
 
         JButton btnCargarArchivo = new JButton("Cargar arbol desde archivo (txt)");
         btnCargarArchivo.addActionListener(e -> cargarDesdeArchivo());
@@ -67,6 +71,12 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             String valorStr = JOptionPane.showInputDialog(this, "Ingrese el vertice (numero entero):");
             if (valorStr == null || valorStr.trim().isEmpty()) return;
             int valor = Integer.parseInt(valorStr.trim());
+
+            // Verificar si el vértice ya existe
+            if (buscarvertice(raiz, valor) != null) {
+                JOptionPane.showMessageDialog(this, "El vértice " + valor + " ya existe en el árbol.");
+                return;
+            }
 
             if (raiz == null) {
                 raiz = new VerticeBinario(valor);
@@ -106,68 +116,184 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             JOptionPane.showMessageDialog(this, "Valor inválido. Intente de nuevo.");
         }
     }
-     private void cargarDesdeArchivo() {
-    JFileChooser fileChooser = new JFileChooser();
-    int opcion = fileChooser.showOpenDialog(this);
-    if (opcion == JFileChooser.APPROVE_OPTION) {
-        File archivo = fileChooser.getSelectedFile();
-        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
-            raiz = null;
-            Map<Integer, VerticeBinario> mapaNodos = new HashMap<>();
-            List<String[]> relacionesPendientes = new ArrayList<>();
-            String linea;
 
-            while ((linea = br.readLine()) != null) {
-                linea = linea.trim();
-                if (linea.isEmpty()) continue;
+    private void eliminarVe() {
+        try {
+            String valorStr = JOptionPane.showInputDialog(this, "Ingrese el vértice a eliminar:");
+            if (valorStr == null || valorStr.trim().isEmpty()) return;
+            int valor = Integer.parseInt(valorStr.trim());
 
-                String[] partes = linea.split(",");
-                if (partes.length == 1) {
-                    int valorRaiz = Integer.parseInt(partes[0].trim());
-                    raiz = new VerticeBinario(valorRaiz);
-                    mapaNodos.put(valorRaiz, raiz);
-                } else if (partes.length == 3) {
-                    relacionesPendientes.add(partes);  
-                }
+            if (raiz == null) {
+                JOptionPane.showMessageDialog(this, "El árbol está vacío.");
+                return;
             }
 
-            // construir el arbol
-            for (String[] partes : relacionesPendientes) {
-                int valorHijo = Integer.parseInt(partes[0].trim());
-                int valorPadre = Integer.parseInt(partes[1].trim());
-                String lado = partes[2].trim().toUpperCase();
-
-                VerticeBinario padre = mapaNodos.get(valorPadre);
-                if (padre == null) continue;  
-
-                VerticeBinario hijo = new VerticeBinario(valorHijo);
-                mapaNodos.put(valorHijo, hijo);
-
-                if (lado.equals("I")) {
-                    padre.izq = hijo;
-                } else if (lado.equals("D")) {
-                    padre.der = hijo;
-                }
-            }
-
-            int numVertices = contarVertices(raiz);
-            int numAristas = contarAristas(raiz);
-            if (numVertices == numAristas + 1) {
+            // Caso especial: eliminar la raíz
+            if (raiz.dato == valor) {
+                raiz = null;
                 panelGrafo.setRaiz(raiz);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "El grafo insertado no es un árbol.\n" +
-                        "Vértices: " + numVertices + " | Aristas: " + numAristas +
-                        "\nVuelva a intentarlo.");
+                JOptionPane.showMessageDialog(this, "Vértice raíz eliminado. Árbol vacío.");
+                return;
+            }
+
+            // Buscar el padre del vértice a eliminar
+            VerticeBinario padre = buscarPadre(raiz, valor);
+            if (padre == null) {
+                JOptionPane.showMessageDialog(this, "Vértice no encontrado.");
+                return;
+            }
+
+            // Eliminar la referencia del padre
+            if (padre.izq != null && padre.izq.dato == valor) {
+                padre.izq = null;
+            } else if (padre.der != null && padre.der.dato == valor) {
+                padre.der = null;
+            }
+
+            panelGrafo.setRaiz(raiz);
+            JOptionPane.showMessageDialog(this, "Vértice eliminado exitosamente.");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Valor inválido. Intente de nuevo.");
+        }
+    }
+
+    // Método auxiliar para encontrar el padre de un vértice
+    private VerticeBinario buscarPadre(VerticeBinario nodo, int valor) {
+        if (nodo == null) return null;
+        
+        if ((nodo.izq != null && nodo.izq.dato == valor) || 
+            (nodo.der != null && nodo.der.dato == valor)) {
+            return nodo;
+        }
+        
+        VerticeBinario padreIzq = buscarPadre(nodo.izq, valor);
+        if (padreIzq != null) return padreIzq;
+        
+        return buscarPadre(nodo.der, valor);
+    }
+
+    private void cargarDesdeArchivo() {
+        JFileChooser fileChooser = new JFileChooser();
+        int opcion = fileChooser.showOpenDialog(this);
+        if (opcion == JFileChooser.APPROVE_OPTION) {
+            File archivo = fileChooser.getSelectedFile();
+            try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+                raiz = null;
+                Map<Integer, VerticeBinario> mapaNodos = new HashMap<>();
+                List<String[]> relacionesPendientes = new ArrayList<>();
+                String linea;
+                boolean errorDuplicados = false;
+    
+                while ((linea = br.readLine()) != null) {
+                    linea = linea.trim();
+                    if (linea.isEmpty()) continue;
+    
+                    String[] partes = linea.split(",");
+                    if (partes.length == 1) {
+                        // Línea que define la raíz
+                        int valorRaiz = Integer.parseInt(partes[0].trim());
+                        
+                        // Verificar si el vértice raíz ya existe
+                        if (mapaNodos.containsKey(valorRaiz)) {
+                            JOptionPane.showMessageDialog(this, 
+                                "Error: Vértice raíz duplicado: " + valorRaiz);
+                            errorDuplicados = true;
+                            break;
+                        }
+                        
+                        raiz = new VerticeBinario(valorRaiz);
+                        mapaNodos.put(valorRaiz, raiz);
+                    } else if (partes.length == 3) {
+                        // Línea que define una relación padre-hijo
+                        relacionesPendientes.add(partes);
+                    }
+                }
+    
+                if (errorDuplicados) {
+                    raiz = null;
+                    panelGrafo.setRaiz(null);
+                    return;
+                }
+    
+                // Construir el árbol verificando duplicados
+                for (String[] partes : relacionesPendientes) {
+                    int valorHijo = Integer.parseInt(partes[0].trim());
+                    int valorPadre = Integer.parseInt(partes[1].trim());
+                    String lado = partes[2].trim().toUpperCase();
+    
+                    // Verificar si el hijo ya existe
+                    if (mapaNodos.containsKey(valorHijo)) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Error: Vértice duplicado: " + valorHijo);
+                        errorDuplicados = true;
+                        break;
+                    }
+    
+                    VerticeBinario padre = mapaNodos.get(valorPadre);
+                    if (padre == null) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Error: Padre no encontrado: " + valorPadre);
+                        errorDuplicados = true;
+                        break;
+                    }
+    
+                    VerticeBinario hijo = new VerticeBinario(valorHijo);
+                    mapaNodos.put(valorHijo, hijo);
+    
+                    if (lado.equals("I")) {
+                        if (padre.izq != null) {
+                            JOptionPane.showMessageDialog(this,
+                                "Error: El padre " + valorPadre + 
+                                " ya tiene hijo izquierdo");
+                            errorDuplicados = true;
+                            break;
+                        }
+                        padre.izq = hijo;
+                    } else if (lado.equals("D")) {
+                        if (padre.der != null) {
+                            JOptionPane.showMessageDialog(this,
+                                "Error: El padre " + valorPadre + 
+                                " ya tiene hijo derecho");
+                            errorDuplicados = true;
+                            break;
+                        }
+                        padre.der = hijo;
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                            "Error: Lado inválido: " + lado);
+                        errorDuplicados = true;
+                        break;
+                    }
+                }
+    
+                if (errorDuplicados) {
+                    raiz = null;
+                    panelGrafo.setRaiz(null);
+                    return;
+                }
+    
+                // Validar que sea un árbol válido
+                int numVertices = contarVertices(raiz);
+                int numAristas = contarAristas(raiz);
+                if (numVertices == numAristas + 1) {
+                    panelGrafo.setRaiz(raiz);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "El grafo insertado no es un árbol válido.\n" +
+                        "Vértices: " + numVertices + " | Aristas: " + numAristas);
+                    raiz = null;
+                    panelGrafo.setRaiz(null);
+                }
+    
+            } catch (IOException | NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error al leer el archivo: " + ex.getMessage());
                 raiz = null;
                 panelGrafo.setRaiz(null);
             }
-
-        } catch (IOException | NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Error al leer el archivo: " + ex.getMessage());
         }
     }
-}
+
     
     private int contarVertices(VerticeBinario vertice) {
         if (vertice == null)
