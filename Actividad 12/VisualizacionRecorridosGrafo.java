@@ -102,57 +102,68 @@ public class VisualizacionRecorridosGrafo extends JFrame {
             JOptionPane.showMessageDialog(this, "Valor inválido. Intente de nuevo.");
         }
     }
-    private void cargarDesdeArchivo() {
-        JFileChooser fileChooser = new JFileChooser();
-        int opcion = fileChooser.showOpenDialog(this);
-        if (opcion == JFileChooser.APPROVE_OPTION) {
-            File archivo = fileChooser.getSelectedFile();
-            try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
-                // Reiniciamos la raíz antes de cargar el nuevo árbol.
-                raiz = null;
-                String linea;
-                while ((linea = br.readLine()) != null) {
-                    linea = linea.trim();
-                    if (linea.isEmpty())
-                        continue;
-    
-                    String[] partes = linea.split(",");
-                    if (partes.length == 1) {
-                        int valor = Integer.parseInt(partes[0].trim());
-                        raiz = new VerticeBinario(valor);
-                    } else if (partes.length == 3) {
-                        // Formato: valor,valorPadre,I/D
-                        int valor = Integer.parseInt(partes[0].trim());
-                        int valorPadre = Integer.parseInt(partes[1].trim());
-                        String lado = partes[2].trim().toUpperCase();
-                        VerticeBinario padre = buscarvertice(raiz, valorPadre);
-                        if (padre != null) {
-                            if (lado.equals("I")) {
-                                padre.izq = new VerticeBinario(valor);
-                            } else if (lado.equals("D")) {
-                                padre.der = new VerticeBinario(valor);
-                            }
-                        }
-                    }
+     private void cargarDesdeArchivo() {
+    JFileChooser fileChooser = new JFileChooser();
+    int opcion = fileChooser.showOpenDialog(this);
+    if (opcion == JFileChooser.APPROVE_OPTION) {
+        File archivo = fileChooser.getSelectedFile();
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            raiz = null;
+            Map<Integer, VerticeBinario> mapaNodos = new HashMap<>();
+            List<String[]> relacionesPendientes = new ArrayList<>();
+            String linea;
+
+            while ((linea = br.readLine()) != null) {
+                linea = linea.trim();
+                if (linea.isEmpty()) continue;
+
+                String[] partes = linea.split(",");
+                if (partes.length == 1) {
+                    int valorRaiz = Integer.parseInt(partes[0].trim());
+                    raiz = new VerticeBinario(valorRaiz);
+                    mapaNodos.put(valorRaiz, raiz);
+                } else if (partes.length == 3) {
+                    relacionesPendientes.add(partes);  
                 }
-                // verifica si es árbol
-                int numVertices = contarVertices(raiz);
-                int numAristas = contarAristas(raiz);
-                if (numVertices == numAristas + 1) {
-                    // si es, dubuja el arbol
-                    panelGrafo.setRaiz(raiz);
-                } else {
-                    // no es 
-                    JOptionPane.showMessageDialog(this,
-                            "El grafo insertado no es un árbol.\n"
-                            + "Vértices: " + numVertices + " | Aristas: " + numAristas
-                            + "\nVuelva a intentarlo.");
-                }
-            } catch (IOException | NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Error al leer el archivo: " + ex.getMessage());
             }
+
+            // construir el arbol
+            for (String[] partes : relacionesPendientes) {
+                int valorHijo = Integer.parseInt(partes[0].trim());
+                int valorPadre = Integer.parseInt(partes[1].trim());
+                String lado = partes[2].trim().toUpperCase();
+
+                VerticeBinario padre = mapaNodos.get(valorPadre);
+                if (padre == null) continue;  
+
+                VerticeBinario hijo = new VerticeBinario(valorHijo);
+                mapaNodos.put(valorHijo, hijo);
+
+                if (lado.equals("I")) {
+                    padre.izq = hijo;
+                } else if (lado.equals("D")) {
+                    padre.der = hijo;
+                }
+            }
+
+            int numVertices = contarVertices(raiz);
+            int numAristas = contarAristas(raiz);
+            if (numVertices == numAristas + 1) {
+                panelGrafo.setRaiz(raiz);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "El grafo insertado no es un árbol.\n" +
+                        "Vértices: " + numVertices + " | Aristas: " + numAristas +
+                        "\nVuelva a intentarlo.");
+                raiz = null;
+                panelGrafo.setRaiz(null);
+            }
+
+        } catch (IOException | NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Error al leer el archivo: " + ex.getMessage());
         }
     }
+}
     
     private int contarVertices(VerticeBinario vertice) {
         if (vertice == null)
