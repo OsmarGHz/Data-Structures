@@ -23,7 +23,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
     private JTextArea txtResumen;  // resumen del recorrido RECORRIDO
 
     public VisualizacionRecorridosGrafo() {
-        super("Recorridos inorden y postorden");
+        super("Recorridos preorden, inorden y postorden");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(900, 600);
         setLocationRelativeTo(null);
@@ -39,6 +39,10 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         JButton btnCargarArchivo = new JButton("Cargar arbol desde archivo (txt)");
         btnCargarArchivo.addActionListener(e -> cargarDesdeArchivo());
         panelBotones.add(btnCargarArchivo);
+
+        JButton btnPreorden = new JButton("Recorrido Preorden");
+        btnPreorden.addActionListener(e -> recorridoPreorden());
+        panelBotones.add(btnPreorden);
 
         JButton btnInorden = new JButton("Recorrido Inorden");
         btnInorden.addActionListener(e -> recorridoInorden());
@@ -182,7 +186,7 @@ public class VisualizacionRecorridosGrafo extends JFrame {
         return aristas + contarAristas(vertice.izq) + contarAristas(vertice.der);
     }
     
-private void iniciarAnimacionRecorrido(final List<VerticeBinario> recorridoList, final String resumen) {
+    private void iniciarAnimacionRecorrido(final List<VerticeBinario> recorridoList, final String resumen) {
         final List<VerticeBinario> recorridoAnimado = new ArrayList<>();
         final javax.swing.Timer timer = new javax.swing.Timer(1500, null);
         timer.addActionListener(new ActionListener() {
@@ -201,7 +205,8 @@ private void iniciarAnimacionRecorrido(final List<VerticeBinario> recorridoList,
         });
         timer.start();
     }
-     private void mostrarResumen(String resumen) {
+
+    private void mostrarResumen(String resumen) {
         JDialog dialog = new JDialog(this, "Resumen del Recorrido", true);
         dialog.setSize(300, 150);
         dialog.setLocationRelativeTo(this);
@@ -222,6 +227,28 @@ private void iniciarAnimacionRecorrido(final List<VerticeBinario> recorridoList,
         dialog.setContentPane(panel);
         dialog.setVisible(true);
     }
+
+    private void recorridoPreorden() {
+        if (raiz == null) {
+            txtResumen.setText("No hay árbol para recorrer.");
+            return;
+        }
+        List<VerticeBinario> preordenList = new ArrayList<>();
+        preorden(raiz, preordenList);
+        StringBuilder sb = new StringBuilder("Recorrido Preorden: ");
+        for (VerticeBinario v : preordenList) {
+            sb.append(v.getDato()).append(" ");
+        }
+       iniciarAnimacionRecorrido(preordenList, sb.toString());
+    }
+
+    private void preorden(VerticeBinario vertice, List<VerticeBinario> list) {
+        if (vertice == null) return;
+        list.add(vertice);
+        preorden(vertice.izq, list);
+        preorden(vertice.der, list);
+    }
+
     private void recorridoInorden() {
         if (raiz == null) {
             txtResumen.setText("No hay árbol para recorrer.");
