@@ -257,13 +257,13 @@ class PanelDibujo extends JPanel {
     }
 }
 
-public class ArbolGUI14 extends JFrame {
+public class ArbolGUI extends JFrame {
     private ArbolAVL arbol;
     private JTextArea areaSalida;
     private JTextField campoValor;
     private PanelDibujo panelDibujo;
 
-    public ArbolGUI14() {
+    public ArbolGUI() {
         arbol = new ArbolAVL();
 
         setTitle("Árbol AVL");
@@ -396,7 +396,7 @@ public class ArbolGUI14 extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            new ArbolGUI14().setVisible(true);
+            new ArbolGUI().setVisible(true);
         });
     }
 }
