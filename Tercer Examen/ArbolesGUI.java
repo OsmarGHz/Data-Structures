@@ -69,17 +69,52 @@ class PanelDibujo extends JPanel {
 // Árbol binario completo (sin orden)
 class ArbolBinario implements ArbolBase {
     protected Nodo raiz;
+
+    // Nuevo método para insertar con padre y lado
+    public boolean insertar(int valor, int padreValor, String lado) {
+        if (buscar(valor)) return false; // No duplicados
+        if (raiz == null) {
+            raiz = new Nodo(valor);
+            return true;
+        }
+        Nodo padre = buscarNodo(raiz, padreValor);
+        if (padre == null) return false;
+        if (lado.equalsIgnoreCase("I")) {
+            if (padre.izq != null) return false;
+            padre.izq = new Nodo(valor);
+            return true;
+        } else if (lado.equalsIgnoreCase("D")) {
+            if (padre.der != null) return false;
+            padre.der = new Nodo(valor);
+            return true;
+        }
+        return false;
+    }
+
+    // Busca un nodo por valor
+    protected Nodo buscarNodo(Nodo n, int v) {
+        if (n == null) return null;
+        if (n.valor == v) return n;
+        Nodo izq = buscarNodo(n.izq, v);
+        if (izq != null) return izq;
+        return buscarNodo(n.der, v);
+    }
+
     public void insertar(int v) { 
+        //Metodo temporalmente deshabilitado para insertar elementos en arbolBinario
         if (!buscar(v)) {
             raiz = insertarRec(raiz, v); 
         }
     }
     protected Nodo insertarRec(Nodo n, int v) {
+        //Metodo temporalmente deshabilitado para insertar elementos en arbolBinario
         if (n == null) return new Nodo(v);
         if (n.izq == null) n.izq = insertarRec(n.izq, v);
         else n.der = insertarRec(n.der, v);
         return n;
     }
+
+
     public boolean buscar(int v) { return buscarRec(raiz, v); }
     protected boolean buscarRec(Nodo n, int v) {
         if (n == null) return false;
@@ -485,32 +520,177 @@ public class ArbolesGUI extends JFrame {
         activo = ab;
     }
 
+    // Elimina un nodo por valor (solo desconecta el nodo, no reestructura)
+    private void eliminarNodoAB(ArbolBinario ab, int valor) {
+        if (ab.raiz == null) {
+            salida.append("\nEl árbol está vacío.");
+            return;
+        }
+        // Caso especial: eliminar la raíz
+        if (ab.raiz.valor == valor) {
+            ab.raiz = null;
+            salida.append("\nVértice raíz eliminado. Árbol vacío.");
+            return;
+        }
+        Nodo padre = buscarPadre(ab.raiz, valor);
+        if (padre == null) {
+            salida.append("\nVértice no encontrado.");
+            return;
+        }
+        if (padre.izq != null && padre.izq.valor == valor) {
+            padre.izq = null;
+        } else if (padre.der != null && padre.der.valor == valor) {
+            padre.der = null;
+        }
+        salida.append("\nVértice eliminado exitosamente.");
+    }
+
+    // Busca el padre de un nodo por valor
+    private Nodo buscarPadre(Nodo nodo, int valor) {
+        if (nodo == null) return null;
+        if ((nodo.izq != null && nodo.izq.valor == valor) ||
+            (nodo.der != null && nodo.der.valor == valor)) {
+            return nodo;
+        }
+        Nodo izq = buscarPadre(nodo.izq, valor);
+        if (izq != null) return izq;
+        return buscarPadre(nodo.der, valor);
+    }
+
+    private void animarBusquedaAB(NodoVisual raiz, int valorBuscado) {
+        java.util.List<NodoVisual> camino = new java.util.ArrayList<>();
+        if (!buscarCaminoVisual(raiz, valorBuscado, camino)) {
+            salida.append("\nNo se encontró el valor " + valorBuscado);
+            return;
+        }
+        Timer timer = new Timer(700, null);
+        final int[] idx = {0};
+        timer.addActionListener(e -> {
+            if (idx[0] < camino.size()) {
+                NodoVisual actual = camino.get(idx[0]);
+                actual.color = Color.YELLOW;
+                if (actual.padre != null) {
+                    if (actual.padre.izq == actual) actual.padre.conexionIzq = true;
+                    if (actual.padre.der == actual) actual.padre.conexionDer = true;
+                }
+                dibujo.setRaizVisual(raiz);
+                idx[0]++;
+            } else {
+                NodoVisual ultimo = camino.get(camino.size()-1);
+                if (ultimo.valor == valorBuscado) {
+                    ultimo.color = Color.GREEN;
+                    salida.append("\nEncontrado: " + valorBuscado);
+                } else {
+                    ultimo.color = Color.RED;
+                    salida.append("\nNo se encontró el valor " + valorBuscado);
+                }
+                dibujo.setRaizVisual(raiz);
+                timer.stop();
+                // Limpiar colores después de un tiempo
+                new Timer(1200, ev -> {
+                    limpiarColoresVisual(raiz);
+                    dibujo.setRaizVisual(raiz);
+                }).start();
+            }
+        });
+        limpiarColoresVisual(raiz);
+        dibujo.setRaizVisual(raiz);
+        timer.start();
+    }
+
+    // Busca el camino hasta el nodo (o hasta donde termina la búsqueda)
+    private boolean buscarCaminoVisual(NodoVisual n, int valor, java.util.List<NodoVisual> camino) {
+        if (n == null) return false;
+        camino.add(n);
+        if (n.valor == valor) return true;
+        if (buscarCaminoVisual(n.izq, valor, camino)) return true;
+        if (buscarCaminoVisual(n.der, valor, camino)) return true;
+        camino.remove(camino.size()-1);
+        return false;
+    }
+
+    // Limpia colores y conexiones visuales
+    private void limpiarColoresVisual(NodoVisual n) {
+        if (n == null) return;
+        n.color = Color.LIGHT_GRAY;
+        n.conexionIzq = false;
+        n.conexionDer = false;
+        limpiarColoresVisual(n.izq);
+        limpiarColoresVisual(n.der);
+    }
+
     // Método para ejecutar operación y mostrar resultado
     private void operar(String op) {
         try {
             int v = Integer.parseInt(entrada.getText());
             switch(op) {
                 case "insertar":
-                    if (activo.buscar(v)) {
-                        salida.append("\nEl valor " + v + " ya existe en el árbol");
-                    } else {
-                        activo.insertar(v);
-                        salida.append("\nInsertado: " + v);
-                        dibujo.setRaizVisual(activo.getVisualTree());
+
+                    //Verificar si es arbol binario normal
+                    if (activo instanceof ArbolBinario && !(activo instanceof ArbolBusqueda)) {
+                        ArbolBinario ab = (ArbolBinario)activo;
+                        if (ab.raiz == null) {
+                            ab.raiz = new Nodo(v);
+                            salida.append("\nInsertado raíz: " + v);
+                            dibujo.setRaizVisual(ab.getVisualTree());
+                        } else {
+                            String padreStr = JOptionPane.showInputDialog(this, "Ingrese el valor del nodo padre:");
+                            if (padreStr == null || padreStr.trim().isEmpty()) return;
+                            int padreValor = Integer.parseInt(padreStr.trim());
+                            Nodo padre = ab.buscarNodo(ab.raiz, padreValor);
+                            if (padre == null) {
+                                salida.append("\nNo existe el nodo padre " + padreValor);
+                                return;
+                            }
+                            String lado = JOptionPane.showInputDialog(this, "¿Insertar a la izquierda (I) o derecha (D)?");
+                            if (lado == null || (!lado.equalsIgnoreCase("I") && !lado.equalsIgnoreCase("D"))) {
+                                salida.append("\nOpción inválida. Use I o D.");
+                                return;
+                            }
+                            boolean ok = ab.insertar(v, padreValor, lado);
+                            if (!ok) {
+                                salida.append("\nNo se pudo insertar. Puede que ya exista el valor, el padre no exista, o el lado esté ocupado.");
+                            } else {
+                                salida.append("\nInsertado: " + v + " como hijo " + (lado.equalsIgnoreCase("I") ? "izquierdo" : "derecho") + " de " + padreValor);
+                                dibujo.setRaizVisual(ab.getVisualTree());
+                            }
+                        }
+                    }else{ //Si no es arbol binario normal
+                        if (activo.buscar(v)) {
+                            salida.append("\nEl valor " + v + " ya existe en el árbol");
+                        } else {
+                            activo.insertar(v);
+                            salida.append("\nInsertado: " + v);
+                            dibujo.setRaizVisual(activo.getVisualTree());
+                        }
                     }
+                    
                     break;
                 case "eliminar":
-                    if (activo.buscar(v)) {
-                        activo.eliminar(v);
-                        salida.append("\nEliminado: " + v);
-                        dibujo.setRaizVisual(activo.getVisualTree());
-                    } else {
-                        salida.append("\nEl valor " + v + " no existe en el árbol");
+                    //Verificar si es arbol binario normal
+                    if (activo instanceof ArbolBinario && !(activo instanceof ArbolBusqueda)) {
+                        ArbolBinario ab = (ArbolBinario)activo;
+                        eliminarNodoAB(ab, v);
+                        dibujo.setRaizVisual(ab.getVisualTree());
+                    } else{
+                        if (activo.buscar(v)) {
+                            activo.eliminar(v);
+                            salida.append("\nEliminado: " + v);
+                            dibujo.setRaizVisual(activo.getVisualTree());
+                        } else {
+                            salida.append("\nEl valor " + v + " no existe en el árbol");
+                        }
                     }
+            
                     break;
                 case "buscar":
                     boolean enc = activo.buscar(v);
                     salida.append("\nBuscando: " + v + (enc ? " existe" : " no existe"));
+                    if (enc) {
+                        NodoVisual raizVisual = activo.getVisualTree();
+                        animarBusquedaAB(raizVisual, v);
+                        break;
+                    }
                     break;
             }
         } catch(Exception ex) {
