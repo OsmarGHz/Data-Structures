@@ -30,14 +30,59 @@ class NodoVisual {
     NodoVisual(int valor) { this.valor = valor; }
 }
 
+// Nodo visual especial para árbol B
+class NodoVisualB {
+    int[] claves;
+    int n;
+    NodoVisualB[] hijos; // hijos visuales
+    int x, y; // posición para dibujar
+    Color color = Color.LIGHT_GRAY;
+    int claveResaltada = -1; // -1: ninguna resaltada
+
+    NodoVisualB(int[] claves, int n) {
+        this.claves = Arrays.copyOf(claves, n);
+        this.n = n;
+        this.hijos = null;
+    }
+}
+
 // Panel que dibuja el árbol
 class PanelDibujo extends JPanel {
     private NodoVisual raiz;
-    void setRaizVisual(NodoVisual r) { raiz = r; repaint(); }
+    private NodoVisualB raizB; // <- NUEVO
+
+    void setRaizVisual(NodoVisual r) { 
+        raiz = r; 
+        raizB = null;
+        repaint(); 
+    }
+    void setRaizVisualB(NodoVisualB r) { 
+        raizB = r; 
+        raiz = null;
+        repaint(); 
+    }
+    // Nuevo método para limpiar completamente el panel
+    void limpiarTodo() {
+        raiz = null;
+        raizB = null;
+        repaint();
+    }
+
+
     @Override protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (raiz != null) dibujar((Graphics2D)g, raiz, getWidth()/2, 50, getWidth()/4);
+        if (raizB != null) {
+            dibujarB((Graphics2D)g, raizB, getWidth()/2, 50, getWidth()/4);
+        } else if (raiz != null) {
+            dibujar((Graphics2D)g, raiz, getWidth()/2, 50, getWidth()/4);
+        } else {
+            // Si no hay árbol, limpiar el fondo explícitamente
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
     }
+    
+
     private void dibujar(Graphics2D g, NodoVisual n, int x, int y, int off) {
         int r = 20;
         g.setColor(n.color);
@@ -62,6 +107,46 @@ class PanelDibujo extends JPanel {
             g.setColor(n.conexionDer ? Color.BLUE : Color.BLACK);
             g.drawLine(lx, ly, x+off, y+50-r);
             dibujar(g, n.der, x+off, y+50, off/2);
+        }
+    }
+    private void dibujarB(Graphics2D g, NodoVisualB n, int x, int y, int ancho) {
+        if (n == null) return;
+        int boxWidth = 30 * n.n;
+        int boxHeight = 30;
+        // Dibuja el rectángulo
+        g.setColor(n.color);
+        g.fillRect(x - boxWidth/2, y, boxWidth, boxHeight);
+        g.setColor(Color.BLACK);
+        g.drawRect(x - boxWidth/2, y, boxWidth, boxHeight);
+        // Dibuja las claves
+        for (int i = 0; i < n.n; i++) {
+            String clave = String.valueOf(n.claves[i]);
+            int claveX = x - boxWidth/2 + 10 + i*30;
+            int claveY = y + 20;
+            if (n.claveResaltada == i) {
+                // Fondo destacado para la clave encontrada
+                Color fondo = (n.color == Color.GREEN) ? Color.GREEN : Color.RED;
+                g.setColor(fondo);
+                g.fillRoundRect(claveX - 4, y + 4, 24, 22, 8, 8);
+                g.setColor(Color.WHITE); // Fuente blanca
+                g.setFont(new Font("Arial", Font.BOLD, 16));
+                g.drawString(clave, claveX, claveY);
+                g.setFont(new Font("Arial", Font.PLAIN, 14));
+                g.setColor(Color.BLACK);
+            } else {
+                g.setColor(Color.BLACK);
+                g.drawString(clave, claveX, claveY);
+            }
+        }
+        // Dibuja los hijos
+        if (n.hijos != null) {
+            int totalWidth = boxWidth + (n.hijos.length-1)*30;
+            int startX = x - totalWidth/2 + 15;
+            for (int i = 0; i < n.hijos.length; i++) {
+                int cx = startX + i*(boxWidth/(n.hijos.length));
+                g.drawLine(x - boxWidth/2 + i*30, y + boxHeight, cx, y + boxHeight + 40);
+                dibujarB(g, n.hijos[i], cx, y + boxHeight + 40, boxWidth / n.hijos.length);
+            }
         }
     }
 }
@@ -226,7 +311,7 @@ class ArbolAVL extends ArbolBusqueda {
     }
 }
 
-// B-Tree orden 2 a 5
+// B-Tree orden minimo de 2
 class ArbolB implements ArbolBase {
     private final int T;
     class NodoB {
@@ -243,7 +328,7 @@ class ArbolB implements ArbolBase {
     private NodoB raiz;
     public ArbolB(int orden) {
         if (orden < 2) orden = 2;
-        if (orden > 5) orden = 5;  // Aseguramos que no sea mayor a 5
+        //if (orden > 5) orden = 5;  // Aseguramos que no sea mayor a 5
         T = orden;
         raiz = new NodoB();
     }   
@@ -307,17 +392,99 @@ class ArbolB implements ArbolBase {
         }
         if (!x.hoja) inorder(x.hijos[x.n], sb);
     }
+
+    @Override
+    public NodoVisual getVisualTree() {
+        NodoVisualB raizB = convertBVisual(raiz);
+        return wrapBVisual(raizB); // Convierte a NodoVisual para que el panel lo pueda dibujar
+    }
+    public NodoVisualB getRaizVisualB() { return convertBVisual(raiz); }
+    public NodoB getRaiz() { return raiz; }
+    // Convierte el árbol B a la estructura visual fiel
+    public NodoVisualB convertBVisual(NodoB x) {
+        if (x == null || x.n == 0) return null;
+        NodoVisualB v = new NodoVisualB(x.claves, x.n);
+        if (!x.hoja) {
+            v.hijos = new NodoVisualB[x.n + 1];
+            for (int i = 0; i <= x.n; i++) {
+                v.hijos[i] = convertBVisual(x.hijos[i]);
+            }
+        }
+        return v;
+    }
+
+    // Convierte NodoVisualB a NodoVisual para que el panel lo dibuje (todos los hijos en horizontal)
+    private NodoVisual wrapBVisual(NodoVisualB b) {
+        if (b == null) return null;
+        // Un solo nodo visual para todas las claves
+        NodoVisual v = new NodoVisual(b.claves[0]);
+        v.extraInfo = Arrays.toString(Arrays.copyOf(b.claves, b.n));
+        // Conecta todos los hijos como una lista horizontal a partir de izq
+        NodoVisual prevHijo = null;
+        if (b.hijos != null && b.hijos.length > 0) {
+            for (int i = 0; i < b.hijos.length; i++) {
+                NodoVisual hijo = wrapBVisual(b.hijos[i]);
+                if (i == 0) {
+                    v.izq = hijo;
+                    if (hijo != null) hijo.padre = v;
+                    prevHijo = hijo;
+                } else {
+                    if (prevHijo != null) {
+                        prevHijo.der = hijo;
+                        if (hijo != null) hijo.padre = prevHijo;
+                    }
+                    prevHijo = hijo;
+                }
+            }
+        }
+        return v;
+    }
+    
+    /*
     @Override public NodoVisual getVisualTree() { return convert(raiz); }
     private NodoVisual convert(NodoB x) {
         if (x == null || x.n == 0) return null;
+        // Usamos la primera clave como valor principal solo para dibujar el círculo
+        NodoVisual v = new NodoVisual(x.claves[0]);
+        v.extraInfo = Arrays.toString(Arrays.copyOf(x.claves, x.n));
+        // Para visualizar todos los hijos, los encadenamos a la derecha
+        NodoVisual actual = v;
+        for (int i = 1; i < x.n; i++) {
+            NodoVisual siguiente = new NodoVisual(x.claves[i]);
+            siguiente.extraInfo = ""; // Ya están todas las claves en el primero
+            actual.der = siguiente;
+            siguiente.padre = actual;
+            actual = siguiente;
+        }
+        // Ahora conectamos los hijos (si no es hoja)
+        if (!x.hoja) {
+            NodoVisual hijoVisual = null;
+            NodoVisual hijoActual = v;
+            for (int i = 0; i <= x.n; i++) {
+                NodoVisual hijo = convert(x.hijos[i]);
+                if (i == 0) {
+                    hijoVisual = hijo;
+                    if (hijoVisual != null) hijoVisual.padre = v;
+                    v.izq = hijoVisual;
+                } else {
+                    if (hijoActual != null) {
+                        hijoActual.izq = hijo;
+                        if (hijo != null) hijo.padre = hijoActual;
+                        hijoActual = hijoActual.der;
+                    }
+                }
+            }
+        }
+        */
+        /*
         NodoVisual v = new NodoVisual(x.claves[0]);
         v.extraInfo = Arrays.toString(Arrays.copyOf(x.claves, x.n));
         if (!x.hoja) {
             v.izq = convert(x.hijos[0]); if (v.izq != null) v.izq.padre = v;
             v.der = convert(x.hijos[1]); if (v.der != null) v.der.padre = v;
         }
-        return v;
-    }
+        //return v;
+    }*/
     @Override public void eliminar(int k) {
         delete(raiz, k);
         if (!raiz.hoja && raiz.n == 0) raiz = raiz.hijos[0];
@@ -449,6 +616,7 @@ public class ArbolesGUI extends JFrame {
                 if (ordenField.isVisible()) { // Solo validar si el campo es visible
                     try {
                         int o = Integer.parseInt(ordenField.getText());
+                        /*
                         if (o > 5) {
                             SwingUtilities.invokeLater(() -> {
                                 JOptionPane.showMessageDialog(ArbolesGUI.this, 
@@ -457,7 +625,7 @@ public class ArbolesGUI extends JFrame {
                                     JOptionPane.WARNING_MESSAGE);
                                 ordenField.setText("5");
                             });
-                        } else if (o < 2) {
+                        } else */ if (o < 2) {
                             SwingUtilities.invokeLater(() -> {
                                 JOptionPane.showMessageDialog(ArbolesGUI.this, 
                                     "El orden no puede ser menor a 2. Se usará orden 2", 
@@ -479,18 +647,14 @@ public class ArbolesGUI extends JFrame {
             boolean isB = t.equals("B");
             ordenLabel.setVisible(isB);
             ordenField.setVisible(isB);
+            // Limpiar visualización previa de cualquier tipo
+            dibujo.limpiarTodo();
+            // Reinicializar el árbol correspondiente para evitar residuos
             if (isB) {
                 int o;
                 try { 
                     o = Integer.parseInt(ordenField.getText());
-                    if (o > 5) {
-                        JOptionPane.showMessageDialog(this, 
-                            "El orden no puede ser mayor a 5. Se usará orden 5", 
-                            "Advertencia", 
-                            JOptionPane.WARNING_MESSAGE);
-                        o = 5;
-                        ordenField.setText("5");
-                    } else if (o < 2) {
+                    if (o < 2) {
                         JOptionPane.showMessageDialog(this, 
                             "El orden no puede ser menor a 2. Se usará orden 2", 
                             "Advertencia", 
@@ -503,13 +667,26 @@ public class ArbolesGUI extends JFrame {
                     o = 2; 
                     ordenField.setText("2");
                 }
-                b = new ArbolB(o);
+                b = new ArbolB(o); // Nueva instancia
                 activo = b;
-            } else if (t.equals("ABB")) activo = abb;
-            else if (t.equals("AVL")) activo = avl;
-            else activo = ab;
-	    dibujo.setRaizVisual(activo.getVisualTree());
-	});
+                dibujo.setRaizVisualB(b.convertBVisual(b.getRaiz()));
+            } else if (t.equals("ABB")) {
+                abb = new ArbolBusqueda(); // Nueva instancia
+                activo = abb;
+                dibujo.setRaizVisual(abb.getVisualTree());
+            } else if (t.equals("AVL")) {
+                avl = new ArbolAVL(); // Nueva instancia
+                activo = avl;
+                dibujo.setRaizVisual(avl.getVisualTree());
+            } else {
+                ab = new ArbolBinario(); // Nueva instancia
+                activo = ab;
+                dibujo.setRaizVisual(ab.getVisualTree());
+            }
+            if (animacionActual != null) animacionActual.cancelar();
+            // Forzar repintado para limpiar cualquier residuo
+            dibujo.repaint();
+	   });
 
        	// Acciones botones
         ins.addActionListener(e -> operar("insertar"));
@@ -557,15 +734,36 @@ public class ArbolesGUI extends JFrame {
         return buscarPadre(nodo.der, valor);
     }
 
+    // --- Encapsulador de animaciones de búsqueda ---
+    private AnimacionBusqueda animacionActual;
+    private class AnimacionBusqueda {
+        private Timer timer;
+        private Object tipoActivo;
+        AnimacionBusqueda(Timer timer, Object tipoActivo) {
+            this.timer = timer;
+            this.tipoActivo = tipoActivo;
+        }
+        void cancelar() {
+            if (timer != null) timer.stop();
+        }
+        boolean sigueActivo(Object actual) {
+            return actual == tipoActivo;
+        }
+    }
+
     private void animarBusquedaAB(NodoVisual raiz, int valorBuscado) {
+        if (animacionActual != null) animacionActual.cancelar();
         java.util.List<NodoVisual> camino = new java.util.ArrayList<>();
         if (!buscarCaminoVisual(raiz, valorBuscado, camino)) {
             salida.append("\nNo se encontró el valor " + valorBuscado);
             return;
         }
+        final Object tipoAnimacion = activo;
         Timer timer = new Timer(700, null);
+        animacionActual = new AnimacionBusqueda(timer, tipoAnimacion);
         final int[] idx = {0};
         timer.addActionListener(e -> {
+            if (!animacionActual.sigueActivo(activo)) { timer.stop(); return; }
             if (idx[0] < camino.size()) {
                 NodoVisual actual = camino.get(idx[0]);
                 actual.color = Color.YELLOW;
@@ -587,15 +785,88 @@ public class ArbolesGUI extends JFrame {
                 dibujo.setRaizVisual(raiz);
                 timer.stop();
                 // Limpiar colores después de un tiempo
-                new Timer(1200, ev -> {
+                Timer t2 = new Timer(1200, ev -> {
+                    if (!animacionActual.sigueActivo(activo)) { ((Timer)ev.getSource()).stop(); return; }
                     limpiarColoresVisual(raiz);
                     dibujo.setRaizVisual(raiz);
-                }).start();
+                });
+                t2.setRepeats(false);
+                t2.start();
             }
         });
         limpiarColoresVisual(raiz);
         dibujo.setRaizVisual(raiz);
         timer.start();
+    }
+
+    private void animarBusquedaB(NodoVisualB raiz, int valorBuscado) {
+        if (animacionActual != null) animacionActual.cancelar();
+        java.util.List<NodoVisualB> camino = new java.util.ArrayList<>();
+        if (!buscarCaminoB(raiz, valorBuscado, camino)) {
+            salida.append("\nNo se encontró el valor " + valorBuscado);
+            return;
+        }
+        final Object tipoAnimacion = activo;
+        Timer timer = new Timer(700, null);
+        animacionActual = new AnimacionBusqueda(timer, tipoAnimacion);
+        final int[] idx = {0};
+        limpiarColoresVisualB(raiz);
+        dibujo.setRaizVisualB(raiz);
+        timer.addActionListener(e -> {
+            if (!animacionActual.sigueActivo(activo)) { timer.stop(); return; }
+            if (idx[0] < camino.size()) {
+                NodoVisualB actual = camino.get(idx[0]);
+                actual.color = Color.YELLOW;
+                actual.claveResaltada = -1; // No resaltar aún
+                dibujo.setRaizVisualB(raiz);
+                idx[0]++;
+            } else {
+                NodoVisualB ultimo = camino.get(camino.size()-1);
+                int claveIdx = -1;
+                for (int i = 0; i < ultimo.n; i++) {
+                    if (ultimo.claves[i] == valorBuscado) {
+                        claveIdx = i;
+                        break;
+                    }
+                }
+                boolean encontrado = claveIdx != -1;
+                ultimo.color = encontrado ? Color.GREEN : Color.RED;
+                ultimo.claveResaltada = claveIdx; // Resalta la clave encontrada (o ninguna si -1)
+                salida.append(encontrado ? "\nEncontrado: " + valorBuscado : "\nNo se encontró el valor " + valorBuscado);
+                dibujo.setRaizVisualB(raiz);
+                timer.stop();
+                // Limpiar colores después de un tiempo
+                Timer t2 = new Timer(1200, ev -> {
+                    if (!animacionActual.sigueActivo(activo)) { ((Timer)ev.getSource()).stop(); return; }
+                    limpiarColoresVisualB(raiz);
+                    dibujo.setRaizVisualB(raiz);
+                });
+                t2.setRepeats(false);
+                t2.start();
+            }
+        });
+        timer.start();
+    }
+
+    // Busca el camino de búsqueda en el árbol B
+    private boolean buscarCaminoB(NodoVisualB n, int valor, java.util.List<NodoVisualB> camino) {
+        if (n == null) return false;
+        camino.add(n);
+        int i = 0;
+        while (i < n.n && valor > n.claves[i]) i++;
+        if (i < n.n && valor == n.claves[i]) return true;
+        if (n.hijos == null || n.hijos.length == 0) return false;
+        return buscarCaminoB(n.hijos[i], valor, camino);
+    }
+
+    // Limpia colores en el árbol B visual
+    private void limpiarColoresVisualB(NodoVisualB n) {
+        if (n == null) return;
+        n.color = Color.LIGHT_GRAY;
+        n.claveResaltada = -1;
+        if (n.hijos != null) {
+            for (NodoVisualB h : n.hijos) limpiarColoresVisualB(h);
+        }
     }
 
     // Busca el camino hasta el nodo (o hasta donde termina la búsqueda)
@@ -625,8 +896,7 @@ public class ArbolesGUI extends JFrame {
             int v = Integer.parseInt(entrada.getText());
             switch(op) {
                 case "insertar":
-
-                    //Verificar si es arbol binario normal
+                    // Árbol binario normal (AB)
                     if (activo instanceof ArbolBinario && !(activo instanceof ArbolBusqueda)) {
                         ArbolBinario ab = (ArbolBinario)activo;
                         if (ab.raiz == null) {
@@ -652,44 +922,76 @@ public class ArbolesGUI extends JFrame {
                                 salida.append("\nNo se pudo insertar. Puede que ya exista el valor, el padre no exista, o el lado esté ocupado.");
                             } else {
                                 salida.append("\nInsertado: " + v + " como hijo " + (lado.equalsIgnoreCase("I") ? "izquierdo" : "derecho") + " de " + padreValor);
-                                dibujo.setRaizVisual(ab.getVisualTree());
                             }
+                            dibujo.setRaizVisual(ab.getVisualTree());
                         }
-                    }else{ //Si no es arbol binario normal
+                    }
+                    // Árbol B
+                    else if (activo instanceof ArbolB) {
+                        ArbolB arbolB = (ArbolB)activo;
+                        if (arbolB.buscar(v)) {
+                            salida.append("\nEl valor " + v + " ya existe en el árbol B");
+                        } else {
+                            arbolB.insertar(v);
+                            salida.append("\nInsertado: " + v + " en Árbol B");
+                        }
+                        dibujo.setRaizVisualB(arbolB.convertBVisual(arbolB.getRaiz()));
+                    }
+                    // Otros tipos (ABB, AVL)
+                    else {
                         if (activo.buscar(v)) {
                             salida.append("\nEl valor " + v + " ya existe en el árbol");
                         } else {
                             activo.insertar(v);
                             salida.append("\nInsertado: " + v);
-                            dibujo.setRaizVisual(activo.getVisualTree());
                         }
+                        dibujo.setRaizVisual(activo.getVisualTree());
                     }
-                    
                     break;
+
                 case "eliminar":
-                    //Verificar si es arbol binario normal
+                    // Árbol binario normal (AB)
                     if (activo instanceof ArbolBinario && !(activo instanceof ArbolBusqueda)) {
                         ArbolBinario ab = (ArbolBinario)activo;
                         eliminarNodoAB(ab, v);
                         dibujo.setRaizVisual(ab.getVisualTree());
-                    } else{
+                    }
+                    // Árbol B
+                    else if (activo instanceof ArbolB) {
+                        ArbolB arbolB = (ArbolB)activo;
+                        if (arbolB.buscar(v)) {
+                            arbolB.eliminar(v);
+                            salida.append("\nEliminado: " + v + " de Árbol B");
+                        } else {
+                            salida.append("\nEl valor " + v + " no existe en el Árbol B");
+                        }
+                        dibujo.setRaizVisualB(arbolB.convertBVisual(arbolB.getRaiz()));
+                    }
+                    // Otros tipos (ABB, AVL)
+                    else {
                         if (activo.buscar(v)) {
                             activo.eliminar(v);
                             salida.append("\nEliminado: " + v);
-                            dibujo.setRaizVisual(activo.getVisualTree());
                         } else {
                             salida.append("\nEl valor " + v + " no existe en el árbol");
                         }
+                        dibujo.setRaizVisual(activo.getVisualTree());
                     }
-            
                     break;
+
                 case "buscar":
                     boolean enc = activo.buscar(v);
                     salida.append("\nBuscando: " + v + (enc ? " existe" : " no existe"));
-                    if (enc) {
+                    // Animación solo para AB, ABB, AVL (puedes mejorar para B si quieres)
+                    if (activo instanceof ArbolBinario || activo instanceof ArbolBusqueda || activo instanceof ArbolAVL) {
                         NodoVisual raizVisual = activo.getVisualTree();
                         animarBusquedaAB(raizVisual, v);
-                        break;
+                    }
+                    // Para Árbol B, solo actualiza visualización (puedes implementar animación especial si gustas)
+                    else if (activo instanceof ArbolB) {
+                        ArbolB arbolB = (ArbolB)activo;
+                        NodoVisualB raizB = arbolB.convertBVisual(arbolB.getRaiz());
+                        animarBusquedaB(raizB, v);
                     }
                     break;
             }
