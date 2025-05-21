@@ -1,8 +1,6 @@
 import java.awt.*;
 import javax.swing.*;
 import java.util.Arrays;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.DocumentEvent;
 
 // Interfaz base para cualquier tipo de árbol
 interface ArbolBase {
@@ -51,101 +49,207 @@ class PanelDibujo extends JPanel {
     private NodoVisual raiz;
     private NodoVisualB raizB; // <- NUEVO
 
+    // --- NUEVO: Cálculo de ancho dinámico para scroll y espaciado ---
+    private static final int RADIO_NODO = 28;
+    private static final int FUENTE_NODO = 18;
+    private static final int BOX_B_ANCHO = 40;
+    private static final int BOX_B_ALTO = 40;
+    private static final int ESPACIO_H = 56; // ancho mínimo por nodo
+    private static final int ESPACIO_V = 100; // espacio vertical entre niveles
+
+    private int calcularAncho(NodoVisual n) {
+        if (n == null) return 0;
+        int r = ESPACIO_H;
+        int izq = calcularAncho(n.izq);
+        int der = calcularAncho(n.der);
+        if (izq == 0 && der == 0) return r;
+        return Math.max(r, izq + der + ESPACIO_H);
+    }
+    private int calcularAnchoB(NodoVisualB n) {
+        if (n == null) return 0;
+        int boxWidth = BOX_B_ANCHO * n.n;
+        if (n.hijos == null || n.hijos.length == 0) return boxWidth;
+        int total = 0;
+        for (NodoVisualB h : n.hijos) total += calcularAnchoB(h);
+        total += BOX_B_ANCHO * (n.hijos.length - 1); // espacio entre hijos
+        return Math.max(boxWidth, total);
+    }
+
+    // --- NUEVO: Cálculo de altura dinámica para scroll vertical ---
+    private int calcularAltura(NodoVisual n) {
+        if (n == null) return 0;
+        return 1 + Math.max(calcularAltura(n.izq), calcularAltura(n.der));
+    }
+    private int calcularAlturaB(NodoVisualB n) {
+        if (n == null) return 0;
+        int maxH = 0;
+        if (n.hijos != null) {
+            for (NodoVisualB h : n.hijos) {
+                maxH = Math.max(maxH, calcularAlturaB(h));
+            }
+        }
+        return 1 + maxH;
+    }
+
     void setRaizVisual(NodoVisual r) { 
         raiz = r; 
         raizB = null;
+        ajustarTamanioPanel();
         repaint(); 
     }
     void setRaizVisualB(NodoVisualB r) { 
         raizB = r; 
         raiz = null;
+        ajustarTamanioPanel();
         repaint(); 
     }
     // Nuevo método para limpiar completamente el panel
     void limpiarTodo() {
         raiz = null;
         raizB = null;
+        ajustarTamanioPanel();
         repaint();
     }
 
+    // Ajusta el tamaño preferido del panel para scroll
+    private void ajustarTamanioPanel() {
+        int ancho = 800, alto = 600;
+        int niveles = 1;
+        if (raizB != null) {
+            ancho = Math.max(800, calcularAnchoB(raizB) + 100);
+            niveles = calcularAlturaB(raizB);
+        } else if (raiz != null) {
+            ancho = Math.max(800, calcularAncho(raiz) + 100);
+            niveles = calcularAltura(raiz);
+        }
+        // Calcula alto dinámico: ESPACIO_V px por nivel + margen
+        alto = Math.max(200, niveles * ESPACIO_V + 60);
+        setPreferredSize(new Dimension(ancho, alto));
+        revalidate();
+    }
 
     @Override protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (raizB != null) {
-            dibujarB((Graphics2D)g, raizB, getWidth()/2, 50, getWidth()/4);
+            int anchoTotal = calcularAnchoB(raizB);
+            dibujarB((Graphics2D)g, raizB, getWidth()/2, 50, anchoTotal);
         } else if (raiz != null) {
-            dibujar((Graphics2D)g, raiz, getWidth()/2, 50, getWidth()/4);
+            int anchoTotal = calcularAncho(raiz);
+            dibujar((Graphics2D)g, raiz, getWidth()/2, 50, anchoTotal);
         } else {
-            // Si no hay árbol, limpiar el fondo explícitamente
             g.setColor(Color.WHITE);
             g.fillRect(0, 0, getWidth(), getHeight());
         }
     }
     
 
-    private void dibujar(Graphics2D g, NodoVisual n, int x, int y, int off) {
-        int r = 20;
+    // Modifica dibujar para usar el ancho calculado
+    private void dibujar(Graphics2D g, NodoVisual n, int x, int y, int ancho) {
+        if (n == null) return;
+        int r = RADIO_NODO;
         g.setColor(n.color);
         g.fillOval(x-r, y-r, 2*r, 2*r);
         g.setColor(Color.BLACK);
         g.drawOval(x-r, y-r, 2*r, 2*r);
+        g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
         String t = String.valueOf(n.valor);
         FontMetrics fm = g.getFontMetrics();
         g.drawString(t, x - fm.stringWidth(t)/2, y + fm.getAscent()/4);
         if (!n.extraInfo.isEmpty()) {
-            g.setFont(new Font("Arial", Font.PLAIN, 10));
-            g.drawString(n.extraInfo, x - 30, y + r + 15);
-            g.setFont(new Font("Arial", Font.BOLD, 14));
+            g.setFont(new Font("Arial", Font.PLAIN, 12));
+            g.drawString(n.extraInfo, x - 40, y + r + 18);
+            g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
         }
-        int lx = x, ly = y + r;
+        int izqAncho = n.izq != null ? calcularAncho(n.izq) : 0;
+        int derAncho = n.der != null ? calcularAncho(n.der) : 0;
+        int totalHijos = izqAncho + derAncho;
+        int baseY = y + ESPACIO_V;
         if (n.izq != null) {
+            int childX = x - (totalHijos > 0 ? (derAncho + ESPACIO_H)/2 : 80);
             g.setColor(n.conexionIzq ? Color.BLUE : Color.BLACK);
-            g.drawLine(lx, ly, x-off, y+50-r);
-            dibujar(g, n.izq, x-off, y+50, off/2);
+            ((Graphics2D)g).setStroke(new BasicStroke(4)); // Línea más gruesa
+            g.drawLine(x, y + r, childX, baseY - r);
+            ((Graphics2D)g).setStroke(new BasicStroke(1)); // Restaurar grosor
+            dibujar(g, n.izq, childX, baseY, izqAncho);
         }
         if (n.der != null) {
+            int childX = x + (totalHijos > 0 ? (izqAncho + ESPACIO_H)/2 : 80);
             g.setColor(n.conexionDer ? Color.BLUE : Color.BLACK);
-            g.drawLine(lx, ly, x+off, y+50-r);
-            dibujar(g, n.der, x+off, y+50, off/2);
+            ((Graphics2D)g).setStroke(new BasicStroke(4)); // Línea más gruesa
+            g.drawLine(x, y + r, childX, baseY - r);
+            ((Graphics2D)g).setStroke(new BasicStroke(1)); // Restaurar grosor
+            dibujar(g, n.der, childX, baseY, derAncho);
         }
     }
+    // Modifica dibujarB para usar el ancho calculado
     private void dibujarB(Graphics2D g, NodoVisualB n, int x, int y, int ancho) {
         if (n == null) return;
-        int boxWidth = 30 * n.n;
-        int boxHeight = 30;
-        // Dibuja el rectángulo
+        // --- Calcular ancho dinámico de cada clave ---
+        g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
+        FontMetrics fm = g.getFontMetrics();
+        int[] claveAnchos = new int[n.n];
+        int maxClaveAlto = 0;
+        for (int i = 0; i < n.n; i++) {
+            String clave = String.valueOf(n.claves[i]);
+            claveAnchos[i] = Math.max(BOX_B_ANCHO, fm.stringWidth(clave) + 24);
+            maxClaveAlto = Math.max(maxClaveAlto, fm.getHeight() + 16);
+        }
+        int boxWidth = 0;
+        for (int w : claveAnchos) boxWidth += w;
+        int boxHeight = Math.max(BOX_B_ALTO, maxClaveAlto);
+        // --- Dibujar el recuadro del nodo ---
         g.setColor(n.color);
         g.fillRect(x - boxWidth/2, y, boxWidth, boxHeight);
         g.setColor(Color.BLACK);
         g.drawRect(x - boxWidth/2, y, boxWidth, boxHeight);
-        // Dibuja las claves
+        // --- Dibujar claves con ancho variable ---
+        int cx = x - boxWidth/2;
         for (int i = 0; i < n.n; i++) {
             String clave = String.valueOf(n.claves[i]);
-            int claveX = x - boxWidth/2 + 10 + i*30;
-            int claveY = y + 20;
+            int claveX = cx + (claveAnchos[i] - fm.stringWidth(clave))/2;
+            int claveY = y + boxHeight/2 + FUENTE_NODO/2 - 2;
             if (n.claveResaltada == i) {
-                // Fondo destacado para la clave encontrada
                 Color fondo = (n.color == Color.GREEN) ? Color.GREEN : Color.RED;
                 g.setColor(fondo);
-                g.fillRoundRect(claveX - 4, y + 4, 24, 22, 8, 8);
-                g.setColor(Color.WHITE); // Fuente blanca
-                g.setFont(new Font("Arial", Font.BOLD, 16));
+                g.fillRoundRect(cx + 2, y + 6, claveAnchos[i] - 4, boxHeight - 12, 10, 10);
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO+2));
                 g.drawString(clave, claveX, claveY);
-                g.setFont(new Font("Arial", Font.PLAIN, 14));
+                g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
                 g.setColor(Color.BLACK);
             } else {
                 g.setColor(Color.BLACK);
                 g.drawString(clave, claveX, claveY);
             }
+            // Línea divisoria entre claves
+            if (i < n.n-1) {
+                g.setColor(Color.BLACK);
+                g.drawLine(cx + claveAnchos[i], y, cx + claveAnchos[i], y + boxHeight);
+            }
+            cx += claveAnchos[i];
         }
-        // Dibuja los hijos
+        // --- Dibujar hijos ---
         if (n.hijos != null) {
-            int totalWidth = boxWidth + (n.hijos.length-1)*30;
-            int startX = x - totalWidth/2 + 15;
+            int[] hijosAnchos = new int[n.hijos.length];
+            int totalHijosAncho = 0;
             for (int i = 0; i < n.hijos.length; i++) {
-                int cx = startX + i*(boxWidth/(n.hijos.length));
-                g.drawLine(x - boxWidth/2 + i*30, y + boxHeight, cx, y + boxHeight + 40);
-                dibujarB(g, n.hijos[i], cx, y + boxHeight + 40, boxWidth / n.hijos.length);
+                hijosAnchos[i] = calcularAnchoB(n.hijos[i]);
+                totalHijosAncho += hijosAnchos[i];
+            }
+            totalHijosAncho += BOX_B_ANCHO * (n.hijos.length - 1);
+            int startX = x - totalHijosAncho/2;
+            int childX = startX;
+            cx = x - boxWidth/2;
+            for (int i = 0; i < n.hijos.length; i++) {
+                int childCenter = childX + hijosAnchos[i]/2;
+                int claveOffset = 0;
+                for (int j = 0; j < i; j++) claveOffset += claveAnchos[j];
+                int fromX = cx + claveOffset;
+                ((Graphics2D)g).setStroke(new BasicStroke(4)); // Línea más gruesa
+                g.drawLine(fromX, y + boxHeight, childCenter, y + boxHeight + ESPACIO_V - boxHeight/2);
+                ((Graphics2D)g).setStroke(new BasicStroke(1)); // Restaurar grosor
+                dibujarB(g, n.hijos[i], childCenter, y + boxHeight + ESPACIO_V - boxHeight/2, hijosAnchos[i]);
+                childX += hijosAnchos[i] + BOX_B_ANCHO;
             }
         }
     }
@@ -313,30 +417,31 @@ class ArbolAVL extends ArbolBusqueda {
 
 // B-Tree orden minimo de 2
 class ArbolB implements ArbolBase {
-    private final int T;
+    private final int m; // orden
+    private final int T; // mínimo de hijos (ceil(m/2))
     class NodoB {
         int[] claves;
         NodoB[] hijos;
         int n;
         boolean hoja;
         NodoB() {
-            claves = new int[2*T - 1];
-            hijos = new NodoB[2*T];
+            claves = new int[m-1+1]; // +1 para overflow temporal
+            hijos = new NodoB[m+1];
             n = 0; hoja = true;
         }
     }
     private NodoB raiz;
     public ArbolB(int orden) {
-        if (orden < 2) orden = 2;
-        //if (orden > 5) orden = 5;  // Aseguramos que no sea mayor a 5
-        T = orden;
+        if (orden < 3) orden = 3;
+        m = orden;
+        T = (int)Math.ceil(m/2.0);
         raiz = new NodoB();
-    }   
+    }
     @Override
     public void insertar(int k) {
         if (!buscar(k)) {
             NodoB r = raiz;
-            if (r.n == 2*T - 1) {
+            if (r.n == m-1) { // Si está lleno (m-1 claves), dividir
                 NodoB s = new NodoB(); s.hoja = false;
                 s.hijos[0] = r;
                 split(s, 0, r);
@@ -355,7 +460,7 @@ class ArbolB implements ArbolBase {
         } else {
             while (i >= 0 && k < x.claves[i]) i--;
             i++;
-            if (x.hijos[i].n == 2*T - 1) {
+            if (x.hijos[i].n == m-1) {
                 split(x, i, x.hijos[i]);
                 if (k > x.claves[i]) i++;
             }
@@ -363,10 +468,11 @@ class ArbolB implements ArbolBase {
         }
     }
     private void split(NodoB p, int i, NodoB y) {
-        NodoB z = new NodoB(); z.hoja = y.hoja; z.n = T - 1;
-        System.arraycopy(y.claves, T, z.claves, 0, T-1);
-        if (!y.hoja) System.arraycopy(y.hijos, T, z.hijos, 0, T);
-        y.n = T - 1;
+        NodoB z = new NodoB(); z.hoja = y.hoja; z.n = T-1;
+        // Copia las últimas T-1 claves de y a z
+        for (int j = 0; j < T-1; j++) z.claves[j] = y.claves[j+T];
+        if (!y.hoja) for (int j = 0; j < T; j++) z.hijos[j] = y.hijos[j+T];
+        y.n = T-1;
         for (int j = p.n; j >= i+1; j--) p.hijos[j+1] = p.hijos[j];
         p.hijos[i+1] = z;
         for (int j = p.n-1; j >= i; j--) p.claves[j+1] = p.claves[j];
@@ -575,9 +681,8 @@ public class ArbolesGUI extends JFrame {
     private ArbolBase activo;
     private PanelDibujo dibujo = new PanelDibujo();
     private JTextArea salida = new JTextArea();
-    private JTextField entrada = new JTextField(5), ordenField = new JTextField("2",3);
+    private JTextField entrada = new JTextField(5);
     private JComboBox<String> tipo;
-    private JLabel ordenLabel;
 
     public ArbolesGUI() {
         setTitle("Visualizador Árboles"); setSize(800,600);
@@ -585,7 +690,8 @@ public class ArbolesGUI extends JFrame {
         
         // Panel principal
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(dibujo, BorderLayout.CENTER);
+        JScrollPane scrollDibujo = new JScrollPane(dibujo, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        panel.add(scrollDibujo, BorderLayout.CENTER);
 
         // Controles
         JPanel ctrl = new JPanel();
@@ -593,101 +699,57 @@ public class ArbolesGUI extends JFrame {
         ctrl.add(tipo);
         ctrl.add(new JLabel("Valor:")); ctrl.add(entrada);
 
-        ordenLabel = new JLabel("Orden B:");
-        ctrl.add(ordenLabel);
-        ctrl.add(ordenField);
-        // Ocultar orden por defecto
-        ordenLabel.setVisible(false);
-        ordenField.setVisible(false);
-
         JButton ins = new JButton("Insertar"), del = new JButton("Eliminar"), bus = new JButton("Buscar");
         ctrl.add(ins); ctrl.add(del); ctrl.add(bus);
         panel.add(ctrl, BorderLayout.NORTH);
-        panel.add(new JScrollPane(salida), BorderLayout.SOUTH);
-        add(panel);
 
-        // Agregar DocumentListener para validar el orden en tiempo real
-        ordenField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) { validarOrden(); }
-            public void removeUpdate(DocumentEvent e) { validarOrden(); }
-            public void insertUpdate(DocumentEvent e) { validarOrden(); }
-            
-            private void validarOrden() {
-                if (ordenField.isVisible()) { // Solo validar si el campo es visible
-                    try {
-                        int o = Integer.parseInt(ordenField.getText());
-                        /*
-                        if (o > 5) {
-                            SwingUtilities.invokeLater(() -> {
-                                JOptionPane.showMessageDialog(ArbolesGUI.this, 
-                                    "El orden no puede ser mayor a 5. Se usará orden 5", 
-                                    "Advertencia", 
-                                    JOptionPane.WARNING_MESSAGE);
-                                ordenField.setText("5");
-                            });
-                        } else */ if (o < 2) {
-                            SwingUtilities.invokeLater(() -> {
-                                JOptionPane.showMessageDialog(ArbolesGUI.this, 
-                                    "El orden no puede ser menor a 2. Se usará orden 2", 
-                                    "Advertencia", 
-                                    JOptionPane.WARNING_MESSAGE);
-                                ordenField.setText("2");
-                            });
-                        }
-                    } catch (NumberFormatException ex) {
-                        // No hacer nada si no es un número válido todavía
-                    }
-                }
-            }
-        });
+        // Área de salida con scroll y altura fija
+        salida.setRows(2);
+        salida.setLineWrap(true);
+        salida.setWrapStyleWord(true);
+        salida.setEditable(false);
+        JScrollPane scrollSalida = new JScrollPane(salida, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollSalida.setPreferredSize(new Dimension(800, salida.getFont().getSize() * 3 + 10));
+        panel.add(scrollSalida, BorderLayout.SOUTH);
+        add(panel);
 
         // Al cambiar tipo, actualizar visibilidad y crear B si aplica
         tipo.addActionListener(e -> {
             String t = (String) tipo.getSelectedItem();
-            boolean isB = t.equals("B");
-            ordenLabel.setVisible(isB);
-            ordenField.setVisible(isB);
-            // Limpiar visualización previa de cualquier tipo
             dibujo.limpiarTodo();
-            // Reinicializar el árbol correspondiente para evitar residuos
-            if (isB) {
-                int o;
-                try { 
-                    o = Integer.parseInt(ordenField.getText());
-                    if (o < 2) {
-                        JOptionPane.showMessageDialog(this, 
-                            "El orden no puede ser menor a 2. Se usará orden 2", 
-                            "Advertencia", 
-                            JOptionPane.WARNING_MESSAGE);
-                        o = 2;
-                        ordenField.setText("2");
+            if (t.equals("B")) {
+                int o = 0;
+                while (o < 3) {
+                    String input = JOptionPane.showInputDialog(this, "Ingrese el orden del árbol B (mínimo 3):", "6");
+                    if (input == null) return; // Cancelado
+                    try {
+                        o = Integer.parseInt(input.trim());
+                        if (o < 3) {
+                            JOptionPane.showMessageDialog(this, "El orden debe ser al menos 3.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, "Ingrese un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
-                catch(Exception ex) { 
-                    o = 2; 
-                    ordenField.setText("2");
-                }
-                b = new ArbolB(o); // Nueva instancia
+                b = new ArbolB(o); // Nueva instancia con orden correcto
                 activo = b;
                 dibujo.setRaizVisualB(b.convertBVisual(b.getRaiz()));
             } else if (t.equals("ABB")) {
-                abb = new ArbolBusqueda(); // Nueva instancia
+                abb = new ArbolBusqueda();
                 activo = abb;
                 dibujo.setRaizVisual(abb.getVisualTree());
             } else if (t.equals("AVL")) {
-                avl = new ArbolAVL(); // Nueva instancia
+                avl = new ArbolAVL();
                 activo = avl;
                 dibujo.setRaizVisual(avl.getVisualTree());
             } else {
-                ab = new ArbolBinario(); // Nueva instancia
+                ab = new ArbolBinario();
                 activo = ab;
                 dibujo.setRaizVisual(ab.getVisualTree());
             }
             if (animacionActual != null) animacionActual.cancelar();
-            // Forzar repintado para limpiar cualquier residuo
             dibujo.repaint();
-	   });
-
+        });
        	// Acciones botones
         ins.addActionListener(e -> operar("insertar"));
         del.addActionListener(e -> operar("eliminar"));
@@ -890,6 +952,22 @@ public class ArbolesGUI extends JFrame {
         limpiarColoresVisual(n.der);
     }
 
+    // --- Animación de eliminación ABB/AVL: parpadeo en rojo antes de eliminar ---
+    private void animarEliminacionABB(int valor) {
+        NodoVisual raizVisual = activo.getVisualTree();
+        java.util.List<NodoVisual> camino = new java.util.ArrayList<>();
+        if (!buscarCaminoVisual(raizVisual, valor, camino)) {
+            salida.append("\nNo se encontró el valor " + valor);
+            return;
+        }
+        NodoVisual[] nodos = {camino.get(camino.size()-1)};
+        animarNodos(nodos, () -> {
+            activo.eliminar(valor);
+            salida.append("\nEliminado: " + valor);
+            dibujo.setRaizVisual(activo.getVisualTree());
+        }, Color.RED, Color.LIGHT_GRAY, Color.RED);
+    }
+
     // Método para ejecutar operación y mostrar resultado
     private void operar(String op) {
         try {
@@ -967,18 +1045,16 @@ public class ArbolesGUI extends JFrame {
                         }
                         dibujo.setRaizVisualB(arbolB.convertBVisual(arbolB.getRaiz()));
                     }
-                    // Otros tipos (ABB, AVL)
-                    else {
+                    // ABB o AVL
+                    else if (activo instanceof ArbolBusqueda || activo instanceof ArbolAVL) {
                         if (activo.buscar(v)) {
-                            activo.eliminar(v);
-                            salida.append("\nEliminado: " + v);
+                            animarEliminacionABB(v);
                         } else {
                             salida.append("\nEl valor " + v + " no existe en el árbol");
+                            dibujo.setRaizVisual(activo.getVisualTree());
                         }
-                        dibujo.setRaizVisual(activo.getVisualTree());
                     }
                     break;
-
                 case "buscar":
                     boolean enc = activo.buscar(v);
                     salida.append("\nBuscando: " + v + (enc ? " existe" : " no existe"));
@@ -998,6 +1074,50 @@ public class ArbolesGUI extends JFrame {
         } catch(Exception ex) {
             salida.append("\nError: entrada inválida");
         }
+    }
+
+    // --- Módulo reutilizable para animaciones de parpadeo de nodos/aristas ---
+    private void animarNodos(NodoVisual[] nodos, Runnable despues, Color... colores) {
+        if (nodos == null || nodos.length == 0 || colores == null || colores.length == 0) {
+            if (despues != null) despues.run();
+            return;
+        }
+        Timer timer = new Timer(350, null);
+        final int[] paso = {0};
+        timer.addActionListener(e -> {
+            int idx = paso[0] % colores.length;
+            for (NodoVisual nv : nodos) nv.color = colores[idx];
+            dibujo.repaint();
+            paso[0]++;
+            if (paso[0] >= colores.length) {
+                timer.stop();
+                for (NodoVisual nv : nodos) nv.color = Color.LIGHT_GRAY;
+                dibujo.repaint();
+                if (despues != null) despues.run();
+            }
+        });
+        timer.start();
+    }
+    private void animarNodosB(NodoVisualB[] nodos, Runnable despues, Color... colores) {
+        if (nodos == null || nodos.length == 0 || colores == null || colores.length == 0) {
+            if (despues != null) despues.run();
+            return;
+        }
+        Timer timer = new Timer(350, null);
+        final int[] paso = {0};
+        timer.addActionListener(e -> {
+            int idx = paso[0] % colores.length;
+            for (NodoVisualB nv : nodos) nv.color = colores[idx];
+            dibujo.repaint();
+            paso[0]++;
+            if (paso[0] >= colores.length) {
+                timer.stop();
+                for (NodoVisualB nv : nodos) nv.color = Color.LIGHT_GRAY;
+                dibujo.repaint();
+                if (despues != null) despues.run();
+            }
+        });
+        timer.start();
     }
 
     public static void main(String[] args) {
