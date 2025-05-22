@@ -25,7 +25,7 @@ class Nodo {
 class NodoVisual {
     int valor;
     NodoVisual izq, der, padre;
-    Color color = Color.LIGHT_GRAY;
+    Color color = new Color(210, 210, 255);
     String extraInfo = "";
     boolean conexionIzq, conexionDer;
     NodoVisual(int valor) { this.valor = valor; }
@@ -37,7 +37,7 @@ class NodoVisualB {
     int n;
     NodoVisualB[] hijos; // hijos visuales
     int x, y; // posición para dibujar
-    Color color = Color.LIGHT_GRAY;
+    Color color = new Color(210, 210, 255);
     int claveResaltada = -1; // -1: ninguna resaltada
 
     NodoVisualB(int[] claves, int n) {
@@ -156,8 +156,8 @@ class PanelDibujo extends JPanel {
         int r = RADIO_NODO;
         g.setColor(n.color);
         g.fillOval(x-r, y-r, 2*r, 2*r);
-        g.setColor(new Color(0, 100, 0)); // Verde oscuro para el contorno
-        g.setStroke(new BasicStroke(3));
+        g.setColor(new Color(150, 150, 220)); // Verde oscuro para el contorno
+        g.setStroke(new BasicStroke(1.5f));
         g.drawOval(x-r, y-r, 2*r, 2*r);
         g.setStroke(new BasicStroke(1));
         g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
@@ -174,7 +174,7 @@ class PanelDibujo extends JPanel {
         if (n.izq != null) {
             int childX = x - (totalHijos > 0 ? (derAncho + ESPACIO_H)/2 : 80);
             g.setColor(n.conexionIzq ? Color.BLUE : new Color(0, 100, 0));
-            ((Graphics2D)g).setStroke(new BasicStroke(4)); // Línea más gruesa
+            ((Graphics2D)g).setStroke(new BasicStroke(1.5f)); // Línea un poco más gruesa
             g.drawLine(x, y + r, childX, baseY - r);
             ((Graphics2D)g).setStroke(new BasicStroke(1)); // Restaurar grosor
             dibujar(g, n.izq, childX, baseY, izqAncho);
@@ -182,7 +182,7 @@ class PanelDibujo extends JPanel {
         if (n.der != null) {
             int childX = x + (totalHijos > 0 ? (izqAncho + ESPACIO_H)/2 : 80);
             g.setColor(n.conexionDer ? Color.BLUE : new Color(0, 100, 0));
-            ((Graphics2D)g).setStroke(new BasicStroke(4)); // Línea más gruesa
+            ((Graphics2D)g).setStroke(new BasicStroke(1.5f)); // Líneaun poco  más gruesa
             g.drawLine(x, y + r, childX, baseY - r);
             ((Graphics2D)g).setStroke(new BasicStroke(1)); // Restaurar grosor
             dibujar(g, n.der, childX, baseY, derAncho);
@@ -190,7 +190,7 @@ class PanelDibujo extends JPanel {
 
         // --- DIBUJAR LA ETIQUETA (extraInfo) ENCIMA DE LAS ARISTAS ---
         if (!n.extraInfo.isEmpty()) {
-            g.setFont(new Font("Arial", Font.PLAIN, 12));
+            g.setFont(new Font("Arial", Font.BOLD, 15));
             FontMetrics fmInfo = g.getFontMetrics();
             int infoWidth = fmInfo.stringWidth(n.extraInfo);
             int infoHeight = fmInfo.getHeight();
@@ -202,7 +202,7 @@ class PanelDibujo extends JPanel {
             int rectY = infoY - fmInfo.getAscent() + 1;
 
             // Fondo semitransparente y redondeado
-            Color fondo = new Color(255, 255, 200, 180); // Amarillo claro, alfa 180/255
+            Color fondo = new Color(255, 255, 200, 230); // Amarillo claro, alfa 180/255
             g.setColor(fondo);
             g.fillRoundRect(infoX, rectY, infoWidth + 2 * paddingX, infoHeight + 2 * paddingY, arc, arc);
 
@@ -731,6 +731,88 @@ class ArbolB implements ArbolBase {
     public int getOrden() { return m; }
 }
 
+class BotonRedondeado extends JButton {
+    private final int arc;
+    private boolean hover = false;
+
+    public BotonRedondeado(String text, int arc) {
+        super(text);
+        this.arc = arc;
+        setContentAreaFilled(false);
+        setFocusPainted(false);
+        setBorderPainted(false);
+        setOpaque(false);
+
+        // Detecta hover
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                hover = true;
+                repaint();
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                hover = false;
+                repaint();
+            }
+        });
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        // Fondo redondeado
+        Color base = getBackground();
+        Color fondo = hover ? base.brighter() : base;
+        g2.setColor(fondo);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+
+        // Dibuja el texto centrado
+        FontMetrics fm = g2.getFontMetrics(getFont());
+        String text = getText();
+        int textWidth = fm.stringWidth(text);
+        int textHeight = fm.getAscent();
+        int x = (getWidth() - textWidth) / 2;
+        int y = (getHeight() + textHeight) / 2 - 2;
+        g2.setColor(getForeground());
+        g2.setFont(getFont());
+        g2.drawString(text, x, y);
+
+        // Si hay icono, dibújalo (opcional)
+        if (getIcon() != null) {
+            getIcon().paintIcon(this, g2, 6, (getHeight() - getIcon().getIconHeight()) / 2);
+        }
+
+        g2.dispose();
+    }
+}
+
+class BordeRedondeado extends javax.swing.border.AbstractBorder {
+    private final int arc;
+    private final Color color;
+    public BordeRedondeado(int arc, Color color) {
+        this.arc = arc;
+        this.color = color;
+    }
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(color);
+        g2.setStroke(new BasicStroke(2));
+        g2.drawRoundRect(x+1, y+1, width-3, height-3, arc, arc);
+        g2.dispose();
+    }
+    @Override
+    public Insets getBorderInsets(Component c) { return new Insets(10, 10, 10, 10); }
+    @Override
+    public Insets getBorderInsets(Component c, Insets insets) {
+        insets.left = insets.right = insets.top = insets.bottom = 10;
+        return insets;
+    }
+}
+
 // Clase principal GUI
 public class ArbolesGUI extends JFrame {
     private ArbolBinario ab = new ArbolBinario();
@@ -742,6 +824,8 @@ public class ArbolesGUI extends JFrame {
     private JTextArea salida = new JTextArea();
     private JTextField entrada = new JTextField(5);
     private JComboBox<String> tipo;
+    Color azulCeleste = new Color(140, 170, 255);
+    Color azulCelesteClaro = new Color(200, 220, 255);
 
     public ArbolesGUI() {
         setTitle("Visualizador Árboles"); setSize(800,600);
@@ -758,12 +842,16 @@ public class ArbolesGUI extends JFrame {
         ctrl.add(tipo);
         ctrl.add(new JLabel("Valor:")); ctrl.add(entrada);
 
-        JButton ins = new JButton("Insertar"), del = new JButton("Eliminar"), bus = new JButton("Buscar"), rec = new JButton("Recorrer");
+        JButton ins = new BotonRedondeado("Insertar", 18);
+        JButton del = new BotonRedondeado("Eliminar", 18);
+        JButton bus = new BotonRedondeado("Buscar", 18);
+        JButton rec = new BotonRedondeado("Recorrer", 18);
         ctrl.add(ins); ctrl.add(del); ctrl.add(bus); ctrl.add(rec);
         panel.add(ctrl, BorderLayout.NORTH);
 
-        JButton guardar = new JButton("Guardar");
-        JButton cargar = new JButton("Cargar");
+        JButton guardar = new BotonRedondeado("Guardar", 18);
+        JButton cargar = new BotonRedondeado("Cargar", 18);
+
         ctrl.add(guardar);
         ctrl.add(cargar);
 
@@ -779,6 +867,22 @@ public class ArbolesGUI extends JFrame {
         scrollSalida.setPreferredSize(new Dimension(800, salida.getFont().getSize() * 3 + 10));
         panel.add(scrollSalida, BorderLayout.SOUTH);
         add(panel);
+
+        scrollSalida.setBorder(new BordeRedondeado(18, new Color(120, 180, 255)));
+        estilizarBoton(ins);
+        estilizarBoton(del);
+        estilizarBoton(bus);
+        estilizarBoton(rec);
+        estilizarBoton(guardar);
+        estilizarBoton(cargar);
+
+        estilizarCombo(tipo);
+        estilizarTextField(entrada);
+
+        salida.setBackground(new Color(235, 245, 255));
+        salida.setForeground(new Color(30, 60, 120));
+        salida.setFont(new Font("Arial", Font.PLAIN, 14));
+        salida.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
         UIManager.put("ScrollBar.width", 12); // Scrollbar más delgada
 
@@ -862,43 +966,43 @@ public class ArbolesGUI extends JFrame {
         });
 
         scrollSalida.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
-        @Override
-        protected void configureScrollBarColors() {
-            this.thumbColor = new Color(0, 120, 60, 180);
-            this.trackColor = new Color(230, 255, 230);
-        }
-        @Override
-        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(thumbColor);
-            g2.fillRoundRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 12, 12);
-            g2.dispose();
-        }
-        @Override
-        protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setColor(trackColor);
-            g2.fillRoundRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height, 12, 12);
-            g2.dispose();
-        }
-        @Override
-        protected JButton createDecreaseButton(int orientation) {
-            return createZeroButton();
-        }
-        @Override
-        protected JButton createIncreaseButton(int orientation) {
-            return createZeroButton();
-        }
-        private JButton createZeroButton() {
-            JButton btn = new JButton();
-            btn.setPreferredSize(new Dimension(0, 0));
-            btn.setMinimumSize(new Dimension(0, 0));
-            btn.setMaximumSize(new Dimension(0, 0));
-            btn.setVisible(false);
-            return btn;
-        }
-    });
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new Color(0, 120, 60, 180);
+                this.trackColor = new Color(230, 255, 230);
+            }
+            @Override
+            protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(thumbColor);
+                g2.fillRoundRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 12, 12);
+                g2.dispose();
+            }
+            @Override
+            protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(trackColor);
+                g2.fillRoundRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height, 12, 12);
+                g2.dispose();
+            }
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                return createZeroButton();
+            }
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                return createZeroButton();
+            }
+            private JButton createZeroButton() {
+                JButton btn = new JButton();
+                btn.setPreferredSize(new Dimension(0, 0));
+                btn.setMinimumSize(new Dimension(0, 0));
+                btn.setMaximumSize(new Dimension(0, 0));
+                btn.setVisible(false);
+                return btn;
+            }
+        });
 
         // Al cambiar tipo, actualizar visibilidad y crear B si aplica
         tipo.addActionListener(e -> {
@@ -945,6 +1049,44 @@ public class ArbolesGUI extends JFrame {
 
         // Inicial activo
         activo = ab;
+    }
+
+    private void estilizarBoton(JButton boton) {
+        boton.setBackground(azulCeleste);
+        boton.setForeground(Color.WHITE);
+        boton.setFocusPainted(false);
+        boton.setFont(new Font("Arial", Font.BOLD, 14));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        //boton.setContentAreaFilled(true);
+        //boton.setOpaque(true);
+        //boton.setBorderPainted(true);
+        boton.setBorder(new BordeRedondeado(18, azulCeleste.darker()));
+    }
+
+    private void estilizarCombo(JComboBox<?> combo) {
+        combo.setBackground(azulCelesteClaro);
+        combo.setForeground(new Color(30, 60, 120));
+        combo.setFont(new Font("Arial", Font.BOLD, 14));
+        combo.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                JButton button = super.createArrowButton();
+                button.setBackground(azulCeleste);
+                button.setBorder(BorderFactory.createEmptyBorder());
+                return button;
+            }
+        });
+    }
+
+    private void estilizarTextField(JTextField campo) {
+        campo.setBackground(new Color(220, 235, 255));
+        campo.setForeground(new Color(30, 60, 120));
+        campo.setFont(new Font("Arial", Font.PLAIN, 14));
+        campo.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(180, 210, 255), 1, true),
+            BorderFactory.createEmptyBorder(6, 10, 6, 10)
+        ));
     }
 
     // Elimina un nodo por valor (solo desconecta el nodo, no reestructura)
@@ -1112,7 +1254,7 @@ public class ArbolesGUI extends JFrame {
     // Limpia colores en el árbol B visual
     private void limpiarColoresVisualB(NodoVisualB n) {
         if (n == null) return;
-        n.color = Color.LIGHT_GRAY;
+        n.color = new Color(210, 210, 255);
         n.claveResaltada = -1;
         if (n.hijos != null) {
             for (NodoVisualB h : n.hijos) limpiarColoresVisualB(h);
@@ -1133,7 +1275,7 @@ public class ArbolesGUI extends JFrame {
     // Limpia colores y conexiones visuales
     private void limpiarColoresVisual(NodoVisual n) {
         if (n == null) return;
-        n.color = Color.LIGHT_GRAY;
+        n.color = new Color(210, 210, 255);
         n.conexionIzq = false;
         n.conexionDer = false;
         limpiarColoresVisual(n.izq);
@@ -1184,15 +1326,15 @@ public class ArbolesGUI extends JFrame {
                     nodosRojo[0].color = Color.RED;
                     nodosAzul[0].color = Color.BLUE;
                 } else {
-                    nodosRojo[0].color = Color.LIGHT_GRAY;
-                    nodosAzul[0].color = Color.LIGHT_GRAY;
+                    nodosRojo[0].color = new Color(210, 210, 255);
+                    nodosAzul[0].color = new Color(210, 210, 255);
                 }
                 dibujo.repaint();
                 paso[0]++;
                 if (paso[0] >= pasos * 2) {
                     timer.stop();
-                    nodosRojo[0].color = Color.LIGHT_GRAY;
-                    nodosAzul[0].color = Color.LIGHT_GRAY;
+                    nodosRojo[0].color = new Color(210, 210, 255);
+                    nodosAzul[0].color = new Color(210, 210, 255);
                     dibujo.repaint();
                     activo.eliminar(valor);
                     dibujo.setRaizVisual(activo.getVisualTree());
@@ -1205,7 +1347,7 @@ public class ArbolesGUI extends JFrame {
                     }
                     if (nuevoSucesor != null) {
                         NodoVisual[] sucesorArr = {nuevoSucesor};
-                        animarNodos(sucesorArr, trasEliminar, Color.BLUE, Color.LIGHT_GRAY, Color.BLUE);
+                        animarNodos(sucesorArr, trasEliminar, Color.BLUE, new Color(210, 210, 255), Color.BLUE);
                     } else {
                         trasEliminar.run();
                     }
@@ -1218,7 +1360,7 @@ public class ArbolesGUI extends JFrame {
             animarNodos(nodos, () -> {
                 activo.eliminar(valor);
                 trasEliminar.run();
-            }, Color.RED, Color.LIGHT_GRAY, Color.RED);
+            }, Color.RED, new Color(210, 210, 255), Color.RED);
         }
     }
 
@@ -1238,8 +1380,8 @@ public class ArbolesGUI extends JFrame {
         NodoVisual[] arr = afectados.toArray(new NodoVisual[0]);
         animarNodos(arr, () -> {
             dibujo.setRaizVisual(activo.getVisualTree());
-            animarNodos(arr, () -> animarRotacionesAVL(rots, idx+1, fin), Color.GREEN, Color.LIGHT_GRAY, Color.GREEN);
-        }, Color.ORANGE, Color.LIGHT_GRAY, Color.ORANGE);
+            animarNodos(arr, () -> animarRotacionesAVL(rots, idx+1, fin), Color.GREEN, new Color(210, 210, 255), Color.GREEN);
+        }, Color.ORANGE, new Color(210, 210, 255), Color.ORANGE);
     }
 
     // Método para ejecutar operación y mostrar resultado
@@ -1429,6 +1571,13 @@ public class ArbolesGUI extends JFrame {
         preordenRec(raiz, sb);
         return sb.toString();
     }
+    // --- NUEVO: Recolectar preorden para guardar ABB y AVL ---
+    private void recolectarPreorden(Nodo n, java.util.List<Integer> lista) {
+        if (n == null) return;
+        lista.add(n.valor);
+        recolectarPreorden(n.izq, lista);
+        recolectarPreorden(n.der, lista);
+    }
     private void preordenRec(NodoVisual n, StringBuilder sb) {
         if (n == null) return;
         sb.append(n.valor).append(' ');
@@ -1482,7 +1631,7 @@ public class ArbolesGUI extends JFrame {
         final int[] idx = {0};
         Timer timer = new Timer(600, null);
         timer.addActionListener(e -> {
-            if (idx[0] > 0) recorrido.get(idx[0] - 1).color = Color.LIGHT_GRAY;
+            if (idx[0] > 0) recorrido.get(idx[0] - 1).color = new Color(210, 210, 255);
             if (idx[0] < recorrido.size()) {
                 NodoVisual actual = recorrido.get(idx[0]);
                 actual.color = Color.ORANGE;
@@ -1490,7 +1639,7 @@ public class ArbolesGUI extends JFrame {
                 idx[0]++;
             } else {
                 timer.stop();
-                if (!recorrido.isEmpty()) recorrido.get(recorrido.size() - 1).color = Color.LIGHT_GRAY;
+                if (!recorrido.isEmpty()) recorrido.get(recorrido.size() - 1).color = new Color(210, 210, 255);
                 dibujo.setRaizVisual(raiz);
                 if (despues != null) despues.run();
             }
@@ -1538,7 +1687,7 @@ public class ArbolesGUI extends JFrame {
                 int[] prev = recorrido.get(idx[0] - 1);
                 NodoVisualB nodoPrev = buscarNodoPorHash(raizB, prev[0]);
                 if (nodoPrev != null) {
-                    nodoPrev.color = Color.LIGHT_GRAY;
+                    nodoPrev.color = new Color(210, 210, 255);
                     nodoPrev.claveResaltada = -1;
                 }
             }
@@ -1557,7 +1706,7 @@ public class ArbolesGUI extends JFrame {
                     int[] ult = recorrido.get(recorrido.size() - 1);
                     NodoVisualB nodoUlt = buscarNodoPorHash(raizB, ult[0]);
                     if (nodoUlt != null) {
-                        nodoUlt.color = Color.LIGHT_GRAY;
+                        nodoUlt.color = new Color(210, 210, 255);
                         nodoUlt.claveResaltada = -1;
                     }
                 }
@@ -1585,7 +1734,7 @@ public class ArbolesGUI extends JFrame {
             paso[0]++;
             if (paso[0] >= colores.length) {
                 timer.stop();
-                for (NodoVisual nv : nodos) nv.color = Color.LIGHT_GRAY;
+                for (NodoVisual nv : nodos) nv.color = new Color(210, 210, 255);
                 dibujo.repaint();
                 if (despues != null) despues.run();
             }
@@ -1606,7 +1755,7 @@ public class ArbolesGUI extends JFrame {
             paso[0]++;
             if (paso[0] >= colores.length) {
                 timer.stop();
-                for (NodoVisualB nv : nodos) nv.color = Color.LIGHT_GRAY;
+                for (NodoVisualB nv : nodos) nv.color = new Color(210, 210, 255);
                 dibujo.repaint();
                 if (despues != null) despues.run();
             }
@@ -1630,8 +1779,16 @@ public class ArbolesGUI extends JFrame {
 
                 if (tipoStr.equals("AB")) {
                     guardarAB((ArbolBinario) activo, pw, null);
+                } else if (tipoStr.equals("ABB") || tipoStr.equals("AVL")) {
+                    // Guardar en preorden para preservar estructura
+                    java.util.List<Integer> preorden = new java.util.ArrayList<>();
+                    Nodo raizABB = null;
+                    if (activo instanceof ArbolBusqueda) raizABB = ((ArbolBusqueda)activo).raiz;
+                    else if (activo instanceof ArbolAVL) raizABB = ((ArbolAVL)activo).raiz;
+                    recolectarPreorden(raizABB, preorden);
+                    for (int val : preorden) pw.println(val);
                 } else {
-                    // Para ABB, AVL, B: solo guardamos los valores en inorden
+                    // Para B: solo guardamos los valores en inorden
                     String[] valores = activo.inorden().trim().split("\\s+");
                     for (String val : valores) {
                         pw.println(val);
