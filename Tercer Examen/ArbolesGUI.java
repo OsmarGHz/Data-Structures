@@ -110,6 +110,10 @@ class PanelDibujo extends JPanel {
         ajustarTamanioPanel();
         repaint();
     }
+    //Método getRaizVisual para obtener la raiz visual del árbol
+    public NodoVisual getRaizVisual() {
+        return raiz;
+    }
 
     // Ajusta el tamaño preferido del panel para scroll
     private void ajustarTamanioPanel() {
@@ -373,13 +377,19 @@ class ArbolAVL extends ArbolBusqueda {
         updateHeight(n);
         int bf = height((NodoAVL)n.izq) - height((NodoAVL)n.der);
         if (bf > 1) {
-            if (height((NodoAVL)n.izq.izq) < height((NodoAVL)n.izq.der))
+            if (height((NodoAVL)n.izq.izq) < height((NodoAVL)n.izq.der)) {
+                registrarRotacion(n.valor, "Rotación Izq-Der");
                 n.izq = rotateLeft((NodoAVL)n.izq);
+            }
+            registrarRotacion(n.valor, "Rotación Derecha");
             return rotateRight(n);
         }
         if (bf < -1) {
-            if (height((NodoAVL)n.der.der) < height((NodoAVL)n.der.izq))
+            if (height((NodoAVL)n.der.der) < height((NodoAVL)n.der.izq)) {
+                registrarRotacion(n.valor, "Rotación Der-Izq");
                 n.der = rotateRight((NodoAVL)n.der);
+            }
+            registrarRotacion(n.valor, "Rotación Izquierda");
             return rotateLeft(n);
         }
         return n;
@@ -412,6 +422,20 @@ class ArbolAVL extends ArbolBusqueda {
         v.extraInfo = "h=" + n.h;
         assignHeights(v.izq, (NodoAVL)n.izq);
         assignHeights(v.der, (NodoAVL)n.der);
+    }
+
+    // --- Evento de rotación para animación AVL ---
+    class RotacionEvento {
+        int pivoteValor;
+        String tipo;
+        RotacionEvento(int v, String t) { pivoteValor = v; tipo = t; }
+    }
+    private java.util.List<RotacionEvento> rotaciones = new java.util.ArrayList<>();
+    private boolean registrarRotaciones = false;
+    public void iniciarRegistroRotaciones() { rotaciones.clear(); registrarRotaciones = true; }
+    public java.util.List<RotacionEvento> obtenerRotaciones() { registrarRotaciones = false; return new java.util.ArrayList<>(rotaciones); }
+    private void registrarRotacion(int pivoteValor, String tipo) {
+        if (registrarRotaciones) rotaciones.add(new RotacionEvento(pivoteValor, tipo));
     }
 }
 
@@ -699,8 +723,8 @@ public class ArbolesGUI extends JFrame {
         ctrl.add(tipo);
         ctrl.add(new JLabel("Valor:")); ctrl.add(entrada);
 
-        JButton ins = new JButton("Insertar"), del = new JButton("Eliminar"), bus = new JButton("Buscar");
-        ctrl.add(ins); ctrl.add(del); ctrl.add(bus);
+        JButton ins = new JButton("Insertar"), del = new JButton("Eliminar"), bus = new JButton("Buscar"), rec = new JButton("Recorrer");
+        ctrl.add(ins); ctrl.add(del); ctrl.add(bus); ctrl.add(rec);
         panel.add(ctrl, BorderLayout.NORTH);
 
         // Área de salida con scroll y altura fija
@@ -754,6 +778,7 @@ public class ArbolesGUI extends JFrame {
         ins.addActionListener(e -> operar("insertar"));
         del.addActionListener(e -> operar("eliminar"));
         bus.addActionListener(e -> operar("buscar"));
+        rec.addActionListener(e -> mostrarDialogoRecorrido());
 
         // Inicial activo
         activo = ab;
@@ -952,20 +977,106 @@ public class ArbolesGUI extends JFrame {
         limpiarColoresVisual(n.der);
     }
 
-    // --- Animación de eliminación ABB/AVL: parpadeo en rojo antes de eliminar ---
+    // --- Animación de eliminación ABB: parpadeo en rojo el nodo a eliminar y azul el sucesor, antes y después de la eliminación ---
     private void animarEliminacionABB(int valor) {
-        NodoVisual raizVisual = activo.getVisualTree();
+        NodoVisual raizVisual = dibujo.getRaizVisual();
         java.util.List<NodoVisual> camino = new java.util.ArrayList<>();
         if (!buscarCaminoVisual(raizVisual, valor, camino)) {
             salida.append("\nNo se encontró el valor " + valor);
             return;
         }
-        NodoVisual[] nodos = {camino.get(camino.size()-1)};
-        animarNodos(nodos, () -> {
-            activo.eliminar(valor);
-            salida.append("\nEliminado: " + valor);
+        NodoVisual nodoAEliminar = camino.get(camino.size()-1);
+        NodoVisual sucesor = null;
+        Integer sucesorValor = null;
+        boolean esAVL = activo instanceof ArbolAVL;
+        ArbolAVL avlRef = esAVL ? (ArbolAVL)activo : null;
+        if (nodoAEliminar.izq != null && nodoAEliminar.der != null) {
+            sucesor = nodoAEliminar.der;
+            while (sucesor.izq != null) sucesor = sucesor.izq;
+            sucesorValor = sucesor.valor;
+        }
+        Runnable trasEliminar = () -> {
+            if (esAVL) {
+                java.util.List<ArbolAVL.RotacionEvento> rots = avlRef.obtenerRotaciones();
+                animarRotacionesAVL(rots, 0, () -> {
+                    salida.append("\nEliminado: " + valor);
+                    dibujo.setRaizVisual(activo.getVisualTree());
+                });
+            } else {
+                salida.append("\nEliminado: " + valor);
+                dibujo.setRaizVisual(activo.getVisualTree());
+            }
+        };
+        if (sucesorValor != null) {
+            NodoVisual[] nodosRojo = {nodoAEliminar};
+            NodoVisual[] nodosAzul = {sucesor};
+            final int sucesorValorFinal = sucesorValor;
+            final int pasos = 1;
+            final int delay = 500;
+            Timer timer = new Timer(delay, null);
+            final int[] paso = {0};
+            if (esAVL) avlRef.iniciarRegistroRotaciones();
+            timer.addActionListener(e -> {
+                if (paso[0] % 2 == 0) {
+                    nodosRojo[0].color = Color.RED;
+                    nodosAzul[0].color = Color.BLUE;
+                } else {
+                    nodosRojo[0].color = Color.LIGHT_GRAY;
+                    nodosAzul[0].color = Color.LIGHT_GRAY;
+                }
+                dibujo.repaint();
+                paso[0]++;
+                if (paso[0] >= pasos * 2) {
+                    timer.stop();
+                    nodosRojo[0].color = Color.LIGHT_GRAY;
+                    nodosAzul[0].color = Color.LIGHT_GRAY;
+                    dibujo.repaint();
+                    activo.eliminar(valor);
+                    dibujo.setRaizVisual(activo.getVisualTree());
+                    NodoVisual nuevaRaiz = dibujo.getRaizVisual();
+                    NodoVisual nuevoSucesor = null;
+                    if (nuevaRaiz != null) {
+                        java.util.List<NodoVisual> caminoS = new java.util.ArrayList<>();
+                        buscarCaminoVisual(nuevaRaiz, sucesorValorFinal, caminoS);
+                        if (!caminoS.isEmpty()) nuevoSucesor = caminoS.get(caminoS.size()-1);
+                    }
+                    if (nuevoSucesor != null) {
+                        NodoVisual[] sucesorArr = {nuevoSucesor};
+                        animarNodos(sucesorArr, trasEliminar, Color.BLUE, Color.LIGHT_GRAY, Color.BLUE);
+                    } else {
+                        trasEliminar.run();
+                    }
+                }
+            });
+            timer.start();
+        } else {
+            NodoVisual[] nodos = {nodoAEliminar};
+            if (esAVL) avlRef.iniciarRegistroRotaciones();
+            animarNodos(nodos, () -> {
+                activo.eliminar(valor);
+                trasEliminar.run();
+            }, Color.RED, Color.LIGHT_GRAY, Color.RED);
+        }
+    }
+
+    // --- Animación de rotaciones AVL tras eliminación ---
+    private void animarRotacionesAVL(java.util.List<ArbolAVL.RotacionEvento> rots, int idx, Runnable fin) {
+        if (rots == null || idx >= rots.size()) { if (fin != null) fin.run(); return; }
+        ArbolAVL.RotacionEvento ev = rots.get(idx);
+        NodoVisual raiz = dibujo.getRaizVisual();
+        java.util.List<NodoVisual> camino = new java.util.ArrayList<>();
+        buscarCaminoVisual(raiz, ev.pivoteValor, camino);
+        if (camino.isEmpty()) { animarRotacionesAVL(rots, idx+1, fin); return; }
+        NodoVisual pivote = camino.get(camino.size()-1);
+        java.util.List<NodoVisual> afectados = new java.util.ArrayList<>();
+        afectados.add(pivote);
+        if (pivote.izq != null) afectados.add(pivote.izq);
+        if (pivote.der != null) afectados.add(pivote.der);
+        NodoVisual[] arr = afectados.toArray(new NodoVisual[0]);
+        animarNodos(arr, () -> {
             dibujo.setRaizVisual(activo.getVisualTree());
-        }, Color.RED, Color.LIGHT_GRAY, Color.RED);
+            animarNodos(arr, () -> animarRotacionesAVL(rots, idx+1, fin), Color.GREEN, Color.LIGHT_GRAY, Color.GREEN);
+        }, Color.ORANGE, Color.LIGHT_GRAY, Color.ORANGE);
     }
 
     // Método para ejecutar operación y mostrar resultado
@@ -1020,10 +1131,29 @@ public class ArbolesGUI extends JFrame {
                         if (activo.buscar(v)) {
                             salida.append("\nEl valor " + v + " ya existe en el árbol");
                         } else {
-                            activo.insertar(v);
-                            salida.append("\nInsertado: " + v);
+                            // --- INICIO: Animación de rotaciones AVL tras inserción ---
+                            if (activo instanceof ArbolAVL) {
+                                ArbolAVL avlRef = (ArbolAVL)activo;
+                                avlRef.iniciarRegistroRotaciones();
+                                activo.insertar(v);
+                                java.util.List<ArbolAVL.RotacionEvento> rots = avlRef.obtenerRotaciones();
+                                dibujo.setRaizVisual(activo.getVisualTree());
+                                if (!rots.isEmpty()) {
+                                    animarRotacionesAVL(rots, 0, () -> {
+                                        salida.append("\nInsertado: " + v);
+                                        dibujo.setRaizVisual(activo.getVisualTree());
+                                    });
+                                } else {
+                                    salida.append("\nInsertado: " + v);
+                                    dibujo.setRaizVisual(activo.getVisualTree());
+                                }
+                            } else {
+                                activo.insertar(v);
+                                salida.append("\nInsertado: " + v);
+                                dibujo.setRaizVisual(activo.getVisualTree());
+                            }
+                            // --- FIN: Animación de rotaciones AVL tras inserción ---
                         }
-                        dibujo.setRaizVisual(activo.getVisualTree());
                     }
                     break;
 
@@ -1074,6 +1204,71 @@ public class ArbolesGUI extends JFrame {
         } catch(Exception ex) {
             salida.append("\nError: entrada inválida");
         }
+    }
+
+    // --- Diálogo y lógica de recorrido ---
+    private void mostrarDialogoRecorrido() {
+        String[] opciones = {"Inorden", "Preorden", "Postorden"};
+        String tipoRec = (String) JOptionPane.showInputDialog(this, "Seleccione el tipo de recorrido:", "Recorrido", JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+        if (tipoRec == null) return;
+        String resultado = "";
+        if (activo instanceof ArbolB) {
+            // Para Árbol B, solo inorden tiene sentido clásico (los otros no son estándar)
+            if (tipoRec.equals("Inorden")) {
+                resultado = activo.inorden();
+            } else {
+                JOptionPane.showMessageDialog(this, "Solo el recorrido inorden es estándar para Árbol B.", "No disponible", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+        } else {
+            switch (tipoRec) {
+                case "Inorden": resultado = recorridoInorden(); break;
+                case "Preorden": resultado = recorridoPreorden(); break;
+                case "Postorden": resultado = recorridoPostorden(); break;
+            }
+        }
+        salida.append("\n" + tipoRec + ": " + resultado);
+    }
+
+    private String recorridoInorden() {
+        if (activo == null) return "";
+        if (activo instanceof ArbolB) return activo.inorden();
+        NodoVisual raiz = activo.getVisualTree();
+        StringBuilder sb = new StringBuilder();
+        inordenRec(raiz, sb);
+        return sb.toString();
+    }
+    private void inordenRec(NodoVisual n, StringBuilder sb) {
+        if (n == null) return;
+        inordenRec(n.izq, sb);
+        sb.append(n.valor).append(' ');
+        inordenRec(n.der, sb);
+    }
+    private String recorridoPreorden() {
+        if (activo == null) return "";
+        NodoVisual raiz = activo.getVisualTree();
+        StringBuilder sb = new StringBuilder();
+        preordenRec(raiz, sb);
+        return sb.toString();
+    }
+    private void preordenRec(NodoVisual n, StringBuilder sb) {
+        if (n == null) return;
+        sb.append(n.valor).append(' ');
+        preordenRec(n.izq, sb);
+        preordenRec(n.der, sb);
+    }
+    private String recorridoPostorden() {
+        if (activo == null) return "";
+        NodoVisual raiz = activo.getVisualTree();
+        StringBuilder sb = new StringBuilder();
+        postordenRec(raiz, sb);
+        return sb.toString();
+    }
+    private void postordenRec(NodoVisual n, StringBuilder sb) {
+        if (n == null) return;
+        postordenRec(n.izq, sb);
+        postordenRec(n.der, sb);
+        sb.append(n.valor).append(' ');
     }
 
     // --- Módulo reutilizable para animaciones de parpadeo de nodos/aristas ---
