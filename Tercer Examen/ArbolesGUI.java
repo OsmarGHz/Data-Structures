@@ -153,24 +153,24 @@ class PanelDibujo extends JPanel {
         int r = RADIO_NODO;
         g.setColor(n.color);
         g.fillOval(x-r, y-r, 2*r, 2*r);
-        g.setColor(Color.BLACK);
+        g.setColor(new Color(0, 100, 0)); // Verde oscuro para el contorno
+        g.setStroke(new BasicStroke(3));
         g.drawOval(x-r, y-r, 2*r, 2*r);
+        g.setStroke(new BasicStroke(1));
         g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
         String t = String.valueOf(n.valor);
         FontMetrics fm = g.getFontMetrics();
+        g.setColor(Color.BLACK);
         g.drawString(t, x - fm.stringWidth(t)/2, y + fm.getAscent()/4);
-        if (!n.extraInfo.isEmpty()) {
-            g.setFont(new Font("Arial", Font.PLAIN, 12));
-            g.drawString(n.extraInfo, x - 40, y + r + 18);
-            g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
-        }
+
+        // --- DIBUJA LAS ARISTAS Y LOS HIJOS ---
         int izqAncho = n.izq != null ? calcularAncho(n.izq) : 0;
         int derAncho = n.der != null ? calcularAncho(n.der) : 0;
         int totalHijos = izqAncho + derAncho;
         int baseY = y + ESPACIO_V;
         if (n.izq != null) {
             int childX = x - (totalHijos > 0 ? (derAncho + ESPACIO_H)/2 : 80);
-            g.setColor(n.conexionIzq ? Color.BLUE : Color.BLACK);
+            g.setColor(n.conexionIzq ? Color.BLUE : new Color(0, 100, 0));
             ((Graphics2D)g).setStroke(new BasicStroke(4)); // Línea más gruesa
             g.drawLine(x, y + r, childX, baseY - r);
             ((Graphics2D)g).setStroke(new BasicStroke(1)); // Restaurar grosor
@@ -178,13 +178,43 @@ class PanelDibujo extends JPanel {
         }
         if (n.der != null) {
             int childX = x + (totalHijos > 0 ? (izqAncho + ESPACIO_H)/2 : 80);
-            g.setColor(n.conexionDer ? Color.BLUE : Color.BLACK);
+            g.setColor(n.conexionDer ? Color.BLUE : new Color(0, 100, 0));
             ((Graphics2D)g).setStroke(new BasicStroke(4)); // Línea más gruesa
             g.drawLine(x, y + r, childX, baseY - r);
             ((Graphics2D)g).setStroke(new BasicStroke(1)); // Restaurar grosor
             dibujar(g, n.der, childX, baseY, derAncho);
         }
+
+        // --- DIBUJAR LA ETIQUETA (extraInfo) ENCIMA DE LAS ARISTAS ---
+        if (!n.extraInfo.isEmpty()) {
+            g.setFont(new Font("Arial", Font.PLAIN, 12));
+            FontMetrics fmInfo = g.getFontMetrics();
+            int infoWidth = fmInfo.stringWidth(n.extraInfo);
+            int infoHeight = fmInfo.getHeight();
+            int paddingX = 8, paddingY = 3;
+            int arc = 12; // radio de las esquinas redondeadas
+
+            int infoX = x - infoWidth / 2 - paddingX;
+            int infoY = y + RADIO_NODO + fmInfo.getAscent() + 2;
+            int rectY = infoY - fmInfo.getAscent() + 1;
+
+            // Fondo semitransparente y redondeado
+            Color fondo = new Color(255, 255, 200, 180); // Amarillo claro, alfa 180/255
+            g.setColor(fondo);
+            g.fillRoundRect(infoX, rectY, infoWidth + 2 * paddingX, infoHeight + 2 * paddingY, arc, arc);
+
+            // Borde opcional
+            g.setColor(new Color(180, 180, 100, 200));
+            g.drawRoundRect(infoX, rectY, infoWidth + 2 * paddingX, infoHeight + 2 * paddingY, arc, arc);
+
+            // Texto
+            g.setColor(Color.DARK_GRAY);
+            g.drawString(n.extraInfo, x - infoWidth / 2, infoY + paddingY);
+
+            g.setFont(new Font("Arial", Font.BOLD, FUENTE_NODO));
+        }
     }
+
     // Modifica dibujarB para usar el ancho calculado
     private void dibujarB(Graphics2D g, NodoVisualB n, int x, int y, int ancho) {
         if (n == null) return;
@@ -736,6 +766,126 @@ public class ArbolesGUI extends JFrame {
         scrollSalida.setPreferredSize(new Dimension(800, salida.getFont().getSize() * 3 + 10));
         panel.add(scrollSalida, BorderLayout.SOUTH);
         add(panel);
+
+        UIManager.put("ScrollBar.width", 12); // Scrollbar más delgada
+
+        javax.swing.plaf.basic.BasicScrollBarUI customScrollBarUI = new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new Color(0, 120, 60, 180); // Verde oscuro translúcido
+                this.trackColor = new Color(230, 255, 230);   // Verde muy claro
+            }
+            @Override
+            protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(thumbColor);
+                g2.fillRoundRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 12, 12);
+                g2.dispose();
+            }
+            @Override
+            protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(trackColor);
+                g2.fillRoundRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height, 12, 12);
+                g2.dispose();
+            }
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                return createZeroButton();
+            }
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                return createZeroButton();
+            }
+            private JButton createZeroButton() {
+                JButton btn = new JButton();
+                btn.setPreferredSize(new Dimension(0, 0));
+                btn.setMinimumSize(new Dimension(0, 0));
+                btn.setMaximumSize(new Dimension(0, 0));
+                btn.setVisible(false);
+                return btn;
+            }
+        };
+
+        scrollDibujo.getVerticalScrollBar().setUI(customScrollBarUI);
+        scrollDibujo.getHorizontalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new Color(0, 120, 60, 180);
+                this.trackColor = new Color(230, 255, 230);
+            }
+            @Override
+            protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(thumbColor);
+                g2.fillRoundRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 12, 12);
+                g2.dispose();
+            }
+            @Override
+            protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(trackColor);
+                g2.fillRoundRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height, 12, 12);
+                g2.dispose();
+            }
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                return createZeroButton();
+            }
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                return createZeroButton();
+            }
+            private JButton createZeroButton() {
+                JButton btn = new JButton();
+                btn.setPreferredSize(new Dimension(0, 0));
+                btn.setMinimumSize(new Dimension(0, 0));
+                btn.setMaximumSize(new Dimension(0, 0));
+                btn.setVisible(false);
+                return btn;
+            }
+        });
+
+        scrollSalida.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+        @Override
+        protected void configureScrollBarColors() {
+            this.thumbColor = new Color(0, 120, 60, 180);
+            this.trackColor = new Color(230, 255, 230);
+        }
+        @Override
+        protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(thumbColor);
+            g2.fillRoundRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 12, 12);
+            g2.dispose();
+        }
+        @Override
+        protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(trackColor);
+            g2.fillRoundRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height, 12, 12);
+            g2.dispose();
+        }
+        @Override
+        protected JButton createDecreaseButton(int orientation) {
+            return createZeroButton();
+        }
+        @Override
+        protected JButton createIncreaseButton(int orientation) {
+            return createZeroButton();
+        }
+        private JButton createZeroButton() {
+            JButton btn = new JButton();
+            btn.setPreferredSize(new Dimension(0, 0));
+            btn.setMinimumSize(new Dimension(0, 0));
+            btn.setMaximumSize(new Dimension(0, 0));
+            btn.setVisible(false);
+            return btn;
+        }
+    });
 
         // Al cambiar tipo, actualizar visibilidad y crear B si aplica
         tipo.addActionListener(e -> {
