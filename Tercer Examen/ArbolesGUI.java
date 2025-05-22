@@ -1,8 +1,11 @@
 import java.awt.*;
-import javax.swing.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.PrintWriter;
 import java.util.Arrays;
-import javax.swing.event.DocumentListener;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 // Interfaz base para cualquier tipo de árbol
 interface ArbolBase {
@@ -439,6 +442,8 @@ public class ArbolesGUI extends JFrame {
         panel.add(new JScrollPane(salida), BorderLayout.SOUTH);
         add(panel);
 
+
+
         // Agregar DocumentListener para validar el orden en tiempo real
         ordenField.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) { validarOrden(); }
@@ -516,9 +521,18 @@ public class ArbolesGUI extends JFrame {
         del.addActionListener(e -> operar("eliminar"));
         bus.addActionListener(e -> operar("buscar"));
 
+        JButton guardar = new JButton("Guardar");
+        JButton cargar = new JButton("Cargar");
+        ctrl.add(guardar);
+        ctrl.add(cargar);
+
+        guardar.addActionListener(e -> guardarArbol());
+        cargar.addActionListener(e -> cargarArbol());
+
         // Inicial activo
         activo = ab;
     }
+
 
     // Elimina un nodo por valor (solo desconecta el nodo, no reestructura)
     private void eliminarNodoAB(ArbolBinario ab, int valor) {
@@ -695,6 +709,99 @@ public class ArbolesGUI extends JFrame {
             }
         } catch(Exception ex) {
             salida.append("\nError: entrada inválida");
+        }
+    }
+
+    private void guardarArbol() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter pw = new PrintWriter(chooser.getSelectedFile())) {
+                String tipoStr = (String) tipo.getSelectedItem();
+                pw.println(tipoStr); // Guardamos el tipo de árbol
+
+                if (tipoStr.equals("B")) {
+                    pw.println(ordenField.getText());
+                }
+
+                if (tipoStr.equals("AB")) {
+                    guardarAB((ArbolBinario) activo, pw, null);
+                } else {
+                    // Para ABB, AVL, B: solo guardamos los valores en inorden
+                    String[] valores = activo.inorden().trim().split("\\s+");
+                    for (String val : valores) {
+                        pw.println(val);
+                    }
+                }
+
+                salida.append("\nÁrbol guardado correctamente.");
+            } catch (Exception ex) {
+                salida.append("\nError al guardar: " + ex.getMessage());
+            }
+        }
+    }
+
+    private void guardarAB(ArbolBinario ab, PrintWriter pw, Nodo padre) {
+        if (ab == null || ab.raiz == null) return;
+        guardarABRec(ab.raiz, pw, padre, ""); // Raíz no tiene padre
+    }
+
+    private void guardarABRec(Nodo actual, PrintWriter pw, Nodo padre, String lado) {
+        if (actual == null) return;
+        if (padre == null) {
+            pw.println("ROOT " + actual.valor);
+        } else {
+            pw.println(padre.valor + " " + lado + " " + actual.valor);
+        }
+        guardarABRec(actual.izq, pw, actual, "I");
+        guardarABRec(actual.der, pw, actual, "D");
+    }
+
+    private void cargarArbol() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try (BufferedReader br = new BufferedReader(new FileReader(chooser.getSelectedFile()))) {
+                String tipoStr = br.readLine().trim();
+                tipo.setSelectedItem(tipoStr);
+
+                if (tipoStr.equals("B")) {
+                    String ordenStr = br.readLine().trim();
+                    ordenField.setText(ordenStr);
+                    b = new ArbolB(Integer.parseInt(ordenStr));
+                    activo = b;
+                } else if (tipoStr.equals("ABB")) {
+                    abb = new ArbolBusqueda();
+                    activo = abb;
+                } else if (tipoStr.equals("AVL")) {
+                    avl = new ArbolAVL();
+                    activo = avl;
+                } else {
+                    ab = new ArbolBinario();
+                    activo = ab;
+                }
+
+                String linea;
+                while ((linea = br.readLine()) != null) {
+                    if (tipoStr.equals("AB")) {
+                        String[] partes = linea.trim().split("\\s+");
+                        if (partes[0].equals("ROOT")) {
+                            ab.raiz = new Nodo(Integer.parseInt(partes[1]));
+                        } else {
+                            int padre = Integer.parseInt(partes[0]);
+                            String lado = partes[1];
+                            int valor = Integer.parseInt(partes[2]);
+                            ab.insertar(valor, padre, lado);
+                        }
+                    } else {
+                        activo.insertar(Integer.parseInt(linea.trim()));
+                    }
+                }
+
+                salida.append("\nÁrbol cargado correctamente.");
+                dibujo.setRaizVisual(activo.getVisualTree());
+
+            } catch (Exception ex) {
+                salida.append("\nError al cargar: " + ex.getMessage());
+            }
         }
     }
 
