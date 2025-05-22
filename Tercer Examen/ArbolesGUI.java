@@ -1211,23 +1211,38 @@ public class ArbolesGUI extends JFrame {
         String[] opciones = {"Inorden", "Preorden", "Postorden"};
         String tipoRec = (String) JOptionPane.showInputDialog(this, "Seleccione el tipo de recorrido:", "Recorrido", JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
         if (tipoRec == null) return;
-        String resultado = "";
         if (activo instanceof ArbolB) {
             // Para Árbol B, solo inorden tiene sentido clásico (los otros no son estándar)
             if (tipoRec.equals("Inorden")) {
-                resultado = activo.inorden();
+                String resultado = activo.inorden();
+                ArbolB arbolB = (ArbolB)activo;
+                NodoVisualB raizB = arbolB.convertBVisual(arbolB.getRaiz());
+                Runnable despues = () -> salida.append("\n" + tipoRec + ": " + resultado);
+                animarRecorridoInordenB(raizB, despues);
             } else {
                 JOptionPane.showMessageDialog(this, "Solo el recorrido inorden es estándar para Árbol B.", "No disponible", JOptionPane.INFORMATION_MESSAGE);
-                return;
             }
+            return;
         } else {
+            NodoVisual raiz = activo.getVisualTree();
+            String resFinal;
             switch (tipoRec) {
-                case "Inorden": resultado = recorridoInorden(); break;
-                case "Preorden": resultado = recorridoPreorden(); break;
-                case "Postorden": resultado = recorridoPostorden(); break;
+                case "Inorden":
+                    resFinal = recorridoInorden();
+                    break;
+                case "Preorden":
+                    resFinal = recorridoPreorden();
+                    break;
+                case "Postorden":
+                    resFinal = recorridoPostorden();
+                    break;
+                default:
+                    resFinal = "";
             }
+            final String resultadoFinal = resFinal;
+            Runnable despues = () -> salida.append("\n" + tipoRec + ": " + resultadoFinal);
+            animarRecorrido(raiz, tipoRec, despues);
         }
-        salida.append("\n" + tipoRec + ": " + resultado);
     }
 
     private String recorridoInorden() {
@@ -1269,6 +1284,127 @@ public class ArbolesGUI extends JFrame {
         postordenRec(n.izq, sb);
         postordenRec(n.der, sb);
         sb.append(n.valor).append(' ');
+    }
+
+    // Método 1: Recolectar nodos en orden de recorrido
+    private void recolectarRecorrido(NodoVisual n, java.util.List<NodoVisual> lista, String tipo) {
+        if (n == null) return;
+        switch (tipo) {
+            case "Inorden":
+                recolectarRecorrido(n.izq, lista, tipo);
+                lista.add(n);
+                recolectarRecorrido(n.der, lista, tipo);
+                break;
+            case "Preorden":
+                lista.add(n);
+                recolectarRecorrido(n.izq, lista, tipo);
+                recolectarRecorrido(n.der, lista, tipo);
+                break;
+            case "Postorden":
+                recolectarRecorrido(n.izq, lista, tipo);
+                recolectarRecorrido(n.der, lista, tipo);
+                lista.add(n);
+                break;
+        }
+    }
+
+    // Método 2: Animar el recorrido
+    private void animarRecorrido(NodoVisual raiz, String tipoRecorrido, Runnable despues) {
+        java.util.List<NodoVisual> recorrido = new java.util.ArrayList<>();
+        recolectarRecorrido(raiz, recorrido, tipoRecorrido);
+        if (recorrido.isEmpty()) {
+            if (despues != null) despues.run();
+            return;
+        }
+        final int[] idx = {0};
+        Timer timer = new Timer(600, null);
+        timer.addActionListener(e -> {
+            if (idx[0] > 0) recorrido.get(idx[0] - 1).color = Color.LIGHT_GRAY;
+            if (idx[0] < recorrido.size()) {
+                NodoVisual actual = recorrido.get(idx[0]);
+                actual.color = Color.ORANGE;
+                dibujo.setRaizVisual(raiz);
+                idx[0]++;
+            } else {
+                timer.stop();
+                if (!recorrido.isEmpty()) recorrido.get(recorrido.size() - 1).color = Color.LIGHT_GRAY;
+                dibujo.setRaizVisual(raiz);
+                if (despues != null) despues.run();
+            }
+        });
+        limpiarColoresVisual(raiz);
+        dibujo.setRaizVisual(raiz);
+        timer.start();
+    }
+
+    // Recolecta pares (nodo, índice de clave) en orden inorden para Árbol B
+    private void recolectarInordenB(NodoVisualB n, java.util.List<int[]> lista) {
+        if (n == null) return;
+        for (int i = 0; i < n.n; i++) {
+            if (n.hijos != null && n.hijos[i] != null) recolectarInordenB(n.hijos[i], lista);
+            lista.add(new int[]{System.identityHashCode(n), i}); // Usamos hash para identificar el nodo
+        }
+        if (n.hijos != null && n.hijos[n.n] != null) recolectarInordenB(n.hijos[n.n], lista);
+    }
+
+    // Busca el nodo visual B por su identityHashCode
+    private NodoVisualB buscarNodoPorHash(NodoVisualB n, int hash) {
+        if (n == null) return null;
+        if (System.identityHashCode(n) == hash) return n;
+        if (n.hijos != null) {
+            for (NodoVisualB h : n.hijos) {
+                NodoVisualB res = buscarNodoPorHash(h, hash);
+                if (res != null) return res;
+            }
+        }
+        return null;
+    }
+
+    // Animación de recorrido inorden para Árbol B
+    private void animarRecorridoInordenB(NodoVisualB raizB, Runnable despues) {
+        java.util.List<int[]> recorrido = new java.util.ArrayList<>();
+        recolectarInordenB(raizB, recorrido);
+        if (recorrido.isEmpty()) {
+            if (despues != null) despues.run();
+            return;
+        }
+        final int[] idx = {0};
+        Timer timer = new Timer(700, null);
+        timer.addActionListener(e -> {
+            if (idx[0] > 0) {
+                int[] prev = recorrido.get(idx[0] - 1);
+                NodoVisualB nodoPrev = buscarNodoPorHash(raizB, prev[0]);
+                if (nodoPrev != null) {
+                    nodoPrev.color = Color.LIGHT_GRAY;
+                    nodoPrev.claveResaltada = -1;
+                }
+            }
+            if (idx[0] < recorrido.size()) {
+                int[] actual = recorrido.get(idx[0]);
+                NodoVisualB nodo = buscarNodoPorHash(raizB, actual[0]);
+                if (nodo != null) {
+                    nodo.color = Color.ORANGE;
+                    nodo.claveResaltada = actual[1];
+                }
+                dibujo.setRaizVisualB(raizB);
+                idx[0]++;
+            } else {
+                timer.stop();
+                if (!recorrido.isEmpty()) {
+                    int[] ult = recorrido.get(recorrido.size() - 1);
+                    NodoVisualB nodoUlt = buscarNodoPorHash(raizB, ult[0]);
+                    if (nodoUlt != null) {
+                        nodoUlt.color = Color.LIGHT_GRAY;
+                        nodoUlt.claveResaltada = -1;
+                    }
+                }
+                dibujo.setRaizVisualB(raizB);
+                if (despues != null) despues.run();
+            }
+        });
+        limpiarColoresVisualB(raizB);
+        dibujo.setRaizVisualB(raizB);
+        timer.start();
     }
 
     // --- Módulo reutilizable para animaciones de parpadeo de nodos/aristas ---
