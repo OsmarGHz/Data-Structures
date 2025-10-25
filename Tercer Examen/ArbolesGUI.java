@@ -401,10 +401,11 @@ class ArbolAVL extends ArbolBusqueda {
     @Override
     protected Nodo insertarRec(Nodo n, int v) {
         if (n == null) return new NodoAVL(v);
-        if (v < n.valor) n.izq = insertarRec(n.izq, v);
-        else if (v > n.valor) n.der = insertarRec(n.der, v);
-        else return n; // No insertar duplicados
-        return balance((NodoAVL)n);
+        NodoAVL nodo = (NodoAVL) n;
+        if (v < nodo.valor) nodo.izq = insertarRec(nodo.izq, v);
+        else if (v > nodo.valor) nodo.der = insertarRec(nodo.der, v);
+        else return nodo; // No insertar duplicados
+        return balance(nodo);
     }
     private NodoAVL balance(NodoAVL n) {
         updateHeight(n);
